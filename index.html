@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Controlo de Projetos</title>
+<title>Sistema de Controle de Projetos</title>
 
 <script>
 window.onerror = function(msg, url, line) {
@@ -77,7 +77,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
 .project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
 .draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
-.project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; }
+.project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
 .project-details-box strong { color: #111827; }
 .progress-container { width: 100%; background-color: var(--border); border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 8px; }
 .progress-bar { height: 100%; background-color: var(--primary); transition: width 0.4s ease; }
@@ -110,17 +110,17 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Ligação à base de dados bloqueada pela rede. A executar no Modo Offline (Memória do Navegador).</div>
+<div id="offline-banner">⚠️ Conexão com a base de dados bloqueada pela rede. Rodando no Modo Offline (Memória do Navegador).</div>
 
 <div id="global-loader">
     <div class="spinner"></div>
-    <h2 style="color: var(--primary); margin: 0;">A Sincronizar com a Nuvem...</h2>
-    <p style="color: var(--text-light);" id="loader-text">Aguardar resposta da base de dados...</p>
+    <h2 style="color: var(--primary); margin: 0;">Sincronizando com a Nuvem...</h2>
+    <p style="color: var(--text-light);" id="loader-text">Aguardando resposta do banco de dados...</p>
 </div>
 
 <div id="create-project-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📋 Registar Novo Projeto na Fila</h3>
+<h3 class="modal-title">📋 Cadastrar Novo Projeto na Fila</h3>
 <p class="modal-desc">Preencha as informações básicas para iniciar.</p>
 <div class="form-grid full"><input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)"></div>
 <div class="form-grid"><input type="text" id="cp-cod" placeholder="CÓD / Ordem"><input type="text" id="cp-cidade" placeholder="Cidade"></div>
@@ -139,12 +139,49 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 </div>
 
+<div id="edit-project-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">✏️ Editar Detalhes do Projeto</h3>
+<p class="modal-desc">Atualize as informações da obra.</p>
+<input type="hidden" id="ep-id">
+<div class="form-grid">
+    <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
+    <input type="text" id="ep-cidade" placeholder="Cidade">
+</div>
+<div class="form-grid">
+    <select id="ep-vendedor">
+        <option value="">Selecione Vendedor...</option>
+        <option value="CARLA">CARLA</option>
+        <option value="JONES">JONES</option>
+        <option value="SHANA">SHANA</option>
+        <option value="OUTRO">Outro / Terceiros</option>
+    </select>
+    <select id="ep-tipo">
+        <option value="NOVO">NOVO</option>
+        <option value="REVISÃO">REVISÃO</option>
+    </select>
+</div>
+<div class="form-grid full">
+    <select id="ep-probabilidade">
+        <option value="">Probabilidade de Venda...</option>
+        <option value="BAIXA">BAIXA</option>
+        <option value="MÉDIA">MÉDIA</option>
+        <option value="ALTA">ALTA</option>
+    </select>
+</div>
+<div class="modal-buttons">
+<button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
+<button class="success" onclick="closeEditProjectModal(true)">Salvar Alterações</button>
+</div>
+</div>
+</div>
+
 <div id="admin-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 class="modal-title">⚙️ Painel de Segurança</h3>
-<p class="modal-desc">Altere a palavra-passe de qualquer utilizador da equipa.</p>
+<p class="modal-desc">Altere a senha de qualquer usuário da equipe.</p>
 <div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
-<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Panel</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button></div>
 </div>
 </div>
 
@@ -153,7 +190,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <h3 class="modal-title">📂 Vincular Pasta ou Arquivo (Drive ou Local)</h3>
 <p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
 <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
-<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
+<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
 <div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Seletor Oficial do Google Drive</button></div>
 <div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Caminho</button></div>
 </div>
@@ -163,7 +200,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <div class="modal-content">
 <h3 class="modal-title">📅 Editar Data do Evento</h3>
 <input type="datetime-local" id="date-modal-input">
-<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Guardar Data</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Salvar Data</button></div>
 </div>
 </div>
 
@@ -188,8 +225,8 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <div id="password-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
-<p id="pwd-modal-desc" class="modal-desc">Insira a palavra-passe.</p>
-<input type="password" id="pwd-modal-input" placeholder="A sua palavra-passe..." autocomplete="new-password">
+<p id="pwd-modal-desc" class="modal-desc">Insira a sua senha.</p>
+<input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password" onkeydown="if(event.key === 'Enter') closePasswordModal(true)">
 <div class="modal-buttons"><button class="secondary" onclick="closePasswordModal(false)">Cancelar</button><button onclick="closePasswordModal(true)">Confirmar</button></div>
 </div>
 </div>
@@ -197,7 +234,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <div id="confirm-modal" class="modal-overlay hidden">
 <div class="modal-content" style="text-align: center;">
 <h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
-<p id="confirm-desc" class="modal-desc">Tem a certeza de que deseja fazer isto?</p>
+<p id="confirm-desc" class="modal-desc">Tem certeza de que deseja fazer isto?</p>
 <div class="modal-buttons" style="justify-content: center;"><button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button><button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button></div>
 </div>
 </div>
@@ -207,17 +244,17 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
     <div id="view-profiles" class="hidden">
         <div class="header">
             <h1><span onclick="handleMasterLogin()" style="cursor: pointer;" title="Bem-vindo">🏢</span> Bem-vindo ao Sistema de Projetos</h1>
-            <p>Selecione como deseja aceder à plataforma hoje.</p>
+            <p>Selecione como deseja acessar a plataforma hoje.</p>
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 20px auto;">
                 <button class="global-btn" onclick="proceedAsViewer()" style="background: #059669; padding: 15px; font-size: 1.1rem; border-radius: 8px;">
                     👁️ ENTRAR COMO VISUALIZADOR (Gerência/Vendas)
                 </button>
             </div>
-            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Palavra-passe):</h3>
+            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Senha):</h3>
             <div class="profiles-grid" id="profiles-container"></div>
             
             <div style="background: var(--card); padding: 15px; border-radius: 8px; max-width: 400px; margin: 20px auto; border: 1px solid var(--border);">
-                <h4 style="margin-top: 0;">Registar Novo Desenhista</h4>
+                <h4 style="margin-top: 0;">Cadastrar Novo Desenhista</h4>
                 <input type="text" id="new-user-name" placeholder="Nome do colega...">
                 <button onclick="addUser()" style="width: 100%;">+ Adicionar Equipe</button>
             </div>
@@ -233,7 +270,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
     <div id="view-manager" class="hidden">
         <div class="header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div style="text-align: left;">
-                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Estado Geral dos Projetos (Painel da Empresa)</h2>
+                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Status Geral dos Projetos (Painel da Empresa)</h2>
                 <p style="margin: 5px 0 0 0; color: var(--text-light); font-size: 0.9rem;">Acompanhamento corporativo em tempo real. Apenas Visualização.</p>
             </div>
             <div class="top-bar-actions">
@@ -246,7 +283,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                 </select>
 
                 <div class="search-bar"><input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Procurar obra ou CÓD..."></div>
-                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF do Separador Atual</button>
+                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF da Aba Atual</button>
                 <button class="secondary" onclick="logout()">← Sair</button>
             </div>
         </div>
@@ -282,8 +319,8 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                 </div>
                 <h1 id="dashboard-title" style="margin: 0;">Área de Trabalho</h1>
                 <div class="top-bar-actions">
-                    <button class="warning" onclick="changeMyPassword()" title="Alterar a minha palavra-passe">🔑 Mudar Palavra-passe</button>
-                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerir Equipa</button>
+                    <button class="warning" onclick="changeMyPassword()" title="Alterar a minha senha">🔑 Mudar Senha</button>
+                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerenciar Equipe</button>
                     
                     <select id="user-filter-select" onchange="renderProjects()" style="margin-bottom: 0; max-width: 210px; font-size: 0.9rem;">
                         <option value="ALL">Visualizar Todos</option>
@@ -299,7 +336,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                     </select>
 
                     <div class="search-bar"><input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD..."></div>
-                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF do Separador</button>
+                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF da Aba</button>
                 </div>
             </div>
         </div>
@@ -334,6 +371,18 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
+// FUNÇÃO MÁGICA: CHAMA O SCRIPT EM PYTHON DO SEU PC SE FOR UM CAMINHO G:\...
+window.abrirPastaLocalPeloAjudante = function(caminho) {
+    fetch('http://127.0.0.1:49152/abrir-pasta?caminho=' + encodeURIComponent(caminho))
+    .then(res => res.text())
+    .then(text => {
+        if(text !== "Sucesso") alert("O ajudante local avisou que deu erro ao abrir a pasta:\n" + text);
+    })
+    .catch(err => {
+        alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais da Engenharia automaticamente com 1 clique, você precisa de abrir o arquivo 'ajudante.py' no seu computador antes.");
+    });
+};
+
 const STAGES = [
 "Aguardando Início (Fila)", // 0
 "Em Desenho",               // 1
@@ -434,7 +483,7 @@ function iniciarSistemaSeguro() {
             document.getElementById('view-dashboard').classList.remove('hidden');
             renderProjects();
         }
-    } catch(err) { console.error("Falha ao remover o ecrã de carregamento:", err); }
+    } catch(err) { console.error("Falha ao remover a tela de carregamento:", err); }
 }
 
 setTimeout(() => {
@@ -534,19 +583,9 @@ function closeDriveModal(c) {
     if (c && driveProjectId) {
         let u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
         if (u) {
-            // CONVERSOR DE CAMINHO LOCAL WINDOWS (Trata caminhos de rede e G:\)
-            if (u.toUpperCase().startsWith('G:') || u.startsWith('\\\\') || (!u.startsWith('http') && u.includes('\\'))) {
-                let formattedPath = u.replace(/\\/g, '/');
-                if (formattedPath.charAt(1) === ':') {
-                    u = 'file:///' + formattedPath;
-                } else {
-                    u = 'file://' + formattedPath;
-                }
-            }
-
             const p = appData.projects.find(p => p.id === driveProjectId);
             if(!p.history) p.history = [];
-            p.history.unshift({ stage: "📂 CAMINHO ANEXADO", obs: o ? `${o}` : "Diretório vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
+            p.history.unshift({ stage: "📂 ARQUIVO/CAMINHO ANEXADO", obs: o ? `${o}` : "Diretório vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
             saveData(); updateViews();
         }
     }
@@ -592,13 +631,13 @@ async function addUser() {
     if(!n) return; if(!appData.users) appData.users = [];
     if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { alert("Este nome já existe ou é reservado!"); return; }
     
-    const pass = await openPasswordModal("Criar Palavra-passe", `Defina a palavra-passe para o novo perfil de ${n}:`);
+    const pass = await openPasswordModal("Criar Senha", `Defina a senha para o novo perfil de ${n}:`);
     if (pass !== null && pass.trim() !== "") {
         appData.users.push(n);
         if(!appData.passwords) appData.passwords = {};
         appData.passwords[n] = pass;
         saveData(); i.value = ''; renderProfiles(); 
-    } else if (pass !== null) { alert("A palavra-passe não pode estar vazia. Criação cancelada."); }
+    } else if (pass !== null) { alert("A senha não pode estar vazia. Criação cancelada."); }
 }
 
 function deleteCurrentUser() {
@@ -612,12 +651,12 @@ function deleteCurrentUser() {
 async function handleLoginClick(user) {
     if (!appData.passwords) appData.passwords = {};
     if (!appData.passwords[user]) {
-        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem palavra-passe. Crie uma agora:`);
+        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem senha. Crie uma agora:`);
         if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
     } else {
-        const pass = await openPasswordModal("Acesso Restrito", `Insira a sua palavra-passe:`);
+        const pass = await openPasswordModal("Acesso Restrito", `Insira a sua senha:`);
         if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
-        else if (pass !== null) alert("Palavra-passe Incorreta!");
+        else if (pass !== null) alert("Senha Incorreta!");
     }
 }
 
@@ -630,10 +669,10 @@ async function handleMasterLogin() {
 }
 
 async function changeMyPassword() {
-    const newPass = await openModal("Segurança", `Insira a sua nova palavra-passe:`, "Nova palavra-passe...");
+    const newPass = await openModal("Segurança", `Insira a sua nova senha:`, "Nova senha...");
     if (newPass !== null && newPass.trim() !== '') {
         if(!appData.passwords) appData.passwords = {};
-        appData.passwords[currentUser] = newPass; saveData(); alert(`Palavra-passe atualizada com sucesso!`);
+        appData.passwords[currentUser] = newPass; saveData(); alert(`Senha atualizada com sucesso!`);
     }
 }
 
@@ -647,10 +686,10 @@ function openAdminModal() {
 }
 
 async function changeUserPassword(u) {
-    const newPass = await openModal("Alterar Palavra-passe", `Insira a nova palavra-passe para ${u}:`, "Nova palavra-passe...");
+    const newPass = await openModal("Alterar Senha", `Insira a nova senha para ${u}:`, "Nova senha...");
     if (newPass !== null && newPass.trim() !== '') {
         if(!appData.passwords) appData.passwords = {};
-        appData.passwords[u] = newPass; saveData(); alert(`Palavra-passe de ${u} atualizada com sucesso!`);
+        appData.passwords[u] = newPass; saveData(); alert(`Senha de ${u} atualizada com sucesso!`);
     }
 }
 
@@ -718,9 +757,39 @@ function closeCreateProjectModal(c) {
     switchDraftsmanTab('fila');
 }
 
+// NOVAS FUNÇÕES PARA EDITAR DETALHES DO PROJETO
+function openEditProjectModal(id) {
+    const p = appData.projects.find(proj => proj.id === id);
+    if (!p) return;
+    document.getElementById('ep-id').value = id;
+    document.getElementById('ep-cod').value = p.cod || '';
+    document.getElementById('ep-cidade').value = p.cidade || '';
+    document.getElementById('ep-vendedor').value = p.vendedor || '';
+    document.getElementById('ep-tipo').value = p.tipo || 'NOVO';
+    document.getElementById('ep-probabilidade').value = p.probabilidade || '';
+    document.getElementById('edit-project-modal').classList.remove('hidden');
+}
+
+function closeEditProjectModal(confirm) {
+    document.getElementById('edit-project-modal').classList.add('hidden');
+    if (confirm) {
+        const id = document.getElementById('ep-id').value;
+        const p = appData.projects.find(proj => proj.id === id);
+        if (p) {
+            p.cod = document.getElementById('ep-cod').value.trim();
+            p.cidade = document.getElementById('ep-cidade').value.trim();
+            p.vendedor = document.getElementById('ep-vendedor').value;
+            p.tipo = document.getElementById('ep-tipo').value;
+            p.probabilidade = document.getElementById('ep-probabilidade').value;
+            saveData();
+            updateViews();
+        }
+    }
+}
+
 async function editProjectName(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
-    const n = await openModal("Editar Obra", "Qual o novo nome?", "Nome...", p.name);
+    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
     if (n) { p.name = n; saveData(); renderProjects(); }
 }
 
@@ -791,7 +860,7 @@ async function toggleImpediment(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
     if (p.isImpeded) {
         const obs = await openModal("Retomar", "Resolvido?", "Obs...");
-        if (obs !== null) { p.isImpeded = false; if(!p.history) p.history = []; p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Libertado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+        if (obs !== null) { p.isImpeded = false; if(!p.history) p.history = []; p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
     } else {
         const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
         if (obs) { p.isImpeded = true; if(!p.history) p.history = []; p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
@@ -925,10 +994,16 @@ function buildCardsStructure(list, container, isDash) {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
             
-            // O BOTÃO DE SUPORTE A LINK WEB E CAMINHO LOCAL WINDOWS
+            // INTEGRAÇÃO COM O PYTHON PARA PASTAS LOCAIS
             let drv = '';
             if (h.driveUrl) {
-                drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir Caminho / Pasta</a>`;
+                let uUpper = h.driveUrl.toUpperCase();
+                if (uUpper.startsWith('G:') || h.driveUrl.startsWith('\\\\') || (!h.driveUrl.startsWith('http') && h.driveUrl.includes('\\'))) {
+                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    drv = `<br><button class="drive-link" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; cursor:pointer;" onclick="window.abrirPastaLocalPeloAjudante('${safePath}')">📂 Abrir Caminho / Pasta</button>`;
+                } else {
+                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive Web</a>`;
+                }
             }
 
             let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
@@ -949,7 +1024,33 @@ function buildCardsStructure(list, container, isDash) {
         }
         acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
 
-        card.innerHTML = `<div class="project-header"><span class="draftsman-badge">👤 Atual: ${p.owner}</span><div class="project-title-container"><h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ''}</div><div class="project-details-box"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>CÓD:</strong> ${p.cod || '-'}</span><span><strong>Vend:</strong> ${p.vendedor || '-'}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span><span><strong>Prob:</strong> ${p.probabilidade || '-'}</span></div><div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;"><span><strong>Cid:</strong> ${p.cidade || '-'}</span></div></div>${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}<div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div></div><div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div><div class="timeline"><strong>Histórico:</strong><br>${hist}</div><div class="actions">${acts}</div>`;
+        // NOVA ÁREA EDITÁVEL PARA INFORMAÇÕES
+        card.innerHTML = `<div class="project-header">
+            <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
+            <div class="project-title-container">
+                <h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Renomear Obra">✏️</button>` : ''}
+            </div>
+            <div class="project-details-box" style="position: relative;">
+                ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️</button>` : ''}
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; padding-right: 25px;">
+                    <span><strong>CÓD:</strong> ${p.cod || '-'}</span>
+                    <span><strong>Vend:</strong> ${p.vendedor || '-'}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span>
+                    <span><strong>Prob:</strong> ${p.probabilidade || '-'}</span>
+                </div>
+                <div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;">
+                    <span><strong>Cid:</strong> ${p.cidade || '-'}</span>
+                </div>
+            </div>
+            ${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}
+            <div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div>
+        </div>
+        <div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div>
+        <div class="timeline"><strong>Histórico:</strong><br>${hist}</div>
+        <div class="actions">${acts}</div>`;
+        
         container.appendChild(card);
     });
 }
