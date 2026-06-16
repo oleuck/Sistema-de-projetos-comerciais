@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Controle de Projetos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+
+<style>
+:root {
+--primary: #2563eb; --primary-hover: #1d4ed8; --success: #16a34a;
+--warning: #f59e0b; --danger: #dc2626; --info: #0284c7;
+--bg: #f3f4f6; --card: #ffffff; --text: #1f2937;
+--text-light: #6b7280; --border: #e5e7eb; --modal-bg: rgba(0, 0, 0, 0.6);
+}
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+.hidden { display: none !important; }
+.container { max-width: 1200px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 20px; background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+h1, h2, h3 { margin-top: 0; margin-bottom: 10px; }
+button { background-color: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
+button:hover { background-color: var(--primary-hover); }
+button.danger { background-color: var(--danger); } button.warning { background-color: var(--warning); color: #000; }
+button.success { background-color: var(--success); } button.info { background-color: var(--info); }
+button.secondary { background-color: #6b7280; color: white; } button.secondary:hover { background-color: #4b5563; }
+button.global-btn { background-color: #4f46e5; font-size: 1rem; padding: 10px 20px; margin-top: 10px; }
+button.manager-btn { background-color: #111827; font-size: 1rem; padding: 10px 20px; color: #fff;}
+button.icon-btn { background: none; border: none; color: var(--text-light); padding: 2px 6px; font-size: 1rem; cursor: pointer; border-radius: 4px; }
+button.icon-btn:hover { background: var(--border); color: var(--text); }
+input[type="text"], input[type="password"], input[type="number"], select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 0.95rem; font-family: inherit; }
+input[type="datetime-local"] { padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
+.search-bar input { margin-bottom: 0; }
+select { font-weight: 500; color: var(--primary); cursor: pointer; }
+.profiles-grid { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+.profile-card { background: var(--card); padding: 15px 25px; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 15px; }
+.profile-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.profile-name { font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+.top-bar-actions { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 0; flex-wrap: wrap;}
+.tab-btn { background: transparent; color: var(--text-light); border: none; font-size: 1.05rem; padding: 10px 20px; cursor: pointer; border-radius: 5px 5px 0 0; transition: 0.2s; margin-bottom: -2px; }
+.tab-btn.active { color: var(--primary); font-weight: bold; border-bottom: 3px solid var(--primary); }
+.tab-btn:hover:not(.active) { color: var(--text); background: var(--card); }
+.kpi-container { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+.kpi-card { background: var(--card); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); }
+.kpi-card h4 { margin: 0 0 5px 0; color: var(--text-light); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;}
+.kpi-card .kpi-value { font-size: 1.8rem; font-weight: bold; color: var(--text); margin: 0;}
+.projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; align-items: start; }
+.project-card { background-color: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); border-left: 6px solid var(--primary); display: flex; flex-direction: column; transition: all 0.3s;}
+.project-card.impediment { border-left-color: var(--warning); background-color: #fffbeb; }
+.project-card.completed { border-left-color: var(--success); }
+.project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
+.project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
+.project-header { margin-bottom: 10px; }
+.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
+.draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
+.project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; }
+.project-details-box strong { color: #111827; }
+.progress-container { width: 100%; background-color: var(--border); border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 8px; }
+.progress-bar { height: 100%; background-color: var(--primary); transition: width 0.4s ease; }
+.timeline { margin-top: 10px; font-size: 0.85rem; background: #ffffff; padding: 10px; border-radius: 5px; border: 1px solid var(--border); max-height: 200px; overflow-y: auto; flex-grow: 1; }
+.timeline-item { display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+.timeline-item:last-child { border-bottom: none; }
+.timeline-top { display: flex; justify-content: space-between; font-weight: bold; align-items: center;}
+.timeline-obs { color: #4b5563; margin-top: 4px; font-style: italic; display: flex; justify-content: space-between; align-items: flex-end; }
+.timeline-date { color: var(--text-light); font-weight: normal; font-size: 0.8rem; white-space: nowrap; margin-left: 10px; }
+.editable-date { cursor: pointer; border-bottom: 1px dashed var(--text-light); transition: color 0.2s; }
+.editable-date:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.actions { margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.actions button { flex: 1; min-width: 80px; padding: 6px; font-size: 0.85rem;}
+#global-loader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.spinner { border: 5px solid var(--border); border-top: 5px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+.modal-content { background-color: var(--card); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease; max-height: 90vh; overflow-y: auto;}
+@keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal-title { margin-top: 0; color: var(--primary); font-size: 1.3rem;}
+.modal-desc { margin-bottom: 15px; color: var(--text-light); font-size: 0.95rem; line-height: 1.4;}
+.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid.full { grid-template-columns: 1fr; }
+.chart-container { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; height: 500px; }
+.drive-link { display: inline-block; background: #e1f5fe; color: #0284c7; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 6px; font-size: 0.85rem; border: 1px solid #bae6fd;}
+.drive-link:hover { background: #b3e5fc; }
+#offline-banner { display: none; background: #f59e0b; color: #000; padding: 10px; text-align: center; font-weight: bold; font-size: 0.9rem;}
+</style>
+</head>
+<body>
+
+<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. Rodando no Modo Offline (Memória do Navegador).</div>
+
+<div id="global-loader">
+    <div class="spinner"></div>
+    <h2 style="color: var(--primary); margin: 0;">Sincronizando com a Nuvem...</h2>
+    <p style="color: var(--text-light);" id="loader-text">Aguardando resposta do banco de dados...</p>
+</div>
+
+<div id="create-project-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">📋 Cadastrar Novo Projeto na Fila</h3>
+<p class="modal-desc">Preencha as informações básicas para iniciar.</p>
+<div class="form-grid full"><input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)"></div>
+<div class="form-grid"><input type="text" id="cp-cod" placeholder="CÓD / Ordem"><input type="text" id="cp-cidade" placeholder="Cidade"></div>
+<div class="form-grid">
+    <select id="cp-vendedor"><option value="">Selecione Vendedor...</option><option value="CARLA">CARLA</option><option value="JONES">JONES</option><option value="SHANA">SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
+    <select id="cp-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
+</div>
+<div class="form-grid full">
+    <select id="cp-probabilidade"><option value="">Probabilidade de Venda...</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
+</div>
+<textarea id="cp-obs" rows="2" placeholder="Observação Inicial / Recado..."></textarea>
+<div class="modal-buttons">
+<button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
+<button class="success" onclick="closeCreateProjectModal(true)">Cadastrar na Fila</button>
+</div>
+</div>
+</div>
+
+<div id="admin-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">⚙️ Painel de Segurança</h3>
+<p class="modal-desc">Altere a senha de qualquer usuário da equipe.</p>
+<div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
+<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button></div>
+</div>
+</div>
+
+<div id="drive-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">📂 Anexar Arquivo do Google Drive</h3>
+<p class="modal-desc">Insira o link direto do arquivo/pasta do Drive ou use o seletor oficial:</p>
+<input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
+<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pela vendedora..."></textarea>
+<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor do Google Drive</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
+</div>
+</div>
+
+<div id="date-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">📅 Editar Data do Evento</h3>
+<input type="datetime-local" id="date-modal-input">
+<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Salvar Data</button></div>
+</div>
+</div>
+
+<div id="rework-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 class="modal-title">🔄 Classificar Revisão de Andamento</h3>
+<select id="rework-type-select" style="margin-bottom: 15px;"><option value="INTERNO">🔴 Erro Interno (Melhorar Qualidade/Processos)</option><option value="EXTERNO">🟠 Solicitação Externa (Alteração à pedido do Cliente)</option></select>
+<textarea id="rework-obs-input" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
+<div class="modal-buttons"><button class="secondary" onclick="closeReworkModal(false)">Cancelar</button><button class="warning" style="background-color: #d946ef; color: white;" onclick="closeReworkModal(true)">Iniciar Revisão</button></div>
+</div>
+</div>
+
+<div id="custom-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 id="modal-title" class="modal-title">Título</h3>
+<p id="modal-desc" class="modal-desc">Descrição</p>
+<textarea id="modal-input" rows="3" placeholder="Digite sua observação..."></textarea>
+<div class="modal-buttons"><button class="secondary" onclick="closeModal(false)">Cancelar</button><button onclick="closeModal(true)">Confirmar</button></div>
+</div>
+</div>
+
+<div id="password-modal" class="modal-overlay hidden">
+<div class="modal-content">
+<h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
+<p id="pwd-modal-desc" class="modal-desc">Insira a senha.</p>
+<input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password">
+<div class="modal-buttons"><button class="secondary" onclick="closePasswordModal(false)">Cancelar</button><button onclick="closePasswordModal(true)">Confirmar</button></div>
+</div>
+</div>
+
+<div id="confirm-modal" class="modal-overlay hidden">
+<div class="modal-content" style="text-align: center;">
+<h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
+<p id="confirm-desc" class="modal-desc">Tem certeza que deseja fazer isso?</p>
+<div class="modal-buttons" style="justify-content: center;"><button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button><button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button></div>
+</div>
+</div>
+
+<div class="container">
+    
+    <div id="view-profiles" class="hidden">
+        <div class="header">
+            <h1><span onclick="handleMasterLogin()" style="cursor: pointer;" title="Bem-vindo">🏢</span> Bem-vindo ao Sistema de Projetos</h1>
+            <p>Selecione como você deseja acessar a plataforma hoje.</p>
+            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 20px auto;">
+                <button class="global-btn" onclick="proceedAsViewer()" style="background: #059669; padding: 15px; font-size: 1.1rem; border-radius: 8px;">
+                    👁️ ENTRAR COMO VISUALIZADOR (Gerência/Vendas)
+                </button>
+            </div>
+            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Senha):</h3>
+            <div class="profiles-grid" id="profiles-container"></div>
+            
+            <div style="background: var(--card); padding: 15px; border-radius: 8px; max-width: 400px; margin: 20px auto; border: 1px solid var(--border);">
+                <h4 style="margin-top: 0;">Cadastrar Novo Desenhista</h4>
+                <input type="text" id="new-user-name" placeholder="Nome do colega...">
+                <button onclick="addUser()" style="width: 100%;">+ Adicionar Equipe</button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="icon-btn" onclick="exportBackup()" title="Backup">💾 Gerar Backup</button>
+                <button class="icon-btn" onclick="document.getElementById('import-file').click()" title="Restaurar">📂 Restaurar Backup</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
+            </div>
+        </div>
+    </div>
+
+    <div id="view-manager" class="hidden">
+        <div class="header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="text-align: left;">
+                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Status Geral Projetos (Painel da Empresa)</h2>
+                <p style="margin: 5px 0 0 0; color: var(--text-light); font-size: 0.9rem;">Acompanhamento corporativo em tempo real. Apenas Visualização.</p>
+            </div>
+            <div class="top-bar-actions">
+                <div class="search-bar"><input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Buscar projeto ou CÓD..."></div>
+                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF da Aba Atual</button>
+                <button class="secondary" onclick="logout()">← Sair</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button id="tab-fila" class="tab-btn active" onclick="switchManagerTab('fila')">⏳ Fila de Orçamento</button>
+            <button id="tab-andamento" class="tab-btn" onclick="switchManagerTab('andamento')">▶ Em Andamento</button>
+            <button id="tab-concluidos" class="tab-btn" onclick="switchManagerTab('concluidos')">✅ Concluídos</button>
+            <button id="tab-graficos" class="tab-btn" onclick="switchManagerTab('graficos')">📊 Gráficos (Pareto)</button>
+        </div>
+        <div class="projects-list" id="global-feed-container"></div>
+
+        <div id="view-graphics" class="hidden">
+            <div style="background: var(--card); padding: 15px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <strong style="white-space: nowrap;">Analisar:</strong>
+                <select id="graph-filter-select" onchange="renderGraph()" style="margin-bottom: 0; max-width: 400px;">
+                    <option value="ALL">Geral (Todos os Projetos do Sistema)</option>
+                </select>
+            </div>
+            <div class="chart-container"><canvas id="paretoChart"></canvas></div>
+            <div class="kpi-container" id="kpi-panel">
+                <div class="kpi-card"><h4>Total de Projetos</h4><p class="kpi-value" id="kpi-total">0</p></div>
+                <div class="kpi-card purple"><h4>Taxa de Erro Interno</h4><p class="kpi-value" id="kpi-internal">0%</p></div>
+                <div class="kpi-card orange"><h4>Alteração de Clientes</h4><p class="kpi-value" id="kpi-external">0%</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-dashboard" class="hidden">
+        <div class="header" style="margin-bottom: 5px;">
+            <div class="top-bar">
+                <div>
+                    <button onclick="logout()">← Sair</button>
+                </div>
+                <h1 id="dashboard-title" style="margin: 0;">Área de Trabalho</h1>
+                <div class="top-bar-actions">
+                    <button class="warning" onclick="changeMyPassword()" title="Alterar minha senha">🔑 Mudar Senha</button>
+                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerenciar Equipe</button>
+                    <select id="user-filter-select" onchange="renderProjects()" style="margin-bottom: 0; max-width: 210px; font-size: 0.9rem;">
+                        <option value="ALL">Visualizar Todos</option>
+                        <option value="MEUS" selected>Somente Meus Projetos</option>
+                    </select>
+                    <div class="search-bar"><input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Buscar obra ou CÓD..."></div>
+                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF da Aba</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="add-project-row" style="background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apaga sua conta do sistema">🗑️ Excluir Meu Perfil</button>
+            <button class="success" onclick="openCreateProjectModal()" style="font-size: 1.05rem; padding: 12px 25px; margin-left:auto;">➕ Iniciar Novo Projeto na Fila</button>
+        </div>
+
+        <div class="tabs" style="margin-bottom: 20px;">
+            <button id="tab-draftsman-fila" class="tab-btn active" onclick="switchDraftsmanTab('fila')">⏳ Fila de Orçamento</button>
+            <button id="tab-draftsman-andamento" class="tab-btn" onclick="switchDraftsmanTab('andamento')">▶ Em Andamento</button>
+            <button id="tab-draftsman-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos</button>
+        </div>
+
+        <div class="projects-list" id="projects-container"></div>
+    </div>
+
+</div>
+
+<script>
+window.onerror = function(msg, url, line) {
+    const loader = document.getElementById('global-loader');
+    if (loader) loader.style.display = 'none'; 
+    console.error(`Erro: ${msg} na linha ${line}`);
+    return false;
+};
+
+const STAGES = [
+"Aguardando Início (Fila)", // 0
+"Em Desenho",               // 1
+"Orçamento",                // 2
+"Correção 1",               // 3
+"Correção 2",               // 4
+"Luis",                     // 5
+"Cristian",                 // 6
+"Entregue"                  // 7
+];
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
+    authDomain: "controle-projetos-comerciais.firebaseapp.com",
+    projectId: "controle-projetos-comerciais",
+    storageBucket: "controle-projetos-comerciais.firebasestorage.app",
+    messagingSenderId: "154256368322",
+    appId: "1:154256368322:web:9c580e7886abfc9779515b"
+};
+let db, docRef;
+
+const DRIVE_API_KEY = "AIzaSyBXRRYBP83kDBTvlFXqEUiodgQNacd0Hso"; 
+const DRIVE_CLIENT_ID = "607516224981-moe9q8ces9tgns26mo8e6hhkc0chg8dl.apps.googleusercontent.com";
+const DRIVE_APP_ID = "607516224981";
+let DRIVE_VIEW_MODE = "docs"; 
+let tokenClient; let accessToken = null; let driveProjectId = null;
+
+function initGoogleDrivePicker() {
+    try {
+        if(window.google && google.picker) DRIVE_VIEW_MODE = google.picker.ViewId.DOCS;
+        if(window.gapi) { gapi.load('picker', () => {}); }
+        if(window.google && window.google.accounts) {
+            tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly', callback: '', });
+        }
+    } catch(err) {}
+}
+window.addEventListener('load', initGoogleDrivePicker);
+
+function openPicker() {
+    if(!tokenClient || !window.gapi) { alert("A conexão com o Google Drive foi bloqueada pelo seu navegador ou rede."); return; }
+    if (!accessToken) {
+        tokenClient.callback = async (response) => { if (response.error !== undefined) throw (response); accessToken = response.access_token; createPicker(); };
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else createPicker();
+}
+
+function createPicker() {
+    const picker = new google.picker.PickerBuilder().addView(DRIVE_VIEW_MODE).setOAuthToken(accessToken).setDeveloperKey(DRIVE_API_KEY).setAppId(DRIVE_APP_ID).setCallback(pickerCallback).build();
+    picker.setVisible(true);
+}
+
+function pickerCallback(data) {
+    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+        document.getElementById('drive-url-input').value = data[google.picker.Response.DOCUMENTS][0][google.picker.Document.URL];
+    }
+}
+
+// ESTADO GLOBAL
+let appData = { users: [], passwords: {}, projects: [] };
+let currentUser = null; let isViewerMode = false;
+let managerCurrentTab = 'andamento'; let draftsmanCurrentTab = 'fila';
+let modalResolve = null, confirmResolve = null, passwordResolve = null;
+let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkProjectId = null;
+let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
+
+// MOTOR DE INICIALIZAÇÃO
+try {
+    if(window.firebase) {
+        firebase.initializeApp(firebaseConfig); db = firebase.firestore(); docRef = db.collection("sistema").doc("bancoDeDados");
+        docRef.onSnapshot((doc) => {
+            if (doc.exists) { 
+                const data = doc.data(); 
+                if(data) appData = data;
+                if(!appData.users) appData.users = [];
+                if(!appData.projects) appData.projects = [];
+                if(!appData.passwords) appData.passwords = {};
+                firebaseSincronizado = true; 
+            } 
+            else if(!firebaseSincronizado) { 
+                docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
+            }
+            clearTimeout(fallbackTimer); liberarSistema();
+        }, (error) => { liberarSistema(); });
+    } else { liberarSistema(); }
+} catch (error) { liberarSistema(); }
+
+const fallbackTimer = setTimeout(() => { liberarSistema(); }, 2500);
+
+function liberarSistema() {
+    try {
+        const loader = document.getElementById('global-loader'); if (loader) loader.style.display = 'none';
+        if (!firebaseSincronizado) { 
+            const local = localStorage.getItem('appData_teste_local'); 
+            if (local) { try { const parsed = JSON.parse(local); if(parsed) appData = parsed; if(!appData.users) appData.users = []; if(!appData.projects) appData.projects = []; if(!appData.passwords) appData.passwords = {}; } catch(e) {} } 
+        }
+        if (!currentUser && !isViewerMode) renderProfiles(); else if (isViewerMode) renderGlobalFeed(); else renderProjects();
+    } catch(err) { }
+}
+
+function saveData() {
+    if (!firebaseSincronizado) { localStorage.setItem('appData_teste_local', JSON.stringify(appData)); return; }
+    if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
+    if (docRef) docRef.set(appData).catch(err => {});
+}
+
+// MODAIS
+function openModal(t, d, p, v = '') {
+    document.getElementById('custom-modal').classList.remove('hidden'); document.getElementById('modal-title').textContent = t;
+    document.getElementById('modal-desc').textContent = d; const i = document.getElementById('modal-input'); i.value = v; i.placeholder = p; i.focus();
+    return new Promise(r => { modalResolve = r; });
+}
+function closeModal(c) {
+    document.getElementById('custom-modal').classList.add('hidden');
+    if (modalResolve) { modalResolve(c ? document.getElementById('modal-input').value : null); modalResolve = null; }
+}
+function openPasswordModal(t, d) {
+    document.getElementById('password-modal').classList.remove('hidden'); document.getElementById('pwd-modal-title').textContent = t;
+    document.getElementById('pwd-modal-desc').textContent = d; document.getElementById('pwd-modal-input').value = ''; document.getElementById('pwd-modal-input').focus();
+    return new Promise(r => { passwordResolve = r; });
+}
+function closePasswordModal(c) {
+    document.getElementById('password-modal').classList.add('hidden');
+    if (passwordResolve) { passwordResolve(c ? document.getElementById('pwd-modal-input').value : null); passwordResolve = null; }
+}
+function openConfirmModal(t, d, a = false) {
+    document.getElementById('confirm-modal').classList.remove('hidden'); document.getElementById('confirm-title').textContent = t;
+    document.getElementById('confirm-desc').textContent = d;
+    if (a) document.getElementById('confirm-btn-yes').classList.add('hidden'); else document.getElementById('confirm-btn-yes').classList.remove('hidden');
+    return new Promise(r => { confirmResolve = r; });
+}
+function closeConfirmModal(c) {
+    document.getElementById('confirm-modal').classList.add('hidden');
+    if (confirmResolve) { confirmResolve(c); confirmResolve = null; }
+}
+
+// DATAS E DRIVE
+function dateToLocalString(ds) { try { let [d, t] = ds.replace(',','').trim().split(' '); let [dd, mm, yy] = d.split('/'); let [hh, mn] = t ? t.split(':') : ['00','00']; return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${hh.padStart(2,'0')}:${mn.padStart(2,'0')}`; } catch(e) { return ""; } }
+function localStringToDate(ls) { let [d, t] = ls.split('T'); let [yy, mm, dd] = d.split('-'); let [hh, mn] = t ? t.split(':') : ['00','00']; return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`; }
+function openDateModal(id, i) {
+    if(isViewerMode) return; activeEditProjectId = id; activeEditHistoryIndex = i;
+    const s = appData.projects.find(p => p.id === id).history[i].date;
+    document.getElementById('date-modal').classList.remove('hidden'); document.getElementById('date-modal-input').value = dateToLocalString(s);
+}
+function closeDateModal(c) {
+    document.getElementById('date-modal').classList.add('hidden');
+    if (c && activeEditProjectId !== null) {
+        const v = document.getElementById('date-modal-input').value;
+        if(v) { appData.projects.find(p => p.id === activeEditProjectId).history[activeEditHistoryIndex].date = localStringToDate(v); saveData(); updateViews(); }
+    }
+    activeEditProjectId = null; activeEditHistoryIndex = null;
+}
+
+function openDriveModal(id) { driveProjectId = id; document.getElementById('drive-url-input').value = ''; document.getElementById('drive-obs-input').value = ''; document.getElementById('drive-modal').classList.remove('hidden'); }
+function closeDriveModal(c) {
+    document.getElementById('drive-modal').classList.add('hidden');
+    if (c && driveProjectId) {
+        const u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
+        if (u) {
+            const p = appData.projects.find(p => p.id === driveProjectId);
+            if(!p.history) p.history = [];
+            p.history.unshift({ stage: "📂 ARQUIVO ANEXADO", obs: o ? `${o}` : "Arquivo vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
+            saveData(); updateViews();
+        }
+    }
+    driveProjectId = null;
+}
+
+async function toggleRework(id) {
+    const p = appData.projects.find(p => p.id === id);
+    if (p.reworkType) {
+        const o = await openModal("Finalizar Revisão", "O retrabalho foi concluído?", "Observações...");
+        if (o !== null) { p.reworkType = null; if(!p.history) p.history = []; p.history.unshift({ stage: "✅ RETRABALHO CONCLUÍDO", obs: o || "Revisão finalizada", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+    } else {
+        reworkProjectId = id; document.getElementById('rework-obs-input').value = ''; document.getElementById('rework-modal').classList.remove('hidden');
+    }
+}
+function closeReworkModal(c) {
+    document.getElementById('rework-modal').classList.add('hidden');
+    if (c && reworkProjectId !== null) {
+        const t = document.getElementById('rework-type-select').value; const o = document.getElementById('rework-obs-input').value;
+        const p = appData.projects.find(p => p.id === reworkProjectId); p.reworkType = t.toLowerCase();
+        if(!p.history) p.history = [];
+        p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo ocultado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
+        saveData(); renderProjects();
+    }
+    reworkProjectId = null;
+}
+
+// PERFIS E SEGURANÇA
+function renderProfiles() {
+    const c = document.getElementById('profiles-container'); if(!c) return; c.innerHTML = '';
+    if(appData.users && Array.isArray(appData.users)) {
+        appData.users.forEach(user => {
+            if(user === "ADMIN") return; 
+            const div = document.createElement('div'); div.className = 'profile-card'; 
+            div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${user}')">👤 ${user}</span>`;
+            c.appendChild(div);
+        });
+    }
+}
+
+async function addUser() {
+    const i = document.getElementById('new-user-name'); const n = i.value.trim();
+    if(!n) return; if(!appData.users) appData.users = [];
+    if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { alert("Este nome já existe ou é reservado!"); return; }
+    
+    const pass = await openPasswordModal("Criar Senha", `Defina a senha para o novo perfil de ${n}:`);
+    if (pass !== null && pass.trim() !== "") {
+        appData.users.push(n);
+        if(!appData.passwords) appData.passwords = {};
+        appData.passwords[n] = pass;
+        saveData(); i.value = ''; renderProfiles(); 
+    } else if (pass !== null) { alert("A senha não pode ser vazia. Criação cancelada."); }
+}
+
+function deleteCurrentUser() {
+    if(confirm(`ATENÇÃO: Deseja apagar o SEU PERFIL ("${currentUser}") do sistema? Essa ação não apaga seus projetos, mas você perderá o acesso.`)) {
+        appData.users = appData.users.filter(u => u !== currentUser);
+        if(appData.passwords && appData.passwords[currentUser]) delete appData.passwords[currentUser];
+        saveData(); logout(); 
+    }
+}
+
+async function handleLoginClick(user) {
+    if (!appData.passwords) appData.passwords = {};
+    if (!appData.passwords[user]) {
+        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem senha. Crie uma agora:`);
+        if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
+    } else {
+        const pass = await openPasswordModal("Acesso Restrito", `Digite sua senha:`);
+        if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
+        else if (pass !== null) alert("Senha Incorreta!");
+    }
+}
+
+async function handleMasterLogin() {
+    const pass = await openPasswordModal("Acesso Restrito", "Insira a credencial de segurança:");
+    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
+        if(!appData.passwords) appData.passwords = {};
+        proceedLogin("ADMIN");
+    } else if (pass !== null) { alert("Credencial incorreta!"); }
+}
+
+async function changeMyPassword() {
+    const newPass = await openModal("Segurança", `Digite sua nova senha:`, "Nova senha...");
+    if (newPass !== null && newPass.trim() !== '') {
+        if(!appData.passwords) appData.passwords = {};
+        appData.passwords[currentUser] = newPass; saveData(); alert(`Senha atualizada com sucesso!`);
+    }
+}
+
+function openAdminModal() {
+    const list = document.getElementById('admin-users-list'); list.innerHTML = '';
+    (appData.users || []).forEach(u => {
+        if(u === "ADMIN") return;
+        list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #e5e7eb;"><strong>👤 ${u}</strong><button class="warning" style="padding: 6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar Senha</button></div>`;
+    });
+    document.getElementById('admin-modal').classList.remove('hidden');
+}
+
+async function changeUserPassword(u) {
+    const newPass = await openModal("Alterar Senha", `Digite a nova senha para ${u}:`, "Nova senha...");
+    if (newPass !== null && newPass.trim() !== '') {
+        if(!appData.passwords) appData.passwords = {};
+        appData.passwords[u] = newPass; saveData(); alert(`Senha de ${u} atualizada com sucesso!`);
+    }
+}
+
+function populateUserFilter() {
+    const sel = document.getElementById('user-filter-select'); if(!sel) return;
+    sel.innerHTML = '<option value="ALL">Visualizar Todos</option><option value="MEUS">Somente Meus Projetos</option>';
+    (appData.users || []).forEach(u => {
+        if (u !== currentUser && u !== "ADMIN") { sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; }
+    });
+    if(currentUser === "ADMIN") sel.value = "ALL"; else sel.value = "MEUS";
+}
+
+function proceedLogin(user) {
+    currentUser = user; isViewerMode = false;
+    document.getElementById('view-profiles').classList.add('hidden');
+    document.getElementById('view-manager').classList.add('hidden');
+    document.getElementById('view-dashboard').classList.remove('hidden');
+    document.getElementById('dashboard-title').textContent = user === "ADMIN" ? `Área de Trabalho (Gestão)` : `Área de Trabalho: ${user}`;
+    if (user === "ADMIN") { document.getElementById('admin-btn').classList.remove('hidden'); document.getElementById('delete-profile-btn').classList.add('hidden'); } 
+    else { document.getElementById('admin-btn').classList.add('hidden'); document.getElementById('delete-profile-btn').classList.remove('hidden'); }
+    populateUserFilter(); switchDraftsmanTab('fila');
+}
+
+function proceedAsViewer() {
+    currentUser = null; isViewerMode = true;
+    document.getElementById('view-profiles').classList.add('hidden');
+    document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById('view-manager').classList.remove('hidden');
+    switchManagerTab('andamento');
+}
+
+function logout() {
+    currentUser = null; isViewerMode = false;
+    document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById('view-manager').classList.add('hidden');
+    document.getElementById('view-profiles').classList.remove('hidden');
+    renderProfiles();
+}
+
+function updateViews() {
+    if (isViewerMode) renderGlobalFeed(); else if (currentUser) renderProjects();
+}
+
+// PROJETOS
+function openCreateProjectModal() {
+    ['cp-cliente', 'cp-cod', 'cp-cidade', 'cp-vendedor', 'cp-tipo', 'cp-probabilidade', 'cp-obs'].forEach(f => { const el = document.getElementById(f); if(el) el.value = ''; });
+    document.getElementById('create-project-modal').classList.remove('hidden');
+}
+
+function closeCreateProjectModal(c) {
+    if (!c) { document.getElementById('create-project-modal').classList.add('hidden'); return; }
+    const cli = document.getElementById('cp-cliente').value.trim();
+    if (!cli) { alert("Nome do Cliente / Obra é obrigatório!"); return; }
+    if(!appData.projects) appData.projects = [];
+    appData.projects.unshift({
+        id: Date.now().toString(), owner: currentUser === "ADMIN" ? "Admin" : currentUser, name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
+        cod: document.getElementById('cp-cod').value.trim(), vendedor: document.getElementById('cp-vendedor').value, tipo: document.getElementById('cp-tipo').value,
+        probabilidade: document.getElementById('cp-probabilidade').value, cidade: document.getElementById('cp-cidade').value.trim(),
+        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado.", date: new Date().toLocaleString('pt-BR'), author: currentUser }]
+    });
+    saveData(); document.getElementById('create-project-modal').classList.add('hidden'); 
+    document.getElementById('user-filter-select').value = "ALL"; 
+    switchDraftsmanTab('fila');
+}
+
+async function editProjectName(id) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    const n = await openModal("Editar Obra", "Qual o novo nome?", "Nome...", p.name);
+    if (n) { p.name = n; saveData(); renderProjects(); }
+}
+
+async function deleteProject(id) {
+    if(confirm("Deseja apagar DEFINITIVAMENTE do sistema?")) { appData.projects = appData.projects.filter(p => p.id !== id); saveData(); renderProjects(); }
+}
+
+async function updateStage(id, sel) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return; const idx = parseInt(sel.value);
+    if (p.stageIndex !== idx) {
+        const s = STAGES[idx] || 'Desconhecido';
+        const obs = await openModal("Avançar", `Indo para: ${s}`, "Recados...");
+        if (obs === null) { sel.value = p.stageIndex; } 
+        else { p.stageIndex = idx; if(!p.history) p.history = []; p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+    }
+}
+
+async function createRevisaoFromCompleted(id) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    const c = await openModal("Criar Revisão", "Qual será o NOVO CÓD?", "Ex: 18455A...");
+    if (c !== null) {
+        const obs = await openModal("Motivo", "Por que está retornando?", "Descreva...");
+        if (obs !== null) {
+            p.stageIndex = 0; p.tipo = "REVISÃO"; if (c.trim() !== "") p.cod = c.trim();
+            if(!p.history) p.history = []; p.history.unshift({ stage: "🔄 RETORNOU", obs: obs || `Nova Revisão`, date: new Date().toLocaleString('pt-BR'), author: currentUser });
+            saveData(); switchDraftsmanTab('fila'); 
+        }
+    }
+}
+
+async function registerEvent(id) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    const obs = await openModal("Recado", "Insira o recado:", "...");
+    if (obs) { if(!p.history) p.history = []; p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); saveData(); updateViews(); }
+}
+
+async function editHistoryItem(id, i) {
+    const p = appData.projects.find(p => p.id === id); if(!p || !p.history[i]) return;
+    const n = await openModal("Editar", p.history[i].stage, "Texto...", p.history[i].obs);
+    if (n !== null) { p.history[i].obs = n || "Sem obs"; saveData(); updateViews(); }
+}
+async function deleteHistoryItem(id, i) {
+    if(confirm("Remover do histórico?")) { const p = appData.projects.find(p => p.id === id); if(p && p.history) p.history.splice(i, 1); saveData(); updateViews(); }
+}
+
+async function toggleImpediment(id) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    if (p.isImpeded) {
+        const obs = await openModal("Retomar", "Resolvido?", "Obs...");
+        if (obs !== null) { p.isImpeded = false; if(!p.history) p.history = []; p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+    } else {
+        const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
+        if (obs) { p.isImpeded = true; if(!p.history) p.history = []; p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+    }
+}
+
+// GUI E RENDERIZAÇÃO
+function switchManagerTab(tab) {
+    managerCurrentTab = tab;
+    ['fila','andamento','concluidos','graficos'].forEach(t => document.getElementById(`tab-${t}`).classList.toggle('active', tab === t));
+    if(tab === 'graficos'){ document.getElementById('global-feed-container').classList.add('hidden'); document.getElementById('view-graphics').classList.remove('hidden'); populateGraphSelect(); renderGraph(); } 
+    else { document.getElementById('view-graphics').classList.add('hidden'); document.getElementById('global-feed-container').classList.remove('hidden'); renderGlobalFeed(); }
+}
+
+function renderGlobalFeed() {
+    const container = document.getElementById('global-feed-container'); if(!container) return; container.innerHTML = '';
+    const src = (document.getElementById('manager-search-input').value || '').toLowerCase();
+    const flt = (appData.projects||[]).filter(p => {
+        if(!p) return false;
+        const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
+        let tb = false;
+        if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0 || p.stageIndex === 2); 
+        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2); 
+        else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 7); 
+        return m && tb;
+    });
+    buildCardsStructure(flt, container, false);
+}
+
+function switchDraftsmanTab(tab) {
+    draftsmanCurrentTab = tab;
+    ['fila','andamento','concluidos'].forEach(t => document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t));
+    renderProjects();
+}
+
+function renderProjects() {
+    const container = document.getElementById('projects-container'); if(!container) return; container.innerHTML = '';
+    const src = (document.getElementById('search-input').value || '').toLowerCase();
+    const filterUser = document.getElementById('user-filter-select') ? document.getElementById('user-filter-select').value : 'ALL';
+
+    const flt = (appData.projects||[]).filter(p => {
+        if(!p) return false; 
+        
+        let tabMatch = false;
+        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0 || p.stageIndex === 2);
+        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2);
+        else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 7);
+        if(!tabMatch) return false;
+
+        const isOwner = p.owner === currentUser;
+        
+        if (filterUser === 'MEUS') return isOwner;
+        else if (filterUser === 'ALL') return true;
+        else return p.owner === filterUser;
+    }).filter(p => (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src));
+    
+    buildCardsStructure(flt, container, true);
+}
+
+function buildCardsStructure(list, container, isDash) {
+    if(!list || list.length === 0) { container.style.display = 'block'; container.innerHTML = '<p style="text-align:center;color:gray;padding:20px;">Nenhum projeto encontrado nesta visualização.</p>'; return; } 
+    else container.style.display = 'grid';
+
+    list.forEach(p => {
+        if(!p) return;
+        const isC = p.stageIndex >= 7; 
+        const own = p.owner === currentUser; 
+        const isMaster = currentUser === "ADMIN";
+        const edit = !isViewerMode && isDash && (own || isMaster);
+        
+        let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
+        if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
+
+        const card = document.createElement('div'); card.className = `project-card ${cClass}`;
+        const prog = Math.round(((p.stageIndex||0) / (STAGES.length - 1)) * 100);
+
+        let opts = ''; STAGES.forEach((s, idx) => { opts += `<option value="${idx}" ${idx === (p.stageIndex||0) ? 'selected' : ''}>${idx+1}. ${s}</option>`; });
+        let hist = '';
+        if(p.history) p.history.forEach((h, i) => {
+            if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
+            const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
+            let drv = h.driveUrl ? `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Abrir no Drive</a>` : '';
+            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea;';
+            if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
+            hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
+        });
+
+        let bt = p.isImpeded ? '⚠️ PAUSADO' : (isC ? '✅ CONCLUÍDO' : '▶ ' + (STAGES[p.stageIndex||0] || 'Etapa'));
+        if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
+
+        let acts = '';
+        if (edit && !isC) acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão Interna</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+        else if (edit && isC) acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
+        acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 PDF</button>`;
+
+        card.innerHTML = `<div class="project-header"><span class="draftsman-badge">👤 Atual: ${p.owner}</span><div class="project-title-container"><h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ''}</div><div class="project-details-box"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>CÓD:</strong> ${p.cod || '-'}</span><span><strong>Vend:</strong> ${p.vendedor || '-'}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span><span><strong>Prob:</strong> ${p.probabilidade || '-'}</span></div><div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;"><span><strong>Cid:</strong> ${p.cidade || '-'}</span></div></div>${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}<div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div></div><div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div><div class="timeline"><strong>Histórico:</strong><br>${hist}</div><div class="actions">${acts}</div>`;
+        container.appendChild(card);
+    });
+}
+
+// GRÁFICOS E PDF
+function populateGraphSelect() { const s = document.getElementById('graph-filter-select'); s.innerHTML = '<option value="ALL">Geral (Todos)</option>'; (appData.projects||[]).forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = `${p.name} (${p.owner})`; s.appendChild(o); }); }
+function renderGraph() {
+    if(typeof Chart === 'undefined') return;
+    const v = document.getElementById('graph-filter-select').value; let tg = v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v);
+    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0; a["Retrabalho: Erro Interno"] = 0; a["Retrabalho: Alteração Cliente"] = 0;
+    (tg||[]).forEach(p => { if(!p.history) return; let cur=null, lst=null; [...p.history].reverse().forEach(ev => { if(!ev) return; let t=parseDateBR(ev.date); if(cur&&lst) a[cur]+=Math.max(0,t-lst); if(STAGES.includes(ev.stage)) cur=ev.stage; else if(ev.stage==="🔴 IMPEDIMENTO / PAUSADO") cur="Pausado / Impedido"; else if(ev.stage.includes("INTERNO")) cur="Retrabalho: Erro Interno"; else if(ev.stage.includes("EXTERNO")) cur="Retrabalho: Alteração Cliente"; else if(ev.stage==="🟢 Retomado"||ev.stage==="✅ RETRABALHO CONCLUÍDO") cur=STAGES[0]; lst=t; }); if(p.stageIndex!==7&&lst&&cur) a[cur]+=Math.max(0,new Date().getTime()-lst); });
+    let fd = []; for(let s in a) { let h = a[s]/(1000*60*60); if(h>0.01) fd.push({s:s, h:h}); } fd.sort((x,y) => y.h - x.h);
+    let lb = [], br = [], ln = [], cm = 0; let tt = fd.reduce((s, i) => s + i.h, 0); fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
+    if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
+    if(currentChart) currentChart.destroy(); currentChart = new Chart(document.getElementById('paretoChart').getContext('2d'), { type:'bar', data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#2563eb', yAxisID:'y' } ]}, options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } });
+}
+function sanitizeForPDF(t) { return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; }
+function exportReportPDF(id) {
+    if(!window.jspdf) { alert("PDF bloqueado."); return; } const p = appData.projects.find(p => p.id === id); const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("Dossie", 20, 20); doc.setFontSize(12); doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 20, 32); doc.text(`Resp: ${sanitizeForPDF(p.owner)}`, 20, 40); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`COD: ${sanitizeForPDF(p.cod)} | Vend: ${sanitizeForPDF(p.vendedor)} | Tipo: ${sanitizeForPDF(p.tipo)}`, 20, 48); doc.text(`Cid: ${sanitizeForPDF(p.cidade)} | Prob: ${sanitizeForPDF(p.probabilidade)}`, 20, 54); let y = 65; doc.setFont("helvetica", "bold"); doc.text("HISTORICO", 20, y); y += 8;
+    if(p.history) p.history.forEach((h, i) => { if(!h) return; if(y>270){doc.addPage();y=20;} doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text(`${p.history.length-i}. ${sanitizeForPDF(h.stage)} [Autor: ${sanitizeForPDF(h.author||p.owner)}]`, 20, y); doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text(h.date||'', 190, y, {align:'right'}); y+=5; let t = h.driveUrl ? `Drive: ${h.driveUrl} \nObs: ${h.obs}` : `Obs: ${h.obs}`; let s = doc.splitTextToSize(sanitizeForPDF(t), 160); doc.text(s, 25, y); y+=(s.length*5)+5; }); window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+}
+function exportDraftsmanReport() { if(!window.jspdf) return; generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Painel: ${currentUser}`); }
+function exportManagerReport() { if(!window.jspdf) return; generateListPDF(appData.projects, `Relatorio Geral`); }
+function generateListPDF(list, title) {
+    const doc = new window.jspdf.jsPDF(); doc.text(sanitizeForPDF(title), 20, 20); let y = 30;
+    list.forEach(p => { if(!p) return; if(y>270){doc.addPage();y=20;} doc.text(`- ${sanitizeForPDF(p.name)} [COD: ${sanitizeForPDF(p.cod)} | Status: ${STAGES[p.stageIndex] || '-'}]`, 20, y); y += 10; });
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+}
+
+// RESTAURAÇÃO DE BACKUP LOCAL
+function exportBackup() {
+const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+const downloadAnchorNode = document.createElement('a');
+downloadAnchorNode.setAttribute("href", dataStr);
+downloadAnchorNode.setAttribute("download", `backup_projetos.json`);
+downloadAnchorNode.click();
+}
+function importBackup(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) { appData = JSON.parse(e.target.result); saveData(); alert("Importado!"); renderProfiles(); };
+reader.readAsText(file);
+}
+</script>
+</body>
+</html>
