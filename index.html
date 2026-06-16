@@ -19,6 +19,8 @@ window.onerror = function(msg, url, line) {
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -148,12 +150,12 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="drive-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📂 Anexar Ficheiro do Google Drive</h3>
-<p class="modal-desc">Insira a ligação direta do ficheiro/pasta do Drive ou use o seletor oficial:</p>
-<input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
+<h3 class="modal-title">📂 Anexar Ficheiro</h3>
+<p class="modal-desc">Insira um link da internet OU o caminho da pasta G: do Windows:</p>
+<input type="text" id="drive-url-input" placeholder="Ex: https://...  ou  G:\Meu Drive\Projetos\...">
 <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
-<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor do Google Drive</button></div>
-<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Ficheiro</button></div>
+<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor Web do Google Drive</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
 </div>
 </div>
 
@@ -332,6 +334,14 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
+// FUNÇÃO GLOBAL DE COPIAR TEXTO (USADA PARA CAMINHOS DO DISCO G:)
+window.copyToClipboard = function(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Caminho copiado com sucesso!\n\n' + text + '\n\nAbra o seu explorador de arquivos (Pastas do Windows) e cole este caminho para acessar.');
+    }).catch(err => {
+        alert('Falha ao copiar caminho: ' + err);
+    });
+};
 
 const STAGES = [
 "Aguardando Início (Fila)", // 0
@@ -908,11 +918,23 @@ function buildCardsStructure(list, container, isDash) {
         const prog = Math.round(((p.stageIndex||0) / (STAGES.length - 1)) * 100);
 
         let opts = ''; STAGES.forEach((s, idx) => { opts += `<option value="${idx}" ${idx === (p.stageIndex||0) ? 'selected' : ''}>${idx+1}. ${s}</option>`; });
+        
         let hist = '';
         if(p.history) p.history.forEach((h, i) => {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
-            let drv = h.driveUrl ? `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Abrir no Drive</a>` : '';
+            
+            // TRATAMENTO DA UNIDADE G: (NÃO CLICÁVEL, APENAS COPIÁVEL)
+            let drv = '';
+            if (h.driveUrl) {
+                if (h.driveUrl.toLowerCase().startsWith('http')) {
+                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Abrir no Drive</a>`;
+                } else {
+                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    drv = `<br><button class="drive-link" style="background:#f3f4f6; border-color:#d1d5db; color:#374151; cursor:pointer;" onclick="copyToClipboard('${safePath}')">📁 Copiar Caminho (G:)</button>`;
+                }
+            }
+
             let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
@@ -923,13 +945,13 @@ function buildCardsStructure(list, container, isDash) {
 
         let acts = '';
         if (edit && !isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão Interna</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
         } else if (edit && isC) {
             acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
         } else if (!edit && isDash && !isC && (p.stageIndex === 0 || p.stageIndex === 2) && !isViewerMode) {
             acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669;">🚀 Assumir Projeto e Desenhar</button>`;
         }
-        acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 PDF</button>`;
+        acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
 
         card.innerHTML = `<div class="project-header"><span class="draftsman-badge">👤 Atual: ${p.owner}</span><div class="project-title-container"><h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ''}</div><div class="project-details-box"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>CÓD:</strong> ${p.cod || '-'}</span><span><strong>Vend:</strong> ${p.vendedor || '-'}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span><span><strong>Prob:</strong> ${p.probabilidade || '-'}</span></div><div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;"><span><strong>Cid:</strong> ${p.cidade || '-'}</span></div></div>${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}<div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div></div><div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div><div class="timeline"><strong>Histórico:</strong><br>${hist}</div><div class="actions">${acts}</div>`;
         container.appendChild(card);
@@ -995,9 +1017,7 @@ function renderGraph() {
     (tg||[]).forEach(p => { 
         if(!p.history) return; 
         
-        // CÁLCULO DE TEMPO MÉDIO (SÓ CONCLUÍDOS)
-        let startMs = null;
-        let endMs = null;
+        let startMs = null; let endMs = null;
         [...p.history].reverse().forEach(ev => {
             if(!ev) return;
             if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
@@ -1008,7 +1028,6 @@ function renderGraph() {
             countCompleted++;
         }
 
-        // CÁLCULO DO PARETO
         let cur=null, lst=null; 
         [...p.history].reverse().forEach(ev => { 
             if(!ev) return; 
@@ -1068,9 +1087,7 @@ function renderDraftsmanGraph() {
     (target||[]).forEach(p => { 
         if(!p.history) return; 
 
-        // CÁLCULO DE TEMPO MÉDIO (SÓ CONCLUÍDOS)
-        let startMs = null;
-        let endMs = null;
+        let startMs = null; let endMs = null;
         [...p.history].reverse().forEach(ev => {
             if(!ev) return;
             if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
@@ -1081,7 +1098,6 @@ function renderDraftsmanGraph() {
             countCompleted++;
         }
 
-        // CÁLCULO DO PARETO
         let cur=null, lst=null; 
         [...p.history].reverse().forEach(ev => { 
             if(!ev) return; 
@@ -1113,17 +1129,108 @@ function renderDraftsmanGraph() {
     });
 }
 
-// ---------- PDF RELATÓRIOS ----------
+// ---------- PDF RELATÓRIOS (NOVO E EMBELEZADO) ----------
 function sanitizeForPDF(t) { return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; }
+
 function exportReportPDF(id) {
-    if(!window.jspdf) { alert("PDF bloqueado."); return; } const p = appData.projects.find(p => p.id === id); const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("Dossie", 20, 20); doc.setFontSize(12); doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 20, 32); doc.text(`Resp: ${sanitizeForPDF(p.owner)}`, 20, 40); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`COD: ${sanitizeForPDF(p.cod)} | Vend: ${sanitizeForPDF(p.vendedor)} | Tipo: ${sanitizeForPDF(p.tipo)}`, 20, 48); doc.text(`Cid: ${sanitizeForPDF(p.cidade)} | Prob: ${sanitizeForPDF(p.probabilidade)}`, 20, 54); let y = 65; doc.setFont("helvetica", "bold"); doc.text("HISTORICO", 20, y); y += 8;
-    if(p.history) p.history.forEach((h, i) => { if(!h) return; if(y>270){doc.addPage();y=20;} doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text(`${p.history.length-i}. ${sanitizeForPDF(h.stage)} [Autor: ${sanitizeForPDF(h.author||p.owner)}]`, 20, y); doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text(h.date||'', 190, y, {align:'right'}); y+=5; let t = h.driveUrl ? `Drive: ${h.driveUrl} \nObs: ${h.obs}` : `Obs: ${h.obs}`; let s = doc.splitTextToSize(sanitizeForPDF(t), 160); doc.text(s, 25, y); y+=(s.length*5)+5; }); window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+    if(!window.jspdf || !window.jspdf.jsPDF) { alert("Gerador de PDF bloqueado."); return; } 
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    
+    const doc = new window.jspdf.jsPDF();
+    
+    // Título Principal
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(37, 99, 235); // Azul Primário
+    doc.text("DOSSIER DO PROJETO", 14, 22);
+    
+    // Nome da Obra
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 14, 32);
+
+    // Tabela de Informações Gerais
+    doc.autoTable({
+        startY: 38,
+        theme: 'plain',
+        body: [
+            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
+            ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
+            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
+        ],
+        styles: { cellPadding: 2, fontSize: 11 }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    
+    // Subtítulo do Histórico
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(37, 99, 235);
+    doc.text("HISTÓRICO DE ATIVIDADES", 14, finalY);
+
+    // Tabela do Histórico
+    const histData = (p.history || []).map(h => [
+        sanitizeForPDF(h.date || ''),
+        sanitizeForPDF(h.stage || ''),
+        sanitizeForPDF(h.author || ''),
+        sanitizeForPDF(h.obs || '') + (h.driveUrl ? `\n[Anexo: ${sanitizeForPDF(h.driveUrl)}]` : '')
+    ]);
+
+    doc.autoTable({
+        startY: finalY + 5,
+        head: [['Data', 'Etapa', 'Autor', 'Observação / Anexos']],
+        body: histData,
+        theme: 'striped',
+        headStyles: { fillColor: [37, 99, 235] },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: { 3: { cellWidth: 80 } }
+    });
+
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
 }
-function exportDraftsmanReport() { if(!window.jspdf) return; generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Painel: ${currentUser}`); }
-function exportManagerReport() { if(!window.jspdf) return; generateListPDF(appData.projects, `Relatorio Geral`); }
+
+function exportDraftsmanReport() { 
+    if(!window.jspdf) return; 
+    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatório de ${currentUser}`); 
+}
+
+function exportManagerReport() { 
+    if(!window.jspdf) return; 
+    generateListPDF(appData.projects, `Relatório Geral de Obras`); 
+}
+
 function generateListPDF(list, title) {
-    const doc = new window.jspdf.jsPDF(); doc.text(sanitizeForPDF(title), 20, 20); let y = 30;
-    list.forEach(p => { if(!p) return; if(y>270){doc.addPage();y=20;} doc.text(`- ${sanitizeForPDF(p.name)} [COD: ${sanitizeForPDF(p.cod)} | Status: ${STAGES[p.stageIndex] || '-'}]`, 20, y); y += 10; });
+    if(!window.jspdf || !window.jspdf.jsPDF) return;
+    const doc = new window.jspdf.jsPDF(); 
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(37, 99, 235);
+    doc.text(sanitizeForPDF(title), 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "normal");
+    doc.text("Gerado a: " + new Date().toLocaleString('pt-BR'), 14, 28);
+
+    const tableData = list.map(p => [
+        sanitizeForPDF(p.cod || '-'),
+        sanitizeForPDF(p.name),
+        sanitizeForPDF(p.vendedor || '-'),
+        sanitizeForPDF(p.owner),
+        sanitizeForPDF(STAGES[p.stageIndex] || '-')
+    ]);
+
+    doc.autoTable({
+        startY: 35,
+        head: [['CÓD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [37, 99, 235] },
+        styles: { fontSize: 9 }
+    });
+
     window.open(URL.createObjectURL(doc.output('blob')), '_blank');
 }
 
