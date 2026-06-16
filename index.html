@@ -20,7 +20,7 @@
 }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
 .hidden { display: none !important; }
-.container { max-width: 1200px; margin: 0 auto; }
+.container { max-width: 1300px; margin: 0 auto; }
 .header { text-align: center; margin-bottom: 20px; background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 h1, h2, h3 { margin-top: 0; margin-bottom: 10px; }
 button { background-color: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
@@ -35,13 +35,13 @@ button.icon-btn:hover { background: var(--border); color: var(--text); }
 input[type="text"], input[type="password"], input[type="number"], select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 0.95rem; font-family: inherit; }
 input[type="datetime-local"] { padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
 .search-bar input { margin-bottom: 0; }
-select { font-weight: 500; color: var(--primary); cursor: pointer; }
+select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius: 5px; padding: 8px; border: 1px solid var(--border); }
 .profiles-grid { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
 .profile-card { background: var(--card); padding: 15px 25px; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 15px; }
 .profile-card:hover { border-color: var(--primary); transform: translateY(-2px); }
 .profile-name { font-size: 1.2rem; font-weight: bold; cursor: pointer; }
 .top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-.top-bar-actions { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+.top-bar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 0; flex-wrap: wrap;}
 .tab-btn { background: transparent; color: var(--text-light); border: none; font-size: 1.05rem; padding: 10px 20px; cursor: pointer; border-radius: 5px 5px 0 0; transition: 0.2s; margin-bottom: -2px; }
 .tab-btn.active { color: var(--primary); font-weight: bold; border-bottom: 3px solid var(--primary); }
@@ -85,7 +85,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form-grid.full { grid-template-columns: 1fr; }
-.chart-container { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; height: 500px; }
+.chart-container { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; height: 450px; }
 .drive-link { display: inline-block; background: #e1f5fe; color: #0284c7; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 6px; font-size: 0.85rem; border: 1px solid #bae6fd;}
 .drive-link:hover { background: #b3e5fc; }
 #offline-banner { display: none; background: #f59e0b; color: #000; padding: 10px; text-align: center; font-weight: bold; font-size: 0.9rem;}
@@ -93,12 +93,12 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. A executar no Modo Offline (Memória do Navegador).</div>
+<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. Rodando no Modo Offline (Memória do Navegador).</div>
 
 <div id="global-loader">
     <div class="spinner"></div>
     <h2 style="color: var(--primary); margin: 0;">Sincronizando com a Nuvem...</h2>
-    <p style="color: var(--text-light);" id="loader-text">Aguardar resposta da base de dados...</p>
+    <p style="color: var(--text-light);" id="loader-text">Aguardando resposta do banco de dados...</p>
 </div>
 
 <div id="create-project-modal" class="modal-overlay hidden">
@@ -125,7 +125,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 <div id="admin-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 class="modal-title">⚙️ Painel de Segurança</h3>
-<p class="modal-desc">Altere a palavra-passe de qualquer utilizador da equipa.</p>
+<p class="modal-desc">Altere a palavra-passe de qualquer usuário da equipe.</p>
 <div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
 <div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button></div>
 </div>
@@ -134,11 +134,11 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 <div id="drive-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 class="modal-title">📂 Anexar Ficheiro do Google Drive</h3>
-<p class="modal-desc">Insira a ligação direta do ficheiro/pasta do Drive ou use o seletor oficial:</p>
+<p class="modal-desc">Insira a ligação direta do arquivo/pasta do Drive ou use o seletor oficial:</p>
 <input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
-<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
+<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
 <div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor do Google Drive</button></div>
-<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Ficheiro</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
 </div>
 </div>
 
@@ -146,7 +146,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 <div class="modal-content">
 <h3 class="modal-title">📅 Editar Data do Evento</h3>
 <input type="datetime-local" id="date-modal-input">
-<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Guardar Data</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Salvar Data</button></div>
 </div>
 </div>
 
@@ -172,7 +172,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 <div class="modal-content">
 <h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
 <p id="pwd-modal-desc" class="modal-desc">Insira a palavra-passe.</p>
-<input type="password" id="pwd-modal-input" placeholder="A sua palavra-passe..." autocomplete="new-password">
+<input type="password" id="pwd-modal-input" placeholder="Sua palavra-passe..." autocomplete="new-password">
 <div class="modal-buttons"><button class="secondary" onclick="closePasswordModal(false)">Cancelar</button><button onclick="closePasswordModal(true)">Confirmar</button></div>
 </div>
 </div>
@@ -180,7 +180,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
 <div id="confirm-modal" class="modal-overlay hidden">
 <div class="modal-content" style="text-align: center;">
 <h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
-<p id="confirm-desc" class="modal-desc">Tem a certeza de que deseja fazer isto?</p>
+<p id="confirm-desc" class="modal-desc">Tem certeza que deseja fazer isso?</p>
 <div class="modal-buttons" style="justify-content: center;"><button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button><button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button></div>
 </div>
 </div>
@@ -190,19 +190,19 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
     <div id="view-profiles" class="hidden">
         <div class="header">
             <h1><span onclick="handleMasterLogin()" style="cursor: pointer;" title="Bem-vindo">🏢</span> Bem-vindo ao Sistema de Projetos</h1>
-            <p>Selecione como deseja aceder à plataforma hoje.</p>
+            <p>Selecione como deseja acessar a plataforma hoje.</p>
             <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 20px auto;">
                 <button class="global-btn" onclick="proceedAsViewer()" style="background: #059669; padding: 15px; font-size: 1.1rem; border-radius: 8px;">
                     👁️ ENTRAR COMO VISUALIZADOR (Gerência/Vendas)
                 </button>
             </div>
-            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Palavra-passe):</h3>
+            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Senha):</h3>
             <div class="profiles-grid" id="profiles-container"></div>
             
             <div style="background: var(--card); padding: 15px; border-radius: 8px; max-width: 400px; margin: 20px auto; border: 1px solid var(--border);">
                 <h4 style="margin-top: 0;">Registar Novo Desenhista</h4>
                 <input type="text" id="new-user-name" placeholder="Nome do colega...">
-                <button onclick="addUser()" style="width: 100%;">+ Adicionar Equipa</button>
+                <button onclick="addUser()" style="width: 100%;">+ Adicionar Equipe</button>
             </div>
             
             <div style="text-align: center; margin-top: 40px;">
@@ -216,12 +216,20 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
     <div id="view-manager" class="hidden">
         <div class="header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div style="text-align: left;">
-                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Estado Geral dos Projetos (Painel da Empresa)</h2>
+                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Status Geral Projetos (Painel da Empresa)</h2>
                 <p style="margin: 5px 0 0 0; color: var(--text-light); font-size: 0.9rem;">Acompanhamento corporativo em tempo real. Apenas Visualização.</p>
             </div>
             <div class="top-bar-actions">
+                <select id="manager-sort-filter-select" onchange="renderGlobalFeed()">
+                    <option value="DATE_DESC" selected>Mais Recentes</option>
+                    <option value="DATE_ASC">Mais Antigos</option>
+                    <option value="VENDEDOR">Por Vendedor (A-Z)</option>
+                    <option value="TIPO_NOVO">Apenas NOVOS</option>
+                    <option value="TIPO_REVISAO">Apenas REVISÕES</option>
+                </select>
+
                 <div class="search-bar"><input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Procurar obra ou CÓD..."></div>
-                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF do Separador Atual</button>
+                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF da Aba Atual</button>
                 <button class="secondary" onclick="logout()">← Sair</button>
             </div>
         </div>
@@ -258,14 +266,24 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
                 </div>
                 <h1 id="dashboard-title" style="margin: 0;">Área de Trabalho</h1>
                 <div class="top-bar-actions">
-                    <button class="warning" onclick="changeMyPassword()" title="Alterar a minha palavra-passe">🔑 Mudar Palavra-passe</button>
-                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerir Equipa</button>
-                    <select id="user-filter-select" onchange="renderProjects()" style="margin-bottom: 0; max-width: 210px; font-size: 0.9rem;">
+                    <button class="warning" onclick="changeMyPassword()" title="Alterar a minha senha">🔑 Mudar Senha</button>
+                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerir Equipe</button>
+                    
+                    <select id="user-filter-select" onchange="renderProjects()">
                         <option value="ALL">Visualizar Todos</option>
-                        <option value="MEUS" selected>Apenas os Meus Projetos</option>
+                        <option value="MEUS" selected>Apenas os Meus</option>
                     </select>
+
+                    <select id="sort-filter-select" onchange="renderProjects()">
+                        <option value="DATE_DESC" selected>Mais Recentes</option>
+                        <option value="DATE_ASC">Mais Antigos</option>
+                        <option value="VENDEDOR">Por Vendedor (A-Z)</option>
+                        <option value="TIPO_NOVO">Apenas NOVOS</option>
+                        <option value="TIPO_REVISAO">Apenas REVISÕES</option>
+                    </select>
+
                     <div class="search-bar"><input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD..."></div>
-                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF do Separador</button>
+                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF da Aba</button>
                 </div>
             </div>
         </div>
@@ -279,25 +297,31 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; }
             <button id="tab-draftsman-fila" class="tab-btn active" onclick="switchDraftsmanTab('fila')">⏳ Fila de Orçamento</button>
             <button id="tab-draftsman-andamento" class="tab-btn" onclick="switchDraftsmanTab('andamento')">▶ Em Andamento</button>
             <button id="tab-draftsman-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos</button>
+            <button id="tab-draftsman-graficos" class="tab-btn" onclick="switchDraftsmanTab('graficos')">📊 Meus Gráficos (Pareto)</button>
         </div>
 
         <div class="projects-list" id="projects-container"></div>
+        
+        <div id="view-draftsman-graphics" class="hidden">
+            <div style="background: var(--card); padding: 15px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <strong style="white-space: nowrap;">Analisar Gráfico:</strong>
+                <select id="draftsman-graph-filter-select" onchange="renderDraftsmanGraph()" style="margin-bottom: 0; max-width: 400px;"></select>
+            </div>
+            <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
+            <div class="kpi-container">
+                <div class="kpi-card"><h4>Meus Projetos</h4><p class="kpi-value" id="dkpi-total">0</p></div>
+                <div class="kpi-card purple"><h4>Minha Taxa de Erro</h4><p class="kpi-value" id="dkpi-internal">0%</p></div>
+                <div class="kpi-card orange"><h4>Alteração de Cliente</h4><p class="kpi-value" id="dkpi-external">0%</p></div>
+            </div>
+        </div>
     </div>
 
 </div>
 
 <script>
-// Sistema que previne que erros no código deixem o ecrã em branco
 window.onerror = function(msg, url, line) {
     const loader = document.getElementById('global-loader');
     if (loader) loader.style.display = 'none'; 
-    
-    // Mostra o erro no ecrã para diagnóstico
-    const errorDiv = document.createElement('div');
-    errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
-    errorDiv.innerHTML = `<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>${msg} (Linha: ${line})</p><button onclick="this.parentElement.style.display='none';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>`;
-    document.body.appendChild(errorDiv);
-    
     console.error(`Erro: ${msg} na linha ${line}`);
     return false;
 };
@@ -349,7 +373,6 @@ function openPicker() {
 }
 
 function createPicker() {
-    if(!window.google || !google.picker) return;
     const picker = new google.picker.PickerBuilder().addView(DRIVE_VIEW_MODE).setOAuthToken(accessToken).setDeveloperKey(DRIVE_API_KEY).setAppId(DRIVE_APP_ID).setCallback(pickerCallback).build();
     picker.setVisible(true);
 }
@@ -367,79 +390,41 @@ let managerCurrentTab = 'andamento'; let draftsmanCurrentTab = 'fila';
 let modalResolve = null, confirmResolve = null, passwordResolve = null;
 let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkProjectId = null;
 let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
+let currentChart = null; let currentDraftsmanChart = null;
 
 // MOTOR DE INICIALIZAÇÃO
-function iniciarSistemaSeguro() {
-    try {
-        const loader = document.getElementById('global-loader'); 
-        if (loader) loader.style.display = 'none';
-        
-        if (!firebaseSincronizado) { 
-            document.getElementById('offline-banner').style.display = 'block';
-            const local = localStorage.getItem('appData_teste_local'); 
-            if (local) { 
-                try { 
-                    const p = JSON.parse(local); 
-                    if(p) appData = p; 
-                } catch(e) {} 
+try {
+    if(window.firebase) {
+        firebase.initializeApp(firebaseConfig); db = firebase.firestore(); docRef = db.collection("sistema").doc("bancoDeDados");
+        docRef.onSnapshot((doc) => {
+            if (doc.exists) { 
+                const data = doc.data(); 
+                if(data) appData = data;
+                if(!appData.users) appData.users = [];
+                if(!appData.projects) appData.projects = [];
+                if(!appData.passwords) appData.passwords = {};
+                firebaseSincronizado = true; 
             } 
-        }
-        
-        if(!appData.users) appData.users = []; 
-        if(!appData.projects) appData.projects = []; 
-        if(!appData.passwords) appData.passwords = {};
+            else if(!firebaseSincronizado) { 
+                docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
+            }
+            clearTimeout(fallbackTimer); liberarSistema();
+        }, (error) => { liberarSistema(); });
+    } else { liberarSistema(); }
+} catch (error) { liberarSistema(); }
 
-        // REMOVE O 'HIDDEN' DO ECRÃ CORRETO!
-        if (!currentUser && !isViewerMode) {
-            document.getElementById('view-profiles').classList.remove('hidden');
-            renderProfiles();
-        } else if (isViewerMode) {
-            document.getElementById('view-manager').classList.remove('hidden');
-            renderGlobalFeed();
-        } else {
-            document.getElementById('view-dashboard').classList.remove('hidden');
-            renderProjects();
-        }
-    } catch(err) { console.error("Falha ao remover o ecrã de carregamento:", err); }
-}
+const fallbackTimer = setTimeout(() => { liberarSistema(); }, 2500);
 
-// Ligação à Base de Dados
-setTimeout(() => {
+function liberarSistema() {
     try {
-        if(window.firebase) {
-            firebase.initializeApp(firebaseConfig); 
-            db = firebase.firestore(); 
-            docRef = db.collection("sistema").doc("bancoDeDados");
-            
-            docRef.onSnapshot((doc) => {
-                if (doc.exists) { 
-                    const data = doc.data(); 
-                    if(data) appData = data;
-                    if(!appData.users) appData.users = [];
-                    if(!appData.projects) appData.projects = [];
-                    if(!appData.passwords) appData.passwords = {};
-                    firebaseSincronizado = true; 
-                    document.getElementById('offline-banner').style.display = 'none';
-                } else if(!firebaseSincronizado) { 
-                    docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
-                }
-                
-                const loader = document.getElementById('global-loader'); 
-                if(loader && loader.style.display !== 'none') iniciarSistemaSeguro();
-                else updateViews(); 
-                
-            }, (error) => { iniciarSistemaSeguro(); });
-        } else { iniciarSistemaSeguro(); }
-    } catch (error) { iniciarSistemaSeguro(); }
-}, 200);
-
-window.addEventListener('load', () => {
-    initGoogleDrivePicker();
-    setTimeout(() => {
-        const loader = document.getElementById('global-loader'); 
-        if(loader && loader.style.display !== 'none') iniciarSistemaSeguro();
-    }, 2500); 
-});
+        const loader = document.getElementById('global-loader'); if (loader) loader.style.display = 'none';
+        if (!firebaseSincronizado) { 
+            const local = localStorage.getItem('appData_teste_local'); 
+            if (local) { try { const parsed = JSON.parse(local); if(parsed) appData = parsed; if(!appData.users) appData.users = []; if(!appData.projects) appData.projects = []; if(!appData.passwords) appData.passwords = {}; } catch(e) {} } 
+        }
+        if (!currentUser && !isViewerMode) renderProfiles(); else if (isViewerMode) renderGlobalFeed(); else renderProjects();
+    } catch(err) { }
+}
 
 function saveData() {
     if (!firebaseSincronizado) { localStorage.setItem('appData_teste_local', JSON.stringify(appData)); return; }
@@ -502,7 +487,7 @@ function closeDriveModal(c) {
         if (u) {
             const p = appData.projects.find(p => p.id === driveProjectId);
             if(!p.history) p.history = [];
-            p.history.unshift({ stage: "📂 FICHEIRO ANEXADO", obs: o ? `${o}` : "Ficheiro vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
+            p.history.unshift({ stage: "📂 ARQUIVO ANEXADO", obs: o ? `${o}` : "Arquivo vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
             saveData(); updateViews();
         }
     }
@@ -524,7 +509,7 @@ function closeReworkModal(c) {
         const t = document.getElementById('rework-type-select').value; const o = document.getElementById('rework-obs-input').value;
         const p = appData.projects.find(p => p.id === reworkProjectId); p.reworkType = t.toLowerCase();
         if(!p.history) p.history = [];
-        p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo não informado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
+        p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo ocultado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
         saveData(); renderProjects();
     }
     reworkProjectId = null;
@@ -548,13 +533,13 @@ async function addUser() {
     if(!n) return; if(!appData.users) appData.users = [];
     if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { alert("Este nome já existe ou é reservado!"); return; }
     
-    const pass = await openPasswordModal("Criar Palavra-passe", `Defina a palavra-passe para o novo perfil de ${n}:`);
+    const pass = await openPasswordModal("Criar Senha", `Defina a senha para o novo perfil de ${n}:`);
     if (pass !== null && pass.trim() !== "") {
         appData.users.push(n);
         if(!appData.passwords) appData.passwords = {};
         appData.passwords[n] = pass;
         saveData(); i.value = ''; renderProfiles(); 
-    } else if (pass !== null) { alert("A palavra-passe não pode estar vazia. Criação cancelada."); }
+    } else if (pass !== null) { alert("A senha não pode estar vazia. Criação cancelada."); }
 }
 
 function deleteCurrentUser() {
@@ -568,12 +553,12 @@ function deleteCurrentUser() {
 async function handleLoginClick(user) {
     if (!appData.passwords) appData.passwords = {};
     if (!appData.passwords[user]) {
-        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem palavra-passe. Crie uma agora:`);
+        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem senha. Crie uma agora:`);
         if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
     } else {
-        const pass = await openPasswordModal("Acesso Restrito", `Insira a sua palavra-passe:`);
+        const pass = await openPasswordModal("Acesso Restrito", `Insira a sua senha:`);
         if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
-        else if (pass !== null) alert("Palavra-passe Incorreta!");
+        else if (pass !== null) alert("Senha Incorreta!");
     }
 }
 
@@ -586,10 +571,10 @@ async function handleMasterLogin() {
 }
 
 async function changeMyPassword() {
-    const newPass = await openModal("Segurança", `Insira a sua nova palavra-passe:`, "Nova palavra-passe...");
+    const newPass = await openModal("Segurança", `Insira a sua nova senha:`, "Nova senha...");
     if (newPass !== null && newPass.trim() !== '') {
         if(!appData.passwords) appData.passwords = {};
-        appData.passwords[currentUser] = newPass; saveData(); alert(`Palavra-passe atualizada com sucesso!`);
+        appData.passwords[currentUser] = newPass; saveData(); alert(`Senha actualizada com sucesso!`);
     }
 }
 
@@ -603,10 +588,10 @@ function openAdminModal() {
 }
 
 async function changeUserPassword(u) {
-    const newPass = await openModal("Alterar Palavra-passe", `Insira a nova palavra-passe para ${u}:`, "Nova palavra-passe...");
+    const newPass = await openModal("Alterar Senha", `Insira a nova senha para ${u}:`, "Nova senha...");
     if (newPass !== null && newPass.trim() !== '') {
         if(!appData.passwords) appData.passwords = {};
-        appData.passwords[u] = newPass; saveData(); alert(`Palavra-passe de ${u} atualizada com sucesso!`);
+        appData.passwords[u] = newPass; saveData(); alert(`Senha de ${u} atualizada com sucesso!`);
     }
 }
 
@@ -668,7 +653,9 @@ function closeCreateProjectModal(c) {
         history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado.", date: new Date().toLocaleString('pt-BR'), author: currentUser }]
     });
     saveData(); document.getElementById('create-project-modal').classList.add('hidden'); 
-    document.getElementById('user-filter-select').value = "ALL"; 
+    
+    if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
+    if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
     switchDraftsmanTab('fila');
 }
 
@@ -690,6 +677,28 @@ async function updateStage(id, sel) {
         if (obs === null) { sel.value = p.stageIndex; } 
         else { p.stageIndex = idx; if(!p.history) p.history = []; p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
     }
+}
+
+// NOVO RECURSO: ASSUMIR PROJETO DA FILA
+function assumirProjeto(id) {
+    const p = appData.projects.find(p => p.id === id);
+    if(!p) return;
+    
+    const responsavelAntigo = p.owner;
+    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; // Passa o projeto pro nome dele
+    p.stageIndex = 1; // Avança automaticamente para 2. Em Desenho
+    
+    if(!p.history) p.history = [];
+    p.history.unshift({
+        stage: "🚀 ASSUMIU PROJETO",
+        obs: `Projeto puxado da fila. Responsável alterado de [${responsavelAntigo}] para [${p.owner}].`,
+        date: new Date().toLocaleString('pt-BR'),
+        author: currentUser
+    });
+    
+    saveData();
+    alert(`Você assumiu o projeto da obra "${p.name}" com sucesso! Ele foi movido para "Em Andamento".`);
+    switchDraftsmanTab('andamento');
 }
 
 async function createRevisaoFromCompleted(id) {
@@ -742,31 +751,61 @@ function switchManagerTab(tab) {
 function renderGlobalFeed() {
     const container = document.getElementById('global-feed-container'); if(!container) return; container.innerHTML = '';
     const src = (document.getElementById('manager-search-input').value || '').toLowerCase();
-    const flt = (appData.projects||[]).filter(p => {
+    const sortFilter = document.getElementById('manager-sort-filter-select') ? document.getElementById('manager-sort-filter-select').value : 'DATE_DESC';
+
+    let flt = (appData.projects||[]).filter(p => {
         if(!p) return false;
         const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
         let tb = false;
         if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0 || p.stageIndex === 2); 
         else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2); 
         else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 7); 
-        return m && tb;
+        if (!m || !tb) return false;
+        if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
+        if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
+        return true;
     });
+
+    flt.sort((a, b) => {
+        if (sortFilter === 'VENDEDOR') {
+            const vA = (a.vendedor || '').toLowerCase(); const vB = (b.vendedor || '').toLowerCase();
+            if (vA < vB) return -1; if (vA > vB) return 1;
+            return b.id - a.id; 
+        }
+        if (sortFilter === 'DATE_ASC') return a.id - b.id; 
+        return b.id - a.id; 
+    });
+
     buildCardsStructure(flt, container, false);
 }
 
 function switchDraftsmanTab(tab) {
     draftsmanCurrentTab = tab;
-    ['fila','andamento','concluidos'].forEach(t => document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t));
-    renderProjects();
+    ['fila','andamento','concluidos', 'graficos'].forEach(t => document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t));
+    
+    if (tab === 'graficos') {
+        document.getElementById('projects-container').classList.add('hidden');
+        document.getElementById('view-draftsman-graphics').classList.remove('hidden');
+        populateDraftsmanGraphSelect();
+        renderDraftsmanGraph();
+    } else {
+        document.getElementById('view-draftsman-graphics').classList.add('hidden');
+        document.getElementById('projects-container').classList.remove('hidden');
+        renderProjects();
+    }
 }
 
 function renderProjects() {
     const container = document.getElementById('projects-container'); if(!container) return; container.innerHTML = '';
+    if(draftsmanCurrentTab === 'graficos') return;
+    
     const src = (document.getElementById('search-input').value || '').toLowerCase();
     const filterUser = document.getElementById('user-filter-select') ? document.getElementById('user-filter-select').value : 'ALL';
+    const sortFilter = document.getElementById('sort-filter-select') ? document.getElementById('sort-filter-select').value : 'DATE_DESC';
 
-    const flt = (appData.projects||[]).filter(p => {
+    let flt = (appData.projects||[]).filter(p => {
         if(!p) return false; 
+        
         let tabMatch = false;
         if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0 || p.stageIndex === 2);
         else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2);
@@ -775,10 +814,32 @@ function renderProjects() {
 
         const isOwner = p.owner === currentUser;
         
-        if (filterUser === 'MEUS') return isOwner;
-        else if (filterUser === 'ALL') return true;
-        else return p.owner === filterUser;
-    }).filter(p => (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src));
+        // MÁGICA: Na fila de orçamento, se estiver no modo "Visualizar Todos", ele deixa passar projetos de outros para que possam ser assumidos!
+        let userMatch = false;
+        if (filterUser === 'MEUS') {
+            userMatch = isOwner;
+        } else if (filterUser === 'ALL') {
+            userMatch = true; 
+        } else {
+            userMatch = (p.owner === filterUser);
+        }
+        if(!userMatch) return false;
+
+        if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
+        if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
+
+        return (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src);
+    });
+
+    flt.sort((a, b) => {
+        if (sortFilter === 'VENDEDOR') {
+            const vA = (a.vendedor || '').toLowerCase(); const vB = (b.vendedor || '').toLowerCase();
+            if (vA < vB) return -1; if (vA > vB) return 1;
+            return b.id - a.id; 
+        }
+        if (sortFilter === 'DATE_ASC') return a.id - b.id; 
+        return b.id - a.id; 
+    });
     
     buildCardsStructure(flt, container, true);
 }
@@ -792,6 +853,8 @@ function buildCardsStructure(list, container, isDash) {
         const isC = p.stageIndex >= 7; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
+        
+        // Só edita se for dono ou admin
         const edit = !isViewerMode && isDash && (own || isMaster);
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
@@ -805,8 +868,8 @@ function buildCardsStructure(list, container, isDash) {
         if(p.history) p.history.forEach((h, i) => {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
-            let drv = h.driveUrl ? `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Drive</a>` : '';
-            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea;';
+            let drv = h.driveUrl ? `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Abrir no Drive</a>` : '';
+            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
         });
@@ -815,8 +878,14 @@ function buildCardsStructure(list, container, isDash) {
         if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
 
         let acts = '';
-        if (edit && !isC) acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button>`;
-        else if (edit && isC) acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
+        if (edit && !isC) {
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão Interna</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+        } else if (edit && isC) {
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
+        } else if (!edit && isDash && !isC && (p.stageIndex === 0 || p.stageIndex === 2) && !isViewerMode) {
+            // RECURSO SOLICITADO: BOTÃO ASSUMIR PROJETO SE FOR DE OUTRO E ESTIVER NA FILA
+            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669;">🚀 Assumir Projeto e Desenhar</button>`;
+        }
         acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 PDF</button>`;
 
         card.innerHTML = `<div class="project-header"><span class="draftsman-badge">👤 Atual: ${p.owner}</span><div class="project-title-container"><h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ''}</div><div class="project-details-box"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>CÓD:</strong> ${p.cod || '-'}</span><span><strong>Vend:</strong> ${p.vendedor || '-'}</span></div><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span><span><strong>Prob:</strong> ${p.probabilidade || '-'}</span></div><div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;"><span><strong>Cid:</strong> ${p.cidade || '-'}</span></div></div>${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}<div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div></div><div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div><div class="timeline"><strong>Histórico:</strong><br>${hist}</div><div class="actions">${acts}</div>`;
@@ -824,18 +893,81 @@ function buildCardsStructure(list, container, isDash) {
     });
 }
 
-// GRÁFICOS E PDF
+// ---------- MOTOR DE GRÁFICOS (PARETO DO MANAGER) ----------
+function parseDateBR(str) { try { let parts = str.split(/[\s,]+/); let d = parts[0].split('/'); let t = parts[1] ? parts[1].split(':') : ['00','00']; return new Date(d[2], d[1]-1, d[0], t[0]||0, t[1]||0).getTime(); } catch(e) { return new Date().getTime(); } }
 function populateGraphSelect() { const s = document.getElementById('graph-filter-select'); s.innerHTML = '<option value="ALL">Geral (Todos)</option>'; (appData.projects||[]).forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = `${p.name} (${p.owner})`; s.appendChild(o); }); }
 function renderGraph() {
     if(typeof Chart === 'undefined') return;
     const v = document.getElementById('graph-filter-select').value; let tg = v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v);
     let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0; a["Retrabalho: Erro Interno"] = 0; a["Retrabalho: Alteração Cliente"] = 0;
+    
+    // Atualiza KPIs Globais do Gestor
+    let total = (tg || []).length; let intC = 0, extC = 0;
+    (tg||[]).forEach(p => {
+        if(p.history) {
+            if(p.history.some(h => h.stage && h.stage.includes("INTERNO"))) intC++;
+            if(p.history.some(h => h.stage && h.stage.includes("EXTERNO"))) extC++;
+        }
+    });
+    if(document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
+    if(document.getElementById('kpi-internal')) document.getElementById('kpi-internal').textContent = `${total===0?0:Math.round((intC/total)*100)}%`;
+    if(document.getElementById('kpi-external')) document.getElementById('kpi-external').textContent = `${total===0?0:Math.round((extC/total)*100)}%`;
+
     (tg||[]).forEach(p => { if(!p.history) return; let cur=null, lst=null; [...p.history].reverse().forEach(ev => { if(!ev) return; let t=parseDateBR(ev.date); if(cur&&lst) a[cur]+=Math.max(0,t-lst); if(STAGES.includes(ev.stage)) cur=ev.stage; else if(ev.stage==="🔴 IMPEDIMENTO / PAUSADO") cur="Pausado / Impedido"; else if(ev.stage.includes("INTERNO")) cur="Retrabalho: Erro Interno"; else if(ev.stage.includes("EXTERNO")) cur="Retrabalho: Alteração Cliente"; else if(ev.stage==="🟢 Retomado"||ev.stage==="✅ RETRABALHO CONCLUÍDO") cur=STAGES[0]; lst=t; }); if(p.stageIndex!==7&&lst&&cur) a[cur]+=Math.max(0,new Date().getTime()-lst); });
     let fd = []; for(let s in a) { let h = a[s]/(1000*60*60); if(h>0.01) fd.push({s:s, h:h}); } fd.sort((x,y) => y.h - x.h);
     let lb = [], br = [], ln = [], cm = 0; let tt = fd.reduce((s, i) => s + i.h, 0); fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
     if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
     if(currentChart) currentChart.destroy(); currentChart = new Chart(document.getElementById('paretoChart').getContext('2d'), { type:'bar', data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#2563eb', yAxisID:'y' } ]}, options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } });
 }
+
+// ---------- NOVO: MOTOR DE GRÁFICOS INTERNOS DO DESENHISTA ----------
+function populateDraftsmanGraphSelect() {
+    const s = document.getElementById('draftsman-graph-filter-select'); if(!s) return;
+    s.innerHTML = `<option value="MEUS">Meus Projetos Individuais (${currentUser})</option><option value="ALL">Geral da Empresa (Todos)</option>`;
+    (appData.projects || []).forEach(p => {
+        if(p.owner === currentUser || currentUser === "ADMIN") {
+            s.innerHTML += `<option value="${p.id}">Apenas Obra: ${p.name}</option>`;
+        }
+    });
+}
+
+function renderDraftsmanGraph() {
+    if(typeof Chart === 'undefined' || !document.getElementById('draftsmanParetoChart')) return;
+    const v = document.getElementById('draftsman-graph-filter-select').value;
+    
+    let target = [];
+    if(v === "MEUS") target = appData.projects.filter(p => p.owner === currentUser);
+    else if(v === "ALL") target = appData.projects;
+    else target = appData.projects.filter(p => p.id === v);
+
+    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0; a["Retrabalho: Erro Interno"] = 0; a["Retrabalho: Alteração Cliente"] = 0;
+    
+    // Atualiza KPIs Locais do Desenhista
+    let total = (target || []).length; let intC = 0, extC = 0;
+    (target||[]).forEach(p => {
+        if(p.history) {
+            if(p.history.some(h => h.stage && h.stage.includes("INTERNO"))) intC++;
+            if(p.history.some(h => h.stage && h.stage.includes("EXTERNO"))) extC++;
+        }
+    });
+    if(document.getElementById('dkpi-total')) document.getElementById('dkpi-total').textContent = total;
+    if(document.getElementById('dkpi-internal')) document.getElementById('dkpi-internal').textContent = `${total===0?0:Math.round((intC/total)*100)}%`;
+    if(document.getElementById('dkpi-external')) document.getElementById('dkpi-external').textContent = `${total===0?0:Math.round((extC/total)*100)}%`;
+
+    (target||[]).forEach(p => { if(!p.history) return; let cur=null, lst=null; [...p.history].reverse().forEach(ev => { if(!ev) return; let t=parseDateBR(ev.date); if(cur&&lst) a[cur]+=Math.max(0,t-lst); if(STAGES.includes(ev.stage)) cur=ev.stage; else if(ev.stage==="🔴 IMPEDIMENTO / PAUSADO") cur="Pausado / Impedido"; else if(ev.stage.includes("INTERNO")) cur="Retrabalho: Erro Interno"; else if(ev.stage.includes("EXTERNO")) cur="Retrabalho: Alteração Cliente"; else if(ev.stage==="🟢 Retomado"||ev.stage==="✅ RETRABALHO CONCLUÍDO") cur=STAGES[0]; lst=t; }); if(p.stageIndex!==7&&lst&&cur) a[cur]+=Math.max(0,new Date().getTime()-lst); });
+    let fd = []; for(let s in a) { let h = a[s]/(1000*60*60); if(h>0.01) fd.push({s:s, h:h}); } fd.sort((x,y) => y.h - x.h);
+    let lb = [], br = [], ln = [], cm = 0; let tt = fd.reduce((s, i) => s + i.h, 0); fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
+    if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
+    
+    if(currentDraftsmanChart) currentDraftsmanChart.destroy(); 
+    currentDraftsmanChart = new Chart(document.getElementById('draftsmanParetoChart').getContext('2d'), { 
+        type:'bar', 
+        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas Gastas', data:br, backgroundColor:'#4f46e5', yAxisID:'y' } ]}, 
+        options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } 
+    });
+}
+
+// ---------- PDF RELATÓRIOS ----------
 function sanitizeForPDF(t) { return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; }
 function exportReportPDF(id) {
     if(!window.jspdf) { alert("PDF bloqueado."); return; } const p = appData.projects.find(p => p.id === id); const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("Dossie", 20, 20); doc.setFontSize(12); doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 20, 32); doc.text(`Resp: ${sanitizeForPDF(p.owner)}`, 20, 40); doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.text(`COD: ${sanitizeForPDF(p.cod)} | Vend: ${sanitizeForPDF(p.vendedor)} | Tipo: ${sanitizeForPDF(p.tipo)}`, 20, 48); doc.text(`Cid: ${sanitizeForPDF(p.cidade)} | Prob: ${sanitizeForPDF(p.probabilidade)}`, 20, 54); let y = 65; doc.setFont("helvetica", "bold"); doc.text("HISTORICO", 20, y); y += 8;
@@ -849,7 +981,7 @@ function generateListPDF(list, title) {
     window.open(URL.createObjectURL(doc.output('blob')), '_blank');
 }
 
-// RESTAURAÇÃO DE BACKUP LOCAL
+// BACKUPS
 function exportBackup() {
 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
 const downloadAnchorNode = document.createElement('a');
