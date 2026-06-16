@@ -1,9 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Controle de Projetos</title>
+<title>Sistema de Controlo de Projetos</title>
+
+<script>
+window.onerror = function(msg, url, line) {
+    var loader = document.getElementById('global-loader');
+    if (loader) loader.style.display = 'none'; 
+    var errorDiv = document.createElement('div');
+    errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
+    errorDiv.innerHTML = '<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>' + msg + ' (Linha: ' + line + ')</p><button onclick="this.parentElement.style.display=\'none\';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>';
+    if(document.body) { document.body.appendChild(errorDiv); }
+    else { window.onload = function() { document.body.appendChild(errorDiv); }; }
+    return false;
+};
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -50,6 +64,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .kpi-card { background: var(--card); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); }
 .kpi-card h4 { margin: 0 0 5px 0; color: var(--text-light); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;}
 .kpi-card .kpi-value { font-size: 1.8rem; font-weight: bold; color: var(--text); margin: 0;}
+.kpi-card.purple { border-bottom-color: #9333ea; }
 .projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; align-items: start; }
 .project-card { background-color: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); border-left: 6px solid var(--primary); display: flex; flex-direction: column; transition: all 0.3s;}
 .project-card.impediment { border-left-color: var(--warning); background-color: #fffbeb; }
@@ -93,11 +108,11 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. A executar no Modo Offline (Memória do Navegador).</div>
+<div id="offline-banner">⚠️ Ligação à base de dados bloqueada pela rede. A executar no Modo Offline (Memória do Navegador).</div>
 
 <div id="global-loader">
     <div class="spinner"></div>
-    <h2 style="color: var(--primary); margin: 0;">Sincronizando com a Nuvem...</h2>
+    <h2 style="color: var(--primary); margin: 0;">A Sincronizar com a Nuvem...</h2>
     <p style="color: var(--text-light);" id="loader-text">Aguardar resposta da base de dados...</p>
 </div>
 
@@ -138,7 +153,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
 <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
 <div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor do Google Drive</button></div>
-<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Ficheiro</button></div>
 </div>
 </div>
 
@@ -252,8 +267,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
             <div class="chart-container"><canvas id="paretoChart"></canvas></div>
             <div class="kpi-container" id="kpi-panel">
                 <div class="kpi-card"><h4>Total de Projetos</h4><p class="kpi-value" id="kpi-total">0</p></div>
-                <div class="kpi-card purple"><h4>Taxa de Erro Interno</h4><p class="kpi-value" id="kpi-internal">0%</p></div>
-                <div class="kpi-card orange"><h4>Alteração de Clientes</h4><p class="kpi-value" id="kpi-external">0%</p></div>
+                <div class="kpi-card purple"><h4>Tempo Médio (Concluídos)</h4><p class="kpi-value" id="kpi-avg-time">0h</p></div>
             </div>
         </div>
     </div>
@@ -310,8 +324,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
             <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
             <div class="kpi-container">
                 <div class="kpi-card"><h4>Meus Projetos</h4><p class="kpi-value" id="dkpi-total">0</p></div>
-                <div class="kpi-card purple"><h4>Minha Taxa de Erro</h4><p class="kpi-value" id="dkpi-internal">0%</p></div>
-                <div class="kpi-card orange"><h4>Alteração de Cliente</h4><p class="kpi-value" id="dkpi-external">0%</p></div>
+                <div class="kpi-card purple"><h4>Meu Tempo Médio (Concluídos)</h4><p class="kpi-value" id="dkpi-avg-time">0h</p></div>
             </div>
         </div>
     </div>
@@ -319,18 +332,6 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
-window.onerror = function(msg, url, line) {
-    const loader = document.getElementById('global-loader');
-    if (loader) loader.style.display = 'none'; 
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
-    errorDiv.innerHTML = `<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>${msg} (Linha: ${line})</p><button onclick="this.parentElement.style.display='none';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>`;
-    document.body.appendChild(errorDiv);
-    
-    console.error(`Erro: ${msg} na linha ${line}`);
-    return false;
-};
 
 const STAGES = [
 "Aguardando Início (Fila)", // 0
@@ -406,7 +407,8 @@ function iniciarSistemaSeguro() {
         if (loader) loader.style.display = 'none';
         
         if (!firebaseSincronizado) { 
-            document.getElementById('offline-banner').style.display = 'block';
+            const offBanner = document.getElementById('offline-banner');
+            if(offBanner) offBanner.style.display = 'block';
             const local = localStorage.getItem('appData_teste_local'); 
             if (local) { 
                 try { 
@@ -416,9 +418,10 @@ function iniciarSistemaSeguro() {
             } 
         }
         
-        if(!appData.users) appData.users = []; 
-        if(!appData.projects) appData.projects = []; 
-        if(!appData.passwords) appData.passwords = {};
+        if (!appData) appData = {};
+        if (!appData.users) appData.users = []; 
+        if (!appData.projects) appData.projects = []; 
+        if (!appData.passwords) appData.passwords = {};
 
         if (!currentUser && !isViewerMode) {
             document.getElementById('view-profiles').classList.remove('hidden');
@@ -448,7 +451,8 @@ setTimeout(() => {
                     if(!appData.projects) appData.projects = [];
                     if(!appData.passwords) appData.passwords = {};
                     firebaseSincronizado = true; 
-                    document.getElementById('offline-banner').style.display = 'none';
+                    const off = document.getElementById('offline-banner');
+                    if(off) off.style.display = 'none';
                 } else if(!firebaseSincronizado) { 
                     docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
                 }
@@ -895,7 +899,6 @@ function buildCardsStructure(list, container, isDash) {
         const isC = p.stageIndex >= 7; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
-        
         const edit = !isViewerMode && isDash && (own || isMaster);
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
@@ -920,7 +923,7 @@ function buildCardsStructure(list, container, isDash) {
 
         let acts = '';
         if (edit && !isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão Interna</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
         } else if (edit && isC) {
             acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
         } else if (!edit && isDash && !isC && (p.stageIndex === 0 || p.stageIndex === 2) && !isViewerMode) {
@@ -933,7 +936,7 @@ function buildCardsStructure(list, container, isDash) {
     });
 }
 
-// ---------- MOTOR DE GRÁFICOS (HORÁRIO COMERCIAL MONDAY-FRIDAY 07:15 AS 17:18) ----------
+// HORAS COMERCIAIS E GRÁFICOS
 function parseDateBR(str) { 
     try { 
         let parts = str.split(/[\s,]+/); 
@@ -949,17 +952,16 @@ function getBusinessHours(startMs, endMs) {
     let end = new Date(endMs);
     let totalHours = 0;
     
-    // Configura a data atual para o dia de início à meia-noite
     let current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     
     while (current <= end) {
         let day = current.getDay();
-        if (day !== 0 && day !== 6) { // Ignora Sábado (6) e Domingo (0)
+        if (day !== 0 && day !== 6) { 
             let bizStart = new Date(current);
-            bizStart.setHours(7, 15, 0, 0); // 07:15
+            bizStart.setHours(7, 15, 0, 0); 
             
             let bizEnd = new Date(current);
-            bizEnd.setHours(17, 18, 0, 0); // 17:18
+            bizEnd.setHours(17, 18, 0, 0); 
             
             let actualStart = (start > bizStart) ? start : bizStart;
             let actualEnd = (end < bizEnd) ? end : bizEnd;
@@ -968,7 +970,7 @@ function getBusinessHours(startMs, endMs) {
                 totalHours += (actualEnd - actualStart) / (1000 * 60 * 60);
             }
         }
-        current.setDate(current.getDate() + 1); // Passa para o dia seguinte
+        current.setDate(current.getDate() + 1); 
     }
     return totalHours;
 }
@@ -984,35 +986,44 @@ function renderGraph() {
     const v = document.getElementById('graph-filter-select').value; 
     let tg = v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v);
     
-    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0; a["Retrabalho: Erro Interno"] = 0; a["Retrabalho: Alteração Cliente"] = 0;
+    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0;
     
-    let total = (tg || []).length; let intC = 0, extC = 0;
-    (tg||[]).forEach(p => {
-        if(p.history) {
-            if(p.history.some(h => h.stage && h.stage.includes("INTERNO"))) intC++;
-            if(p.history.some(h => h.stage && h.stage.includes("EXTERNO"))) extC++;
-        }
-    });
-    if(document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
-    if(document.getElementById('kpi-internal')) document.getElementById('kpi-internal').textContent = `${total===0?0:Math.round((intC/total)*100)}%`;
-    if(document.getElementById('kpi-external')) document.getElementById('kpi-external').textContent = `${total===0?0:Math.round((extC/total)*100)}%`;
+    let total = (tg || []).length;
+    let sumHoursCompleted = 0;
+    let countCompleted = 0;
 
     (tg||[]).forEach(p => { 
         if(!p.history) return; 
+        
+        // CÁLCULO DE TEMPO MÉDIO (SÓ CONCLUÍDOS)
+        let startMs = null;
+        let endMs = null;
+        [...p.history].reverse().forEach(ev => {
+            if(!ev) return;
+            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
+            if(ev.stage === STAGES[7]) endMs = parseDateBR(ev.date);
+        });
+        if(startMs && endMs && endMs > startMs) {
+            sumHoursCompleted += getBusinessHours(startMs, endMs);
+            countCompleted++;
+        }
+
+        // CÁLCULO DO PARETO
         let cur=null, lst=null; 
         [...p.history].reverse().forEach(ev => { 
             if(!ev) return; 
             let t=parseDateBR(ev.date); 
             if(cur&&lst) a[cur] += getBusinessHours(lst, t); 
             if(STAGES.includes(ev.stage)) cur=ev.stage; 
-            else if(ev.stage==="🔴 IMPEDIMENTO / PAUSADO") cur="Pausado / Impedido"; 
-            else if(ev.stage.includes("INTERNO")) cur="Retrabalho: Erro Interno"; 
-            else if(ev.stage.includes("EXTERNO")) cur="Retrabalho: Alteração Cliente"; 
-            else if(ev.stage==="🟢 Retomado"||ev.stage==="✅ RETRABALHO CONCLUÍDO") cur=STAGES[0]; 
+            else if(ev.stage==="🔴 PAUSADO") cur="Pausado / Impedido"; 
+            else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
             lst=t; 
         }); 
         if(p.stageIndex!==7&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
     });
+
+    if(document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
+    if(document.getElementById('kpi-avg-time')) document.getElementById('kpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
     
     let fd = []; for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
     fd.sort((x,y) => y.h - x.h);
@@ -1048,35 +1059,44 @@ function renderDraftsmanGraph() {
     else if(v === "ALL") target = appData.projects;
     else target = appData.projects.filter(p => p.id === v);
 
-    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0; a["Retrabalho: Erro Interno"] = 0; a["Retrabalho: Alteração Cliente"] = 0;
+    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0;
     
-    let total = (target || []).length; let intC = 0, extC = 0;
-    (target||[]).forEach(p => {
-        if(p.history) {
-            if(p.history.some(h => h.stage && h.stage.includes("INTERNO"))) intC++;
-            if(p.history.some(h => h.stage && h.stage.includes("EXTERNO"))) extC++;
-        }
-    });
-    if(document.getElementById('dkpi-total')) document.getElementById('dkpi-total').textContent = total;
-    if(document.getElementById('dkpi-internal')) document.getElementById('dkpi-internal').textContent = `${total===0?0:Math.round((intC/total)*100)}%`;
-    if(document.getElementById('dkpi-external')) document.getElementById('dkpi-external').textContent = `${total===0?0:Math.round((extC/total)*100)}%`;
+    let total = (target || []).length;
+    let sumHoursCompleted = 0;
+    let countCompleted = 0;
 
     (target||[]).forEach(p => { 
         if(!p.history) return; 
+
+        // CÁLCULO DE TEMPO MÉDIO (SÓ CONCLUÍDOS)
+        let startMs = null;
+        let endMs = null;
+        [...p.history].reverse().forEach(ev => {
+            if(!ev) return;
+            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
+            if(ev.stage === STAGES[7]) endMs = parseDateBR(ev.date);
+        });
+        if(startMs && endMs && endMs > startMs) {
+            sumHoursCompleted += getBusinessHours(startMs, endMs);
+            countCompleted++;
+        }
+
+        // CÁLCULO DO PARETO
         let cur=null, lst=null; 
         [...p.history].reverse().forEach(ev => { 
             if(!ev) return; 
             let t=parseDateBR(ev.date); 
             if(cur&&lst) a[cur] += getBusinessHours(lst, t); 
             if(STAGES.includes(ev.stage)) cur=ev.stage; 
-            else if(ev.stage==="🔴 IMPEDIMENTO / PAUSADO") cur="Pausado / Impedido"; 
-            else if(ev.stage.includes("INTERNO")) cur="Retrabalho: Erro Interno"; 
-            else if(ev.stage.includes("EXTERNO")) cur="Retrabalho: Alteração Cliente"; 
-            else if(ev.stage==="🟢 Retomado"||ev.stage==="✅ RETRABALHO CONCLUÍDO") cur=STAGES[0]; 
+            else if(ev.stage==="🔴 PAUSADO") cur="Pausado / Impedido"; 
+            else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
             lst=t; 
         }); 
         if(p.stageIndex!==7&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
     });
+
+    if(document.getElementById('dkpi-total')) document.getElementById('dkpi-total').textContent = total;
+    if(document.getElementById('dkpi-avg-time')) document.getElementById('dkpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
     
     let fd = []; for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
     fd.sort((x,y) => y.h - x.h);
