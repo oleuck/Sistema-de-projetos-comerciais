@@ -144,18 +144,18 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <h3 class="modal-title">⚙️ Painel de Segurança</h3>
 <p class="modal-desc">Altere a palavra-passe de qualquer utilizador da equipa.</p>
 <div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
-<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Panel</button></div>
 </div>
 </div>
 
 <div id="drive-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📂 Anexar Ficheiro do Google Drive</h3>
-<p class="modal-desc">Insira a ligação direta do ficheiro/pasta do Drive ou use o seletor oficial:</p>
-<input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
+<h3 class="modal-title">📂 Vincular Pasta ou Arquivo (Drive ou Local)</h3>
+<p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
+<input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
 <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
-<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor Web do Google Drive</button></div>
-<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
+<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Seletor Oficial do Google Drive</button></div>
+<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Caminho</button></div>
 </div>
 </div>
 
@@ -532,11 +532,21 @@ function openDriveModal(id) { driveProjectId = id; document.getElementById('driv
 function closeDriveModal(c) {
     document.getElementById('drive-modal').classList.add('hidden');
     if (c && driveProjectId) {
-        const u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
+        let u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
         if (u) {
+            // CONVERSOR DE CAMINHO LOCAL WINDOWS (Trata caminhos de rede e G:\)
+            if (u.toUpperCase().startsWith('G:') || u.startsWith('\\\\') || (!u.startsWith('http') && u.includes('\\'))) {
+                let formattedPath = u.replace(/\\/g, '/');
+                if (formattedPath.charAt(1) === ':') {
+                    u = 'file:///' + formattedPath;
+                } else {
+                    u = 'file://' + formattedPath;
+                }
+            }
+
             const p = appData.projects.find(p => p.id === driveProjectId);
             if(!p.history) p.history = [];
-            p.history.unshift({ stage: "📂 ARQUIVO ANEXADO", obs: o ? `${o}` : "Arquivo vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
+            p.history.unshift({ stage: "📂 CAMINHO ANEXADO", obs: o ? `${o}` : "Diretório vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
             saveData(); updateViews();
         }
     }
@@ -915,13 +925,13 @@ function buildCardsStructure(list, container, isDash) {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
             
-            // O BOTÃO AGORA SEMPRE ABRE COMO LINK DA WEB NO NAVEGADOR
+            // O BOTÃO DE SUPORTE A LINK WEB E CAMINHO LOCAL WINDOWS
             let drv = '';
             if (h.driveUrl) {
-                drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive</a>`;
+                drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir Caminho / Pasta</a>`;
             }
 
-            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
+            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
         });
@@ -1115,7 +1125,7 @@ function renderDraftsmanGraph() {
     });
 }
 
-// ---------- PDF RELATÓRIOS (NOVO E EMBELEZADO) ----------
+// ---------- PDF RELATÓRIOS ----------
 function sanitizeForPDF(t) { return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; }
 
 function exportReportPDF(id) {
@@ -1155,7 +1165,7 @@ function exportReportPDF(id) {
         sanitizeForPDF(h.date || ''),
         sanitizeForPDF(h.stage || ''),
         sanitizeForPDF(h.author || ''),
-        sanitizeForPDF(h.obs || '') + (h.driveUrl ? `\n[Anexo: ${sanitizeForPDF(h.driveUrl)}]` : '')
+        sanitizeForPDF(h.obs || '') + (h.driveUrl ? `\n[Caminho: ${sanitizeForPDF(h.driveUrl)}]` : '')
     ]);
 
     doc.autoTable({
