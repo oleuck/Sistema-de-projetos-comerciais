@@ -150,9 +150,9 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="drive-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📂 Anexar Ficheiro</h3>
-<p class="modal-desc">Insira um link da internet OU o caminho da pasta G: do Windows:</p>
-<input type="text" id="drive-url-input" placeholder="Ex: https://...  ou  G:\Meu Drive\Projetos\...">
+<h3 class="modal-title">📂 Anexar Ficheiro do Google Drive</h3>
+<p class="modal-desc">Insira a ligação direta do ficheiro/pasta do Drive ou use o seletor oficial:</p>
+<input type="text" id="drive-url-input" placeholder="https://drive.google.com/...">
 <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisto enviado pelo vendedor..."></textarea>
 <div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Abrir Seletor Web do Google Drive</button></div>
 <div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Arquivo</button></div>
@@ -334,15 +334,6 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
-// FUNÇÃO GLOBAL DE COPIAR TEXTO (USADA PARA CAMINHOS DO DISCO G:)
-window.copyToClipboard = function(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Caminho copiado com sucesso!\n\n' + text + '\n\nAbra o seu explorador de arquivos (Pastas do Windows) e cole este caminho para acessar.');
-    }).catch(err => {
-        alert('Falha ao copiar caminho: ' + err);
-    });
-};
-
 const STAGES = [
 "Aguardando Início (Fila)", // 0
 "Em Desenho",               // 1
@@ -924,15 +915,10 @@ function buildCardsStructure(list, container, isDash) {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
             
-            // TRATAMENTO DA UNIDADE G: (NÃO CLICÁVEL, APENAS COPIÁVEL)
+            // O BOTÃO AGORA SEMPRE ABRE COMO LINK DA WEB NO NAVEGADOR
             let drv = '';
             if (h.driveUrl) {
-                if (h.driveUrl.toLowerCase().startsWith('http')) {
-                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link">📂 Abrir no Drive</a>`;
-                } else {
-                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                    drv = `<br><button class="drive-link" style="background:#f3f4f6; border-color:#d1d5db; color:#374151; cursor:pointer;" onclick="copyToClipboard('${safePath}')">📁 Copiar Caminho (G:)</button>`;
-                }
+                drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive</a>`;
             }
 
             let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('ARQUIVO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
@@ -945,7 +931,7 @@ function buildCardsStructure(list, container, isDash) {
 
         let acts = '';
         if (edit && !isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button onclick="toggleRework('${p.id}')" style="background:#d946ef;">🔄 Revisão Interna</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
         } else if (edit && isC) {
             acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
         } else if (!edit && isDash && !isC && (p.stageIndex === 0 || p.stageIndex === 2) && !isViewerMode) {
@@ -1138,38 +1124,33 @@ function exportReportPDF(id) {
     
     const doc = new window.jspdf.jsPDF();
     
-    // Título Principal
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
-    doc.setTextColor(37, 99, 235); // Azul Primário
+    doc.setTextColor(37, 99, 235); 
     doc.text("DOSSIER DO PROJETO", 14, 22);
     
-    // Nome da Obra
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
     doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 14, 32);
 
-    // Tabela de Informações Gerais
     doc.autoTable({
         startY: 38,
         theme: 'plain',
         body: [
-            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
+            ['COD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
             ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
-            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
+            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsavel Atual:', sanitizeForPDF(p.owner)]
         ],
         styles: { cellPadding: 2, fontSize: 11 }
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
     
-    // Subtítulo do Histórico
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(37, 99, 235);
-    doc.text("HISTÓRICO DE ATIVIDADES", 14, finalY);
+    doc.text("HISTORICO DE ATIVIDADES", 14, finalY);
 
-    // Tabela do Histórico
     const histData = (p.history || []).map(h => [
         sanitizeForPDF(h.date || ''),
         sanitizeForPDF(h.stage || ''),
@@ -1179,7 +1160,7 @@ function exportReportPDF(id) {
 
     doc.autoTable({
         startY: finalY + 5,
-        head: [['Data', 'Etapa', 'Autor', 'Observação / Anexos']],
+        head: [['Data', 'Etapa', 'Autor', 'Observacao / Anexos']],
         body: histData,
         theme: 'striped',
         headStyles: { fillColor: [37, 99, 235] },
@@ -1192,12 +1173,12 @@ function exportReportPDF(id) {
 
 function exportDraftsmanReport() { 
     if(!window.jspdf) return; 
-    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatório de ${currentUser}`); 
+    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatorio de ${currentUser}`); 
 }
 
 function exportManagerReport() { 
     if(!window.jspdf) return; 
-    generateListPDF(appData.projects, `Relatório Geral de Obras`); 
+    generateListPDF(appData.projects, `Relatorio Geral de Obras`); 
 }
 
 function generateListPDF(list, title) {
@@ -1224,7 +1205,7 @@ function generateListPDF(list, title) {
 
     doc.autoTable({
         startY: 35,
-        head: [['CÓD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
+        head: [['COD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
         body: tableData,
         theme: 'grid',
         headStyles: { fillColor: [37, 99, 235] },
