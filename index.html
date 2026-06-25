@@ -141,8 +141,8 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="edit-project-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">✏️ Editar Projeto</h3>
-<p class="modal-desc">Altere as informações do projeto atual.</p>
+<h3 class="modal-title">✏️ Editar Informações</h3>
+<p class="modal-desc">Altere os detalhes do projeto atual.</p>
 <input type="hidden" id="ep-id">
 <div class="form-grid">
     <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
@@ -431,6 +431,7 @@ let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkPro
 let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
 let currentChart = null; let currentDraftsmanChart = null;
 
+// MOTOR DE INICIALIZAÇÃO - DESTRAVA A TELA E MOSTRA OS DADOS
 function iniciarSistemaSeguro() {
     const loader = document.getElementById('global-loader'); 
     if (loader) loader.style.display = 'none';
@@ -486,17 +487,20 @@ setTimeout(() => {
 }, 200);
 
 window.addEventListener('load', () => {
+    // Timeout de fallback para destravar a tela se a net falhar 100%
     setTimeout(() => {
         iniciarSistemaSeguro();
     }, 2500); 
 });
 
+// A NOVA FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
 function saveData() {
     if (!firebaseSincronizado) { 
         localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
         return; 
     }
     
+    // A SUPER TRAVA: Se tentar salvar 0 projetos e a gente sabe que antes tinha projetos, aborta a missão!
     if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) {
         console.error("Tentativa de salvar banco vazio bloqueada pela Trava de Segurança!");
         return;
@@ -603,7 +607,6 @@ function openEditProjectModal(id) {
     const p = appData.projects.find(proj => proj.id === id);
     if (!p) return;
     document.getElementById('ep-id').value = id;
-    document.getElementById('ep-cliente').value = p.name || '';
     document.getElementById('ep-cod').value = p.cod || '';
     document.getElementById('ep-cidade').value = p.cidade || '';
     document.getElementById('ep-vendedor').value = p.vendedor || '';
@@ -783,7 +786,7 @@ function closeCreateProjectModal(c) {
     if(!appData.projects) appData.projects = [];
     appData.projects.unshift({
         id: Date.now().toString(), 
-        owner: "Sem Desenhista", // NOVO: Deixa na fila sem ninguém
+        owner: "Fila", 
         name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
         cod: document.getElementById('cp-cod').value.trim(), vendedor: document.getElementById('cp-vendedor').value, tipo: document.getElementById('cp-tipo').value,
         probabilidade: document.getElementById('cp-probabilidade').value, cidade: document.getElementById('cp-cidade').value.trim(),
@@ -794,7 +797,6 @@ function closeCreateProjectModal(c) {
     if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
     if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
     
-    // Se for visualizador volta pra fila do visualizador, senão do desenhista
     if(isViewerMode) switchManagerTab('fila'); else switchDraftsmanTab('fila');
 }
 
@@ -824,7 +826,7 @@ function assumirProjeto(id) {
     
     const responsavelAntigo = p.owner;
     p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
-    p.stageIndex = 1; // Avança para Em Desenho
+    p.stageIndex = 1; 
     
     if(!p.history) p.history = [];
     p.history.unshift({
@@ -952,9 +954,8 @@ function renderProjects() {
 
         const isOwner = p.owner === currentUser;
         
-        // Garante que projetos novos ("Sem Desenhista") sejam vistos por todos para assumir
         let userMatch = false;
-        if (p.owner === "Sem Desenhista") {
+        if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
             userMatch = true;
         } else if (filterUser === 'MEUS') {
             userMatch = isOwner;
@@ -993,8 +994,7 @@ function buildCardsStructure(list, container, isDash) {
         const isC = p.stageIndex >= 7; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
-        // Permite edição de projetos recém criados
-        const edit = !isViewerMode && isDash && (own || isMaster || p.owner === "Sem Desenhista");
+        const edit = !isViewerMode && isDash && (own || isMaster || p.owner === "Fila" || p.owner === "Sem Desenhista");
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
         if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
@@ -1263,9 +1263,9 @@ function exportReportPDF(id) {
         startY: 38,
         theme: 'plain',
         body: [
-            ['COD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
+            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
             ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
-            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsavel Atual:', sanitizeForPDF(p.owner)]
+            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
         ],
         styles: { cellPadding: 2, fontSize: 11 }
     });
@@ -1275,7 +1275,7 @@ function exportReportPDF(id) {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(37, 99, 235);
-    doc.text("HISTORICO DE ATIVIDADES", 14, finalY);
+    doc.text("HISTÓRICO DE ATIVIDADES", 14, finalY);
 
     const histData = (p.history || []).map(h => [
         sanitizeForPDF(h.date || ''),
@@ -1286,7 +1286,7 @@ function exportReportPDF(id) {
 
     doc.autoTable({
         startY: finalY + 5,
-        head: [['Data', 'Etapa', 'Autor', 'Observacao / Anexos']],
+        head: [['Data', 'Etapa', 'Autor', 'Observação / Anexos']],
         body: histData,
         theme: 'striped',
         headStyles: { fillColor: [37, 99, 235] },
@@ -1299,12 +1299,12 @@ function exportReportPDF(id) {
 
 function exportDraftsmanReport() { 
     if(!window.jspdf) return; 
-    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatorio de ${currentUser}`); 
+    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatório de ${currentUser}`); 
 }
 
 function exportManagerReport() { 
     if(!window.jspdf) return; 
-    generateListPDF(appData.projects, `Relatorio Geral de Obras`); 
+    generateListPDF(appData.projects, `Relatório Geral de Obras`); 
 }
 
 function generateListPDF(list, title) {
@@ -1331,7 +1331,7 @@ function generateListPDF(list, title) {
 
     doc.autoTable({
         startY: 35,
-        head: [['COD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
+        head: [['CÓD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
         body: tableData,
         theme: 'grid',
         headStyles: { fillColor: [37, 99, 235] },
