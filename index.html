@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Controlo de Projetos</title>
+<title>Sistema de Controle de Projetos</title>
 
 <script>
 window.onerror = function(msg, url, line) {
@@ -74,7 +74,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
 .project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
 .project-header { margin-bottom: 10px; }
-.project-title-container { display: flex; justify-content: space-between; align-items: start; gap: 10px; margin-bottom: 10px; }
+.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
 .draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
 .project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
@@ -142,9 +142,8 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <div id="edit-project-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 class="modal-title">✏️ Editar Projeto</h3>
-<p class="modal-desc">Altere o nome e as informações do projeto atual.</p>
+<p class="modal-desc">Altere as informações do projeto atual.</p>
 <input type="hidden" id="ep-id">
-<div class="form-grid full"><input type="text" id="ep-cliente" placeholder="Nome do Cliente / Obra"></div>
 <div class="form-grid">
     <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
     <input type="text" id="ep-cidade" placeholder="Cidade">
@@ -432,8 +431,10 @@ let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkPro
 let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
 let currentChart = null; let currentDraftsmanChart = null;
 
-// MOTOR DE INICIALIZAÇÃO - OBRIGA A TELA A FICAR TRANCADA ATÉ CARREGAR TUDO
 function iniciarSistemaSeguro() {
+    const loader = document.getElementById('global-loader'); 
+    if (loader) loader.style.display = 'none';
+
     try {
         if (!firebaseSincronizado) { 
             const offBanner = document.getElementById('offline-banner');
@@ -454,11 +455,6 @@ function iniciarSistemaSeguro() {
         } else {
             document.getElementById('view-dashboard').classList.remove('hidden'); renderProjects();
         }
-        
-        // Só esconde a tela de loading DEPOIS que o código acima decidir o que desenhar na tela
-        const loader = document.getElementById('global-loader'); 
-        if (loader) loader.style.display = 'none';
-        
     } catch(err) { console.error("Falha ao inicializar a tela:", err); }
 }
 
@@ -482,7 +478,7 @@ setTimeout(() => {
                 } else if(!firebaseSincronizado) { 
                     docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
                 }
-                // Dispara a inicialização segura que irá destrancar a tela
+                
                 iniciarSistemaSeguro();
             }, (error) => { iniciarSistemaSeguro(); });
         } else { iniciarSistemaSeguro(); }
@@ -490,28 +486,23 @@ setTimeout(() => {
 }, 200);
 
 window.addEventListener('load', () => {
-    // Timeout de fallback para destravar a tela se a net falhar 100%
     setTimeout(() => {
-        const loader = document.getElementById('global-loader'); 
-        if(loader && loader.style.display !== 'none') iniciarSistemaSeguro();
+        iniciarSistemaSeguro();
     }, 2500); 
 });
 
-// A NOVA FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
 function saveData() {
     if (!firebaseSincronizado) { 
         localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
         return; 
     }
     
-    // A SUPER TRAVA: Se tentar salvar 0 projetos e a gente sabe que antes tinha projetos, aborta a missão!
     if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) {
         console.error("Tentativa de salvar banco vazio bloqueada pela Trava de Segurança!");
         return;
     }
     
     if (docRef) {
-        // Bloqueio visual para evitar duplo clique da equipe
         const loader = document.getElementById('global-loader');
         const loaderTitle = document.getElementById('loader-title');
         const loaderText = document.getElementById('loader-text');
@@ -542,7 +533,6 @@ function closeModal(c) {
     if (modalResolve) { modalResolve(c ? document.getElementById('modal-input').value : null); modalResolve = null; }
 }
 
-// MODAL DA SENHA (ATUALIZADO PARA ACEITAR O ENTER)
 function openPasswordModal(t, d) {
     document.getElementById('password-modal').classList.remove('hidden'); 
     document.getElementById('pwd-modal-title').textContent = t;
@@ -628,7 +618,6 @@ function closeEditProjectModal(confirm) {
         const id = document.getElementById('ep-id').value;
         const p = appData.projects.find(proj => proj.id === id);
         if (p) {
-            p.name = document.getElementById('ep-cliente').value.trim() || p.name;
             p.cod = document.getElementById('ep-cod').value.trim();
             p.cidade = document.getElementById('ep-cidade').value.trim();
             p.vendedor = document.getElementById('ep-vendedor').value;
@@ -793,16 +782,26 @@ function closeCreateProjectModal(c) {
     if (!cli) { alert("Nome do Cliente / Obra é obrigatório!"); return; }
     if(!appData.projects) appData.projects = [];
     appData.projects.unshift({
-        id: Date.now().toString(), owner: currentUser === "ADMIN" ? "Admin" : currentUser, name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
+        id: Date.now().toString(), 
+        owner: "Sem Desenhista", // NOVO: Deixa na fila sem ninguém
+        name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
         cod: document.getElementById('cp-cod').value.trim(), vendedor: document.getElementById('cp-vendedor').value, tipo: document.getElementById('cp-tipo').value,
         probabilidade: document.getElementById('cp-probabilidade').value, cidade: document.getElementById('cp-cidade').value.trim(),
-        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado.", date: new Date().toLocaleString('pt-BR'), author: currentUser }]
+        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado na fila.", date: new Date().toLocaleString('pt-BR'), author: currentUser || "Visualizador" }]
     });
     saveData(); document.getElementById('create-project-modal').classList.add('hidden'); 
     
     if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
     if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
-    switchDraftsmanTab('fila');
+    
+    // Se for visualizador volta pra fila do visualizador, senão do desenhista
+    if(isViewerMode) switchManagerTab('fila'); else switchDraftsmanTab('fila');
+}
+
+async function editProjectName(id) {
+    const p = appData.projects.find(p => p.id === id); if(!p) return;
+    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
+    if (n) { p.name = n; saveData(); renderProjects(); }
 }
 
 async function deleteProject(id) {
@@ -953,8 +952,11 @@ function renderProjects() {
 
         const isOwner = p.owner === currentUser;
         
+        // Garante que projetos novos ("Sem Desenhista") sejam vistos por todos para assumir
         let userMatch = false;
-        if (filterUser === 'MEUS') {
+        if (p.owner === "Sem Desenhista") {
+            userMatch = true;
+        } else if (filterUser === 'MEUS') {
             userMatch = isOwner;
         } else if (filterUser === 'ALL') {
             userMatch = true; 
@@ -991,7 +993,8 @@ function buildCardsStructure(list, container, isDash) {
         const isC = p.stageIndex >= 7; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
-        const edit = !isViewerMode && isDash && (own || isMaster);
+        // Permite edição de projetos recém criados
+        const edit = !isViewerMode && isDash && (own || isMaster || p.owner === "Sem Desenhista");
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
         if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
@@ -1035,16 +1038,16 @@ function buildCardsStructure(list, container, isDash) {
         }
         acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
 
-        // BOTÃO DE EDITAR AGORA É UM BOTÃO ROBUSTO "✏️ Editar" NO LUGAR DO PEQUENO LÁPIS
         card.innerHTML = `
         <div class="project-header">
             <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
-            <div class="project-title-container" style="display:flex; justify-content:space-between; align-items:start;">
+            <div class="project-title-container" style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
                 <h2 style="margin:0;">${p.name||'Sem Nome'}</h2>
-                ${edit ? `<button class="icon-btn" onclick="openEditProjectModal('${p.id}')" title="Editar Obra e Detalhes" style="background:#f3f4f6; border:1px solid #e5e7eb; padding:4px 8px;">✏️ Editar</button>` : ''}
+                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome da Obra">✏️</button>` : ''}
             </div>
-            <div class="project-details-box">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <div class="project-details-box" style="position: relative;">
+                ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px; background:#e5e7eb; padding:4px 8px; font-size: 0.8rem; font-weight: bold; border-radius: 4px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️ Editar Info</button>` : ''}
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; padding-right: 80px;">
                     <span><strong>CÓD:</strong> ${p.cod || '-'}</span>
                     <span><strong>Vend:</strong> ${p.vendedor || '-'}</span>
                 </div>
