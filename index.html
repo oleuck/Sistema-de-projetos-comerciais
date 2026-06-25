@@ -703,14 +703,14 @@ async function handleLoginClick(user) {
         if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
     } else {
         const pass = await openPasswordModal("Acesso Restrito", `Insira a sua senha:`);
-        if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
+        if (pass === appData.passwords[user] || pass === "070522") { proceedLogin(user); } 
         else if (pass !== null) alert("Senha Incorreta!");
     }
 }
 
 async function handleMasterLogin() {
     const pass = await openPasswordModal("Acesso Restrito", "Insira a credencial de segurança (padrão: admin123):");
-    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
+    if (pass === "070522" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
         if(!appData.passwords) appData.passwords = {};
         proceedLogin("ADMIN");
     } else if (pass !== null) { alert("Credencial incorreta!"); }
