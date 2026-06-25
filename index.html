@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Controle de Projetos</title>
+<title>Sistema de Controlo de Projetos</title>
 
 <script>
 window.onerror = function(msg, url, line) {
@@ -74,7 +74,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
 .project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
 .project-header { margin-bottom: 10px; }
-.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.project-title-container { display: flex; justify-content: space-between; align-items: start; gap: 10px; margin-bottom: 10px; }
 .project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
 .draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
 .project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
@@ -110,17 +110,17 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Conexão com a base de dados bloqueada pela rede. Rodando no Modo Offline (Memória do Navegador).</div>
+<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. Rodando no Modo Offline.</div>
 
 <div id="global-loader">
     <div class="spinner"></div>
-    <h2 style="color: var(--primary); margin: 0;">Sincronizando com a Nuvem...</h2>
+    <h2 style="color: var(--primary); margin: 0;" id="loader-title">Sincronizando com a Nuvem...</h2>
     <p style="color: var(--text-light);" id="loader-text">Aguardando resposta do banco de dados...</p>
 </div>
 
 <div id="create-project-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📋 Cadastrar Novo Projeto na Fila</h3>
+<h3 class="modal-title">📋 Cadastrar Novo Projeto</h3>
 <p class="modal-desc">Preencha as informações básicas para iniciar.</p>
 <div class="form-grid full"><input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)"></div>
 <div class="form-grid"><input type="text" id="cp-cod" placeholder="CÓD / Ordem"><input type="text" id="cp-cidade" placeholder="Cidade"></div>
@@ -141,33 +141,20 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="edit-project-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">✏️ Editar Detalhes do Projeto</h3>
-<p class="modal-desc">Atualize as informações da obra.</p>
+<h3 class="modal-title">✏️ Editar Projeto</h3>
+<p class="modal-desc">Altere o nome e as informações do projeto atual.</p>
 <input type="hidden" id="ep-id">
+<div class="form-grid full"><input type="text" id="ep-cliente" placeholder="Nome do Cliente / Obra"></div>
 <div class="form-grid">
     <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
     <input type="text" id="ep-cidade" placeholder="Cidade">
 </div>
 <div class="form-grid">
-    <select id="ep-vendedor">
-        <option value="">Selecione Vendedor...</option>
-        <option value="CARLA">CARLA</option>
-        <option value="JONES">JONES</option>
-        <option value="SHANA">SHANA</option>
-        <option value="OUTRO">Outro / Terceiros</option>
-    </select>
-    <select id="ep-tipo">
-        <option value="NOVO">NOVO</option>
-        <option value="REVISÃO">REVISÃO</option>
-    </select>
+    <select id="ep-vendedor"><option value="">Selecione Vendedor...</option><option value="CARLA">CARLA</option><option value="JONES">JONES</option><option value="SHANA">SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
+    <select id="ep-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
 </div>
 <div class="form-grid full">
-    <select id="ep-probabilidade">
-        <option value="">Probabilidade de Venda...</option>
-        <option value="BAIXA">BAIXA</option>
-        <option value="MÉDIA">MÉDIA</option>
-        <option value="ALTA">ALTA</option>
-    </select>
+    <select id="ep-probabilidade"><option value="">Probabilidade...</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
 </div>
 <div class="modal-buttons">
 <button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
@@ -187,7 +174,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="drive-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">📂 Vincular Pasta ou Arquivo (Drive ou Local)</h3>
+<h3 class="modal-title">📂 Vincular Pasta ou Arquivo</h3>
 <p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
 <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
 <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
@@ -206,7 +193,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 
 <div id="rework-modal" class="modal-overlay hidden">
 <div class="modal-content">
-<h3 class="modal-title">🔄 Classificar Revisão de Andamento</h3>
+<h3 class="modal-title">🔄 Classificar Revisão</h3>
 <select id="rework-type-select" style="margin-bottom: 15px;"><option value="INTERNO">🔴 Erro Interno (Melhorar Qualidade/Processos)</option><option value="EXTERNO">🟠 Solicitação Externa (Alteração a pedido do Cliente)</option></select>
 <textarea id="rework-obs-input" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
 <div class="modal-buttons"><button class="secondary" onclick="closeReworkModal(false)">Cancelar</button><button class="warning" style="background-color: #d946ef; color: white;" onclick="closeReworkModal(true)">Iniciar Revisão</button></div>
@@ -225,7 +212,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 <div id="password-modal" class="modal-overlay hidden">
 <div class="modal-content">
 <h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
-<p id="pwd-modal-desc" class="modal-desc">Insira a sua senha.</p>
+<p id="pwd-modal-desc" class="modal-desc">Insira a senha.</p>
 <input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password" onkeydown="if(event.key === 'Enter') closePasswordModal(true)">
 <div class="modal-buttons"><button class="secondary" onclick="closePasswordModal(false)">Cancelar</button><button onclick="closePasswordModal(true)">Confirmar</button></div>
 </div>
@@ -336,13 +323,13 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                     </select>
 
                     <div class="search-bar"><input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD..."></div>
-                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF da Aba</button>
+                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF do Separador</button>
                 </div>
             </div>
         </div>
 
         <div id="add-project-row" style="background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-            <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apaga a sua conta do sistema">🗑️ Excluir o Meu Perfil</button>
+            <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apaga a sua conta do sistema">🗑️ Excluir Meu Perfil</button>
             <button class="success" onclick="openCreateProjectModal()" style="font-size: 1.05rem; padding: 12px 25px; margin-left:auto;">➕ Iniciar Novo Projeto na Fila</button>
         </div>
 
@@ -371,16 +358,12 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
-// FUNÇÃO MÁGICA: CHAMA O SCRIPT EM PYTHON DO SEU PC SE FOR UM CAMINHO G:\...
+// COMUNICAÇÃO COM O SCRIPT PYTHON
 window.abrirPastaLocalPeloAjudante = function(caminho) {
     fetch('http://127.0.0.1:49152/abrir-pasta?caminho=' + encodeURIComponent(caminho))
     .then(res => res.text())
-    .then(text => {
-        if(text !== "Sucesso") alert("O ajudante local avisou que deu erro ao abrir a pasta:\n" + text);
-    })
-    .catch(err => {
-        alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais da Engenharia automaticamente com 1 clique, você precisa de abrir o arquivo 'ajudante.py' no seu computador antes.");
-    });
+    .then(text => { if(text !== "Sucesso") alert("O ajudante local avisou que deu erro:\n" + text); })
+    .catch(err => { alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais automaticamente com 1 clique, você precisa abrir o arquivo 'ajudante.py' no seu computador."); });
 };
 
 const STAGES = [
@@ -422,7 +405,7 @@ function initGoogleDrivePicker() {
 window.addEventListener('load', initGoogleDrivePicker);
 
 function openPicker() {
-    if(!tokenClient || !window.gapi) { alert("A ligação ao Google Drive foi bloqueada pelo seu navegador ou rede."); return; }
+    if(!tokenClient || !window.gapi) { alert("Conexão ao Google Drive bloqueada pelo navegador."); return; }
     if (!accessToken) {
         tokenClient.callback = async (response) => { if (response.error !== undefined) throw (response); accessToken = response.access_token; createPicker(); };
         tokenClient.requestAccessToken({prompt: 'consent'});
@@ -441,7 +424,6 @@ function pickerCallback(data) {
     }
 }
 
-// ESTADO GLOBAL
 let appData = { users: [], passwords: {}, projects: [] };
 let currentUser = null; let isViewerMode = false;
 let managerCurrentTab = 'andamento'; let draftsmanCurrentTab = 'fila';
@@ -450,22 +432,14 @@ let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkPro
 let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
 let currentChart = null; let currentDraftsmanChart = null;
 
-// MOTOR DE INICIALIZAÇÃO
+// MOTOR DE INICIALIZAÇÃO - OBRIGA A TELA A FICAR TRANCADA ATÉ CARREGAR TUDO
 function iniciarSistemaSeguro() {
     try {
-        const loader = document.getElementById('global-loader'); 
-        if (loader) loader.style.display = 'none';
-        
         if (!firebaseSincronizado) { 
             const offBanner = document.getElementById('offline-banner');
             if(offBanner) offBanner.style.display = 'block';
             const local = localStorage.getItem('appData_teste_local'); 
-            if (local) { 
-                try { 
-                    const p = JSON.parse(local); 
-                    if(p) appData = p; 
-                } catch(e) {} 
-            } 
+            if (local) { try { const p = JSON.parse(local); if(p) appData = p; } catch(e) {} } 
         }
         
         if (!appData) appData = {};
@@ -474,25 +448,25 @@ function iniciarSistemaSeguro() {
         if (!appData.passwords) appData.passwords = {};
 
         if (!currentUser && !isViewerMode) {
-            document.getElementById('view-profiles').classList.remove('hidden');
-            renderProfiles();
+            document.getElementById('view-profiles').classList.remove('hidden'); renderProfiles();
         } else if (isViewerMode) {
-            document.getElementById('view-manager').classList.remove('hidden');
-            renderGlobalFeed();
+            document.getElementById('view-manager').classList.remove('hidden'); renderGlobalFeed();
         } else {
-            document.getElementById('view-dashboard').classList.remove('hidden');
-            renderProjects();
+            document.getElementById('view-dashboard').classList.remove('hidden'); renderProjects();
         }
-    } catch(err) { console.error("Falha ao remover a tela de carregamento:", err); }
+        
+        // Só esconde a tela de loading DEPOIS que o código acima decidir o que desenhar na tela
+        const loader = document.getElementById('global-loader'); 
+        if (loader) loader.style.display = 'none';
+        
+    } catch(err) { console.error("Falha ao inicializar a tela:", err); }
 }
 
 setTimeout(() => {
     try {
         if(window.firebase) {
             firebase.initializeApp(firebaseConfig); 
-            db = firebase.firestore(); 
-            docRef = db.collection("sistema").doc("bancoDeDados");
-            
+            db = firebase.firestore(); docRef = db.collection("sistema").doc("bancoDeDados");
             docRef.onSnapshot((doc) => {
                 if (doc.exists) { 
                     const data = doc.data(); 
@@ -501,33 +475,60 @@ setTimeout(() => {
                     if(!appData.projects) appData.projects = [];
                     if(!appData.passwords) appData.passwords = {};
                     firebaseSincronizado = true; 
-                    const off = document.getElementById('offline-banner');
-                    if(off) off.style.display = 'none';
+                    
+                    maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
+                    
+                    const off = document.getElementById('offline-banner'); if(off) off.style.display = 'none';
                 } else if(!firebaseSincronizado) { 
                     docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
                 }
-                
-                const loader = document.getElementById('global-loader'); 
-                if(loader && loader.style.display !== 'none') iniciarSistemaSeguro();
-                else updateViews(); 
-                
+                // Dispara a inicialização segura que irá destrancar a tela
+                iniciarSistemaSeguro();
             }, (error) => { iniciarSistemaSeguro(); });
         } else { iniciarSistemaSeguro(); }
     } catch (error) { iniciarSistemaSeguro(); }
 }, 200);
 
 window.addEventListener('load', () => {
-    initGoogleDrivePicker();
+    // Timeout de fallback para destravar a tela se a net falhar 100%
     setTimeout(() => {
         const loader = document.getElementById('global-loader'); 
         if(loader && loader.style.display !== 'none') iniciarSistemaSeguro();
     }, 2500); 
 });
 
+// A NOVA FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
 function saveData() {
-    if (!firebaseSincronizado) { localStorage.setItem('appData_teste_local', JSON.stringify(appData)); return; }
-    if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
-    if (docRef) docRef.set(appData).catch(err => {});
+    if (!firebaseSincronizado) { 
+        localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
+        return; 
+    }
+    
+    // A SUPER TRAVA: Se tentar salvar 0 projetos e a gente sabe que antes tinha projetos, aborta a missão!
+    if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) {
+        console.error("Tentativa de salvar banco vazio bloqueada pela Trava de Segurança!");
+        return;
+    }
+    
+    if (docRef) {
+        // Bloqueio visual para evitar duplo clique da equipe
+        const loader = document.getElementById('global-loader');
+        const loaderTitle = document.getElementById('loader-title');
+        const loaderText = document.getElementById('loader-text');
+        if(loader && loaderText && loaderTitle) {
+            loaderTitle.innerText = "Registrando...";
+            loaderText.innerText = "Aguarde um momento";
+            loader.style.display = 'flex';
+        }
+
+        docRef.set(appData).then(() => {
+            if(loader) loader.style.display = 'none';
+            maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
+        }).catch(err => {
+            if(loader) loader.style.display = 'none';
+            alert("⚠️ Erro de conexão ao salvar na nuvem.");
+        });
+    }
 }
 
 // MODAIS
@@ -540,15 +541,30 @@ function closeModal(c) {
     document.getElementById('custom-modal').classList.add('hidden');
     if (modalResolve) { modalResolve(c ? document.getElementById('modal-input').value : null); modalResolve = null; }
 }
+
+// MODAL DA SENHA (ATUALIZADO PARA ACEITAR O ENTER)
 function openPasswordModal(t, d) {
-    document.getElementById('password-modal').classList.remove('hidden'); document.getElementById('pwd-modal-title').textContent = t;
-    document.getElementById('pwd-modal-desc').textContent = d; document.getElementById('pwd-modal-input').value = ''; document.getElementById('pwd-modal-input').focus();
+    document.getElementById('password-modal').classList.remove('hidden'); 
+    document.getElementById('pwd-modal-title').textContent = t;
+    document.getElementById('pwd-modal-desc').textContent = d; 
+    const input = document.getElementById('pwd-modal-input');
+    input.value = ''; 
+    input.focus();
+    
+    input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            closePasswordModal(true);
+        }
+    };
+    
     return new Promise(r => { passwordResolve = r; });
 }
 function closePasswordModal(c) {
     document.getElementById('password-modal').classList.add('hidden');
     if (passwordResolve) { passwordResolve(c ? document.getElementById('pwd-modal-input').value : null); passwordResolve = null; }
 }
+
 function openConfirmModal(t, d, a = false) {
     document.getElementById('confirm-modal').classList.remove('hidden'); document.getElementById('confirm-title').textContent = t;
     document.getElementById('confirm-desc').textContent = d;
@@ -590,6 +606,38 @@ function closeDriveModal(c) {
         }
     }
     driveProjectId = null;
+}
+
+// EDIÇÃO DE INFORMAÇÕES GERAIS DO PROJETO
+function openEditProjectModal(id) {
+    const p = appData.projects.find(proj => proj.id === id);
+    if (!p) return;
+    document.getElementById('ep-id').value = id;
+    document.getElementById('ep-cliente').value = p.name || '';
+    document.getElementById('ep-cod').value = p.cod || '';
+    document.getElementById('ep-cidade').value = p.cidade || '';
+    document.getElementById('ep-vendedor').value = p.vendedor || '';
+    document.getElementById('ep-tipo').value = p.tipo || 'NOVO';
+    document.getElementById('ep-probabilidade').value = p.probabilidade || '';
+    document.getElementById('edit-project-modal').classList.remove('hidden');
+}
+
+function closeEditProjectModal(confirm) {
+    document.getElementById('edit-project-modal').classList.add('hidden');
+    if (confirm) {
+        const id = document.getElementById('ep-id').value;
+        const p = appData.projects.find(proj => proj.id === id);
+        if (p) {
+            p.name = document.getElementById('ep-cliente').value.trim() || p.name;
+            p.cod = document.getElementById('ep-cod').value.trim();
+            p.cidade = document.getElementById('ep-cidade').value.trim();
+            p.vendedor = document.getElementById('ep-vendedor').value;
+            p.tipo = document.getElementById('ep-tipo').value;
+            p.probabilidade = document.getElementById('ep-probabilidade').value;
+            saveData();
+            updateViews();
+        }
+    }
 }
 
 async function toggleRework(id) {
@@ -757,42 +805,6 @@ function closeCreateProjectModal(c) {
     switchDraftsmanTab('fila');
 }
 
-// NOVAS FUNÇÕES PARA EDITAR DETALHES DO PROJETO
-function openEditProjectModal(id) {
-    const p = appData.projects.find(proj => proj.id === id);
-    if (!p) return;
-    document.getElementById('ep-id').value = id;
-    document.getElementById('ep-cod').value = p.cod || '';
-    document.getElementById('ep-cidade').value = p.cidade || '';
-    document.getElementById('ep-vendedor').value = p.vendedor || '';
-    document.getElementById('ep-tipo').value = p.tipo || 'NOVO';
-    document.getElementById('ep-probabilidade').value = p.probabilidade || '';
-    document.getElementById('edit-project-modal').classList.remove('hidden');
-}
-
-function closeEditProjectModal(confirm) {
-    document.getElementById('edit-project-modal').classList.add('hidden');
-    if (confirm) {
-        const id = document.getElementById('ep-id').value;
-        const p = appData.projects.find(proj => proj.id === id);
-        if (p) {
-            p.cod = document.getElementById('ep-cod').value.trim();
-            p.cidade = document.getElementById('ep-cidade').value.trim();
-            p.vendedor = document.getElementById('ep-vendedor').value;
-            p.tipo = document.getElementById('ep-tipo').value;
-            p.probabilidade = document.getElementById('ep-probabilidade').value;
-            saveData();
-            updateViews();
-        }
-    }
-}
-
-async function editProjectName(id) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
-    if (n) { p.name = n; saveData(); renderProjects(); }
-}
-
 async function deleteProject(id) {
     if(confirm("Deseja apagar DEFINITIVAMENTE do sistema?")) { appData.projects = appData.projects.filter(p => p.id !== id); saveData(); renderProjects(); }
 }
@@ -801,7 +813,7 @@ async function updateStage(id, sel) {
     const p = appData.projects.find(p => p.id === id); if(!p) return; const idx = parseInt(sel.value);
     if (p.stageIndex !== idx) {
         const s = STAGES[idx] || 'Desconhecido';
-        const obs = await openModal("Avançar", `A avançar para: ${s}`, "Recados...");
+        const obs = await openModal("Avançar", `Avançando para: ${s}`, "Recados...");
         if (obs === null) { sel.value = p.stageIndex; } 
         else { p.stageIndex = idx; if(!p.history) p.history = []; p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
     }
@@ -832,7 +844,7 @@ async function createRevisaoFromCompleted(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
     const c = await openModal("Criar Revisão", "Qual será o NOVO CÓD?", "Ex: 18455A...");
     if (c !== null) {
-        const obs = await openModal("Motivo", "Por que está a retornar?", "Descreva...");
+        const obs = await openModal("Motivo", "Por que está retornando?", "Descreva...");
         if (obs !== null) {
             p.stageIndex = 0; p.tipo = "REVISÃO"; if (c.trim() !== "") p.cod = c.trim();
             if(!p.history) p.history = []; p.history.unshift({ stage: "🔄 RETORNOU", obs: obs || `Nova Revisão`, date: new Date().toLocaleString('pt-BR'), author: currentUser });
@@ -994,7 +1006,6 @@ function buildCardsStructure(list, container, isDash) {
             if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
             
-            // INTEGRAÇÃO COM O PYTHON PARA PASTAS LOCAIS
             let drv = '';
             if (h.driveUrl) {
                 let uUpper = h.driveUrl.toUpperCase();
@@ -1006,7 +1017,7 @@ function buildCardsStructure(list, container, isDash) {
                 }
             }
 
-            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU'))) col = 'color:#9333ea; font-weight:bold;';
+            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
         });
@@ -1024,15 +1035,16 @@ function buildCardsStructure(list, container, isDash) {
         }
         acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
 
-        // NOVA ÁREA EDITÁVEL PARA INFORMAÇÕES
-        card.innerHTML = `<div class="project-header">
+        // BOTÃO DE EDITAR AGORA É UM BOTÃO ROBUSTO "✏️ Editar" NO LUGAR DO PEQUENO LÁPIS
+        card.innerHTML = `
+        <div class="project-header">
             <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
-            <div class="project-title-container">
-                <h2>${p.name||'Sem Nome'}</h2>${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Renomear Obra">✏️</button>` : ''}
+            <div class="project-title-container" style="display:flex; justify-content:space-between; align-items:start;">
+                <h2 style="margin:0;">${p.name||'Sem Nome'}</h2>
+                ${edit ? `<button class="icon-btn" onclick="openEditProjectModal('${p.id}')" title="Editar Obra e Detalhes" style="background:#f3f4f6; border:1px solid #e5e7eb; padding:4px 8px;">✏️ Editar</button>` : ''}
             </div>
-            <div class="project-details-box" style="position: relative;">
-                ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️</button>` : ''}
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; padding-right: 25px;">
+            <div class="project-details-box">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                     <span><strong>CÓD:</strong> ${p.cod || '-'}</span>
                     <span><strong>Vend:</strong> ${p.vendedor || '-'}</span>
                 </div>
