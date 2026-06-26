@@ -1057,8 +1057,10 @@ function renderGlobalFeed() {
         if(!p) return false;
         const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
         let tb = false;
-        if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0 || p.stageIndex === 2); 
-        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8 && p.stageIndex !== 2); 
+        
+        // CORREÇÃO: Fila é apenas o índice 0. Em andamento é do 1 ao 7.
+        if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0); 
+        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8); 
         else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 8); 
         
         if (!m || !tb) return false;
@@ -1115,8 +1117,9 @@ function renderProjects() {
         if(!p) return false; 
         let tabMatch = false;
         
-        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0 || p.stageIndex === 2);
-        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8 && p.stageIndex !== 2);
+        // CORREÇÃO: Fila é apenas o índice 0. Em andamento é do 1 ao 7.
+        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0);
+        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8);
         else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 8);
         
         if(!tabMatch) return false;
@@ -1212,7 +1215,7 @@ function buildCardsStructure(list, container, isDash) {
         if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
         
         let acts = '';
-        if (isFila && isDash && !isViewerMode) {
+        if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
             acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>
             <div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>
             <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
@@ -1231,7 +1234,7 @@ function buildCardsStructure(list, container, isDash) {
             <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
             <div class="project-title-container" style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
                 <h2 style="margin:0;">${p.name||'Sem Nome'}</h2>
-                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome">✏️</button>` : ''}
+                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome da Obra">✏️</button>` : ''}
             </div>
             <div class="project-details-box" style="position: relative;">
                 ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px; background:#e5e7eb; padding:4px 8px; font-size: 0.8rem; font-weight: bold; border-radius: 4px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️ Editar Info</button>` : ''}
