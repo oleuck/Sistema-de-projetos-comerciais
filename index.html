@@ -5,22 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Controle de Projetos</title>
 
-<script>
-window.onerror = function(msg, url, line) {
-    var loader = document.getElementById('global-loader');
-    if (loader) loader.style.display = 'none'; 
-    var errorDiv = document.createElement('div');
-    errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
-    errorDiv.innerHTML = '<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>' + msg + ' (Linha: ' + line + ')</p><button onclick="this.parentElement.style.display=\'none\';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>';
-    if(document.body) { document.body.appendChild(errorDiv); }
-    else { window.onload = function() { document.body.appendChild(errorDiv); }; }
-    return false;
-};
-</script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,1749 +14,1803 @@ window.onerror = function(msg, url, line) {
 <script src="https://accounts.google.com/gsi/client"></script>
 
 <style>
+/* ===== DESIGN TOKENS ===== */
 :root {
---primary: #2563eb; --primary-hover: #1d4ed8; --success: #16a34a;
---warning: #f59e0b; --danger: #dc2626; --info: #0284c7;
---bg: #f3f4f6; --card: #ffffff; --text: #1f2937;
---text-light: #6b7280; --border: #e5e7eb; --modal-bg: rgba(0, 0, 0, 0.6);
+  --primary:       #2563eb;
+  --primary-h:     #1d4ed8;
+  --primary-light: #eff6ff;
+  --success:       #16a34a;
+  --success-light: #f0fdf4;
+  --warning:       #f59e0b;
+  --danger:        #dc2626;
+  --danger-light:  #fef2f2;
+  --info:          #0284c7;
+  --purple:        #9333ea;
+  --orange:        #ea580c;
+  --bg:            #f3f4f6;
+  --card:          #ffffff;
+  --text:          #1f2937;
+  --text-light:    #6b7280;
+  --border:        #e5e7eb;
+  --border-h:      #d1d5db;
+  --modal-bg:      rgba(0,0,0,0.55);
+  --radius:        10px;
+  --radius-sm:     6px;
+  --shadow:        0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg:     0 8px 24px rgba(0,0,0,0.14);
+  --transition:    0.18s ease;
 }
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 16px;
+  line-height: 1.5;
+}
 .hidden { display: none !important; }
-.container { max-width: 1300px; margin: 0 auto; }
-.header { text-align: center; margin-bottom: 20px; background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-h1, h2, h3 { margin-top: 0; margin-bottom: 10px; }
-button { background-color: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
-button:hover { background-color: var(--primary-hover); }
-button.danger { background-color: var(--danger); } button.warning { background-color: var(--warning); color: #000; }
-button.success { background-color: var(--success); } button.info { background-color: var(--info); }
-button.secondary { background-color: #6b7280; color: white; } button.secondary:hover { background-color: #4b5563; }
-button.global-btn { background-color: #4f46e5; font-size: 1rem; padding: 10px 20px; margin-top: 10px; }
-button.manager-btn { background-color: #111827; font-size: 1rem; padding: 10px 20px; color: #fff;}
-button.icon-btn { background: none; border: none; color: var(--text-light); padding: 2px 6px; font-size: 1rem; cursor: pointer; border-radius: 4px; }
+.container { max-width: 1320px; margin: 0 auto; }
+
+/* ===== TOAST ===== */
+#toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.toast {
+  background: #1f2937; color: #fff; padding: 12px 18px; border-radius: var(--radius-sm);
+  font-size: 0.9rem; box-shadow: var(--shadow-lg); pointer-events: all;
+  animation: slideIn 0.25s ease; max-width: 320px;
+}
+.toast.success { background: var(--success); }
+.toast.danger  { background: var(--danger); }
+.toast.warning { background: #b45309; }
+@keyframes slideIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+@keyframes fadeOut { to { opacity:0; transform: translateY(8px); } }
+
+/* ===== LOADER ===== */
+#global-loader {
+  position: fixed; inset: 0; background: var(--bg); z-index: 99998;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px;
+}
+.spinner {
+  border: 4px solid var(--border); border-top-color: var(--primary);
+  border-radius: 50%; width: 48px; height: 48px;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loader-status { font-size: 0.85rem; color: var(--text-light); }
+
+/* ===== OFFLINE BANNER ===== */
+#offline-banner {
+  display: none; background: var(--warning); color: #000;
+  padding: 8px 16px; text-align: center; font-weight: 600;
+  font-size: 0.88rem; border-radius: var(--radius-sm); margin-bottom: 12px;
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; }
+
+/* ===== BUTTONS ===== */
+button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  background: var(--primary); color: #fff;
+  border: none; padding: 8px 16px; border-radius: var(--radius-sm);
+  cursor: pointer; font-weight: 600; font-size: 0.9rem;
+  transition: background var(--transition), opacity var(--transition), transform var(--transition);
+  white-space: nowrap;
+}
+button:hover:not(:disabled) { background: var(--primary-h); }
+button:active:not(:disabled) { transform: scale(0.97); }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button.danger   { background: var(--danger); }   button.danger:hover:not(:disabled)   { background: #b91c1c; }
+button.success  { background: var(--success); }  button.success:hover:not(:disabled)  { background: #15803d; }
+button.warning  { background: var(--warning); color: #000; } button.warning:hover:not(:disabled) { background: #d97706; }
+button.info     { background: var(--info); }     button.info:hover:not(:disabled)     { background: #0369a1; }
+button.secondary{ background: #6b7280; }          button.secondary:hover:not(:disabled){ background: #4b5563; }
+button.ghost    { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+button.ghost:hover:not(:disabled) { background: var(--border); color: var(--text); }
+button.icon-btn {
+  background: none; border: none; color: var(--text-light);
+  padding: 4px 7px; font-size: 1rem; border-radius: 4px;
+}
 button.icon-btn:hover { background: var(--border); color: var(--text); }
-input[type="text"], input[type="password"], input[type="number"], select, textarea { padding: 10px; border: 1px solid var(--border); border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; font-size: 0.95rem; font-family: inherit; }
-input[type="datetime-local"] { padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
-.search-bar input { margin-bottom: 0; }
-select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius: 5px; padding: 8px; border: 1px solid var(--border); }
-.profiles-grid { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
-.profile-card { background: var(--card); padding: 15px 25px; border-radius: 10px; border: 2px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 15px; }
-.profile-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-.profile-name { font-size: 1.2rem; font-weight: bold; cursor: pointer; }
-.top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-.top-bar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 0; flex-wrap: wrap;}
-.tab-btn { background: transparent; color: var(--text-light); border: none; font-size: 1.05rem; padding: 10px 20px; cursor: pointer; border-radius: 5px 5px 0 0; transition: 0.2s; margin-bottom: -2px; }
-.tab-btn.active { color: var(--primary); font-weight: bold; border-bottom: 3px solid var(--primary); }
-.tab-btn:hover:not(.active) { color: var(--text); background: var(--card); }
-.kpi-container { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
-.kpi-card { background: var(--card); padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); }
-.kpi-card h4 { margin: 0 0 5px 0; color: var(--text-light); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;}
-.kpi-card .kpi-value { font-size: 1.8rem; font-weight: bold; color: var(--text); margin: 0;}
-.kpi-card.purple { border-bottom-color: #9333ea; }
-.projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; align-items: start; }
-.project-card { background-color: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); border-left: 6px solid var(--primary); display: flex; flex-direction: column; transition: all 0.3s;}
-.project-card.impediment { border-left-color: var(--warning); background-color: #fffbeb; }
-.project-card.completed { border-left-color: var(--success); }
-.project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
-.project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
-.project-header { margin-bottom: 10px; }
-.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
-.draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
-.project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
-.project-details-box strong { color: #111827; }
-.progress-container { width: 100%; background-color: var(--border); border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 8px; }
-.progress-bar { height: 100%; background-color: var(--primary); transition: width 0.4s ease; }
-.timeline { margin-top: 10px; font-size: 0.85rem; background: #ffffff; padding: 10px; border-radius: 5px; border: 1px solid var(--border); max-height: 200px; overflow-y: auto; flex-grow: 1; }
-.timeline-item { display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+
+/* ===== FORM ELEMENTS ===== */
+input, select, textarea {
+  padding: 9px 12px; border: 1px solid var(--border-h); border-radius: var(--radius-sm);
+  width: 100%; font-size: 0.95rem; font-family: inherit;
+  background: var(--card); color: var(--text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  margin-bottom: 10px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+select { font-weight: 600; cursor: pointer; }
+textarea { resize: vertical; min-height: 60px; }
+input[type="datetime-local"] { margin-bottom: 0; }
+label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
+
+/* ===== CARDS & GRID ===== */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.card.padded { padding: 20px; }
+.header-card {
+  background: var(--card); padding: 16px 20px; border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 16px;
+}
+
+/* ===== PROFILES ===== */
+.profiles-grid {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;
+}
+.profile-card {
+  background: var(--card); padding: 14px 22px; border-radius: var(--radius);
+  border: 2px solid transparent; box-shadow: var(--shadow);
+  text-align: center; cursor: pointer; transition: all var(--transition);
+}
+.profile-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.profile-name { font-size: 1.1rem; font-weight: 700; }
+
+/* ===== TOPBAR ===== */
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.top-bar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.top-bar-actions select { margin-bottom: 0; }
+.search-wrap { position: relative; }
+.search-wrap input { padding-left: 34px; margin-bottom: 0; min-width: 200px; }
+.search-wrap::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 0.85rem; }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  border-bottom: 2px solid var(--border); flex-wrap: wrap;
+}
+.tab-btn {
+  background: transparent; color: var(--text-light); border: none;
+  font-size: 0.97rem; padding: 10px 18px; cursor: pointer;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: all var(--transition); margin-bottom: -2px; border-bottom: 3px solid transparent;
+}
+.tab-btn.active { color: var(--primary); font-weight: 700; border-bottom-color: var(--primary); }
+.tab-btn:hover:not(.active) { color: var(--text); background: var(--primary-light); }
+.tab-badge {
+  display: inline-block; background: var(--primary); color: #fff;
+  font-size: 0.72rem; font-weight: 700; padding: 1px 6px;
+  border-radius: 99px; margin-left: 5px; vertical-align: middle;
+}
+
+/* ===== KPI ===== */
+.kpi-container { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+.kpi-card {
+  background: var(--card); padding: 16px; border-radius: var(--radius);
+  flex: 1; min-width: 160px; text-align: center;
+  box-shadow: var(--shadow); border-bottom: 4px solid var(--primary);
+}
+.kpi-card.purple { border-bottom-color: var(--purple); }
+.kpi-card.success { border-bottom-color: var(--success); }
+.kpi-card h4 { margin: 0 0 4px; color: var(--text-light); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--text); margin: 0; }
+
+/* ===== PROJECTS GRID ===== */
+.projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+.empty-state {
+  grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-light);
+}
+.empty-state .empty-icon { font-size: 3rem; margin-bottom: 10px; }
+
+/* ===== PROJECT CARD ===== */
+.project-card {
+  background: var(--card); padding: 18px; border-radius: var(--radius);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+  border-left: 5px solid var(--primary);
+  display: flex; flex-direction: column; gap: 12px;
+  transition: box-shadow var(--transition);
+}
+.project-card:hover { box-shadow: var(--shadow-lg); }
+.project-card.completed   { border-left-color: var(--success); }
+.project-card.impediment  { border-left-color: var(--warning); background: #fffceb; }
+.project-card.rework-int  { border-left-color: var(--purple); background: #faf5ff; }
+.project-card.rework-ext  { border-left-color: var(--orange); background: #fff7ed; }
+
+.badge-owner {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; background: var(--border); border-radius: 99px;
+  font-size: 0.82rem; font-weight: 700; color: #374151;
+}
+.project-title-row { display: flex; align-items: center; gap: 8px; }
+.project-title-row h2 { margin: 0; font-size: 1.2rem; word-break: break-word; color: #111827; flex: 1; }
+
+.info-box {
+  background: #f9fafb; border: 1px solid var(--border);
+  padding: 10px 34px 10px 12px; /* <-- PADDING DIREITO AJUSTADO PARA O BOTÃO NÃO TAMPAR O NOME */
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem; color: #4b5563; position: relative;
+}
+.info-box .edit-info-btn { 
+  position: absolute; 
+  top: 8px; 
+  right: 6px; 
+  background: transparent; 
+  border: none; 
+  padding: 4px; 
+}
+.info-row { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; }
+.info-row:last-child { margin-bottom: 0; }
+.info-divider { border: none; border-top: 1px dashed var(--border); margin: 6px 0; }
+
+.stage-select { margin: 0; font-weight: 600; color: var(--primary); }
+
+.status-label {
+  font-weight: 700; font-size: 0.88rem; color: var(--primary); padding: 4px 0;
+}
+
+/* ===== PROGRESS ===== */
+.progress-wrap {
+  width: 100%; background: var(--border); border-radius: 99px;
+  height: 10px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa);
+  border-radius: 99px; transition: width 0.4s ease;
+}
+
+/* ===== TIMELINE ===== */
+.timeline {
+  font-size: 0.84rem; background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); max-height: 210px; overflow-y: auto; padding: 10px;
+}
+.timeline-header { font-weight: 700; color: var(--text-light); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 8px; }
+.timeline-item {
+  padding: 8px 0; border-bottom: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 3px;
+}
 .timeline-item:last-child { border-bottom: none; }
-.timeline-top { display: flex; justify-content: space-between; font-weight: bold; align-items: center;}
-.timeline-obs { color: #4b5563; margin-top: 4px; font-style: italic; display: flex; justify-content: space-between; align-items: flex-end; }
-.timeline-date { color: var(--text-light); font-weight: normal; font-size: 0.8rem; white-space: nowrap; margin-left: 10px; }
-.editable-date { cursor: pointer; border-bottom: 1px dashed var(--text-light); transition: color 0.2s; }
-.editable-date:hover { color: var(--primary); border-bottom-color: var(--primary); }
-.actions { margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-.actions button { flex: 1; min-width: 80px; padding: 6px; font-size: 0.85rem;}
-#global-loader { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.spinner { border: 5px solid var(--border); border-top: 5px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-.modal-content { background-color: var(--card); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease; max-height: 90vh; overflow-y: auto;}
-@keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.modal-title { margin-top: 0; color: var(--primary); font-size: 1.3rem;}
-.modal-desc { margin-bottom: 15px; color: var(--text-light); font-size: 0.95rem; line-height: 1.4;}
-.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
+.timeline-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.timeline-stage { font-weight: 700; flex: 1; }
+.timeline-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.timeline-obs { color: #4b5563; font-style: italic; }
+.timeline-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.timeline-author { font-size: 0.78rem; color: var(--primary); font-style: normal; font-weight: 600; }
+.timeline-date {
+  color: var(--text-light); font-size: 0.78rem; white-space: nowrap;
+}
+.timeline-date.editable { cursor: pointer; border-bottom: 1px dashed var(--text-light); }
+.timeline-date.editable:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.drive-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 4px; text-decoration: none;
+  font-weight: 600; font-size: 0.82rem; margin-top: 4px;
+  border: 1px solid; cursor: pointer;
+}
+.drive-link.web   { background: #e1f5fe; color: var(--info); border-color: #bae6fd; }
+.drive-link.local { background: var(--success-light); color: var(--success); border-color: #bbf7d0; }
+
+/* ===== CARD ACTIONS ===== */
+.card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.actions-row { display: flex; gap: 6px; }
+.actions-row button { flex: 1; padding: 7px 8px; font-size: 0.84rem; }
+.btn-assume { width: 100%; padding: 11px; font-size: 0.97rem; background: #059669; }
+.btn-corrected { width: 100%; padding: 10px; background: var(--success); }
+.btn-pdf { width: 100%; background: #1f2937; margin-top: 2px; font-size: 0.84rem; }
+
+/* ===== MODAIS ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: var(--modal-bg);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; backdrop-filter: blur(3px); padding: 16px;
+}
+.modal-content {
+  background: var(--card); padding: 24px; border-radius: 14px;
+  width: 100%; max-width: 480px; box-shadow: var(--shadow-lg);
+  animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto;
+}
+@keyframes modalIn {
+  from { opacity:0; transform: translateY(-16px) scale(0.96); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.modal-title { color: var(--primary); font-size: 1.2rem; margin-bottom: 6px; }
+.modal-desc  { color: var(--text-light); font-size: 0.9rem; margin-bottom: 14px; line-height: 1.5; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form-grid.full { grid-template-columns: 1fr; }
-.chart-container { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; height: 450px; }
-.drive-link { display: inline-block; background: #e1f5fe; color: #0284c7; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 6px; font-size: 0.85rem; border: 1px solid #bae6fd;}
-.drive-link:hover { background: #b3e5fc; }
-#offline-banner { display: none; background: #f59e0b; color: #000; padding: 10px; text-align: center; font-weight: bold; font-size: 0.9rem;}
+.form-grid > * { margin-bottom: 0; }
+
+/* ===== CHART ===== */
+.chart-container {
+  background: var(--card); padding: 20px; border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-top: 16px; height: 430px;
+}
+
+/* ===== FIREBASE STATUS ===== */
+.firebase-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--warning); margin-right: 5px; transition: background 0.5s;
+}
+.firebase-dot.connected { background: var(--success); }
+.firebase-dot.error     { background: var(--danger); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  body { padding: 10px; }
+  .projects-list { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .top-bar { flex-direction: column; align-items: stretch; }
+  .top-bar-actions { flex-direction: column; }
+  .tabs { gap: 2px; }
+  .tab-btn { padding: 8px 10px; font-size: 0.88rem; }
+  .modal-content { padding: 18px; }
+  .search-wrap input { min-width: 0; }
+}
 </style>
 </head>
 <body>
 
-<div id="offline-banner">⚠️ Conexão com Firebase bloqueada pela rede. Rodando no Modo Offline.</div>
+<div id="toast-container" role="status" aria-live="polite"></div>
+<div id="offline-banner">⚠️ Firebase offline — usando dados locais.</div>
 
-<div id="global-loader">
-    <div class="spinner"></div>
-    <h2 style="color: var(--primary); margin: 0;" id="loader-title">Sincronizando com a Nuvem...</h2>
-    <p style="color: var(--text-light);" id="loader-text">Aguardando resposta do banco de dados...</p>
+<div id="global-loader" aria-label="Carregando sistema">
+  <div class="spinner"></div>
+  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Sincronizando com a nuvem...</p>
+  <p id="loader-status" style="margin:0;">Aguardando banco de dados...</p>
 </div>
 
-<div id="create-project-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">📋 Cadastrar Novo Projeto</h3>
-        <p class="modal-desc">Preencha as informações básicas para iniciar.</p>
-        <div class="form-grid full">
-            <input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)">
-        </div>
-        <div class="form-grid">
-            <input type="text" id="cp-cod" placeholder="CÓD / Ordem">
-            <input type="text" id="cp-cidade" placeholder="Cidade">
-        </div>
-        <div class="form-grid">
-            <select id="cp-vendedor">
-                <option value="">Selecione Vendedor...</option>
-                <option value="CARLA">CARLA</option>
-                <option value="JONES">JONES</option>
-                <option value="SHANA">SHANA</option>
-                <option value="OUTRO">Outro / Terceiros</option>
-            </select>
-            <select id="cp-tipo">
-                <option value="NOVO">NOVO</option>
-                <option value="REVISÃO">REVISÃO</option>
-            </select>
-        </div>
-        <div class="form-grid full">
-            <select id="cp-probabilidade">
-                <option value="">Probabilidade de Venda...</option>
-                <option value="BAIXA">BAIXA</option>
-                <option value="MÉDIA">MÉDIA</option>
-                <option value="ALTA">ALTA</option>
-            </select>
-        </div>
-        <textarea id="cp-obs" rows="2" placeholder="Observação Inicial / Recado..."></textarea>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
-            <button class="success" onclick="closeCreateProjectModal(true)">Colocar na Fila</button>
-        </div>
+<div id="create-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cp-modal-title">
+  <div class="modal-content">
+    <h3 id="cp-modal-title" class="modal-title">📋 Cadastrar Novo Projeto</h3>
+    <p class="modal-desc">Preencha as informações para colocar na fila de orçamento.</p>
+    <div class="form-grid full">
+      <label for="cp-cliente">Nome do Cliente / Obra *</label>
+      <input type="text" id="cp-cliente" placeholder="Ex: Condomínio Ibirapuera — Bloco A">
     </div>
+    <div class="form-grid">
+      <div><label for="cp-cod">CÓD / Ordem</label><input type="text" id="cp-cod" placeholder="Ex: 18455"></div>
+      <div><label for="cp-cidade">Cidade</label><input type="text" id="cp-cidade" placeholder="Ex: São Paulo"></div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label for="cp-vendedor">Vendedor</label>
+        <select id="cp-vendedor"><option value="">Selecione...</option><option>CARLA</option><option>JONES</option><option>SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
+      </div>
+      <div>
+        <label for="cp-tipo">Tipo</label>
+        <select id="cp-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
+      </div>
+    </div>
+    <div><label for="cp-probabilidade">Probabilidade de Venda</label>
+      <select id="cp-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
+    </div>
+    <div><label for="cp-obs">Observação inicial</label>
+      <textarea id="cp-obs" rows="2" placeholder="Recados, detalhes, pendências..."></textarea>
+    </div>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
+      <button class="success" onclick="closeCreateProjectModal(true)">✅ Colocar na Fila</button>
+    </div>
+  </div>
 </div>
 
-<div id="edit-project-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">✏️ Editar Informações</h3>
-        <p class="modal-desc">Altere os detalhes do projeto atual.</p>
-        <input type="hidden" id="ep-id">
-        <div class="form-grid">
-            <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
-            <input type="text" id="ep-cidade" placeholder="Cidade">
-        </div>
-        <div class="form-grid">
-            <select id="ep-vendedor">
-                <option value="">Selecione Vendedor...</option>
-                <option value="CARLA">CARLA</option>
-                <option value="JONES">JONES</option>
-                <option value="SHANA">SHANA</option>
-                <option value="OUTRO">Outro / Terceiros</option>
-            </select>
-            <select id="ep-tipo">
-                <option value="NOVO">NOVO</option>
-                <option value="REVISÃO">REVISÃO</option>
-            </select>
-        </div>
-        <div class="form-grid full">
-            <select id="ep-probabilidade">
-                <option value="">Probabilidade...</option>
-                <option value="BAIXA">BAIXA</option>
-                <option value="MÉDIA">MÉDIA</option>
-                <option value="ALTA">ALTA</option>
-            </select>
-        </div>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
-            <button class="success" onclick="closeEditProjectModal(true)">Salvar Alterações</button>
-        </div>
+<div id="edit-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ep-modal-title">
+  <div class="modal-content">
+    <h3 id="ep-modal-title" class="modal-title">✏️ Editar Informações do Projeto</h3>
+    <input type="hidden" id="ep-id">
+    <div class="form-grid">
+      <div><label for="ep-cod">CÓD / Ordem</label><input type="text" id="ep-cod"></div>
+      <div><label for="ep-cidade">Cidade</label><input type="text" id="ep-cidade"></div>
     </div>
+    <div class="form-grid">
+      <div><label for="ep-vendedor">Vendedor</label>
+        <select id="ep-vendedor"><option value="">Selecione...</option><option>CARLA</option><option>JONES</option><option>SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
+      </div>
+      <div><label for="ep-tipo">Tipo</label>
+        <select id="ep-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
+      </div>
+    </div>
+    <div><label for="ep-probabilidade">Probabilidade</label>
+      <select id="ep-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
+    </div>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
+      <button class="success" onclick="closeEditProjectModal(true)">Salvar Alterações</button>
+    </div>
+  </div>
 </div>
 
-<div id="admin-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">⚙️ Painel de Segurança</h3>
-        <p class="modal-desc">Altere a senha de qualquer usuário da equipe.</p>
-        <div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button>
-        </div>
+<div id="admin-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal-content">
+    <h3 id="admin-modal-title" class="modal-title">⚙️ Gerenciar Equipe</h3>
+    <p class="modal-desc">Altere a senha de qualquer membro da equipe.</p>
+    <div id="admin-users-list" style="max-height:260px;overflow-y:auto;"></div>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeModal('admin-modal')">Fechar</button>
     </div>
+  </div>
 </div>
 
-<div id="drive-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">📂 Vincular Pasta ou Arquivo</h3>
-        <p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
-        <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
-        <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
-        <div style="margin-bottom: 15px;">
-            <button class="info" onclick="openPicker()" style="width: 100%;">🔍 Seletor Oficial do Google Drive</button>
-        </div>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeDriveModal(false)">Cancelar</button>
-            <button onclick="closeDriveModal(true)">Vincular Caminho</button>
-        </div>
+<div id="drive-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title">
+  <div class="modal-content">
+    <h3 id="drive-modal-title" class="modal-title">📂 Vincular Arquivo ou Pasta</h3>
+    <p class="modal-desc">Cole o link do Google Drive <strong>ou</strong> um caminho local (ex: G:\Projetos\...).</p>
+    <label for="drive-url-input">Caminho ou URL</label>
+    <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... ou G:\...">
+    <label for="drive-obs-input">Observação</label>
+    <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado pelo vendedor..."></textarea>
+    <button class="info" onclick="openPicker()" style="width:100%; margin-bottom:10px;">🔍 Seletor Google Drive</button>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeDriveModal(false)">Cancelar</button>
+      <button onclick="closeDriveModal(true)">Vincular</button>
     </div>
+  </div>
 </div>
 
-<div id="date-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">📅 Editar Data do Evento</h3>
-        <input type="datetime-local" id="date-modal-input">
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeDateModal(false)">Cancelar</button>
-            <button onclick="closeDateModal(true)">Salvar Data</button>
-        </div>
+<div id="date-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="date-modal-title">
+  <div class="modal-content">
+    <h3 id="date-modal-title" class="modal-title">📅 Editar Data do Evento</h3>
+    <label for="date-modal-input">Nova data e hora</label>
+    <input type="datetime-local" id="date-modal-input" style="margin-bottom:0;">
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeDateModal(false)">Cancelar</button>
+      <button onclick="closeDateModal(true)">Salvar</button>
     </div>
+  </div>
 </div>
 
-<div id="rework-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 class="modal-title">🔄 Classificar Revisão</h3>
-        <select id="rework-type-select" style="margin-bottom: 15px;">
-            <option value="INTERNO">🔴 Erro Interno (Melhorar Qualidade/Processos)</option>
-            <option value="EXTERNO">🟠 Solicitação Externa (Alteração a pedido do Cliente)</option>
-        </select>
-        <textarea id="rework-obs-input" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeReworkModal(false)">Cancelar</button>
-            <button class="warning" style="background-color: #d946ef; color: white;" onclick="closeReworkModal(true)">Iniciar Revisão</button>
-        </div>
+<div id="rework-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rework-modal-title">
+  <div class="modal-content">
+    <h3 id="rework-modal-title" class="modal-title">🔄 Classificar Revisão / Retrabalho</h3>
+    <label for="rework-type-select">Tipo de revisão</label>
+    <select id="rework-type-select">
+      <option value="INTERNO">🔴 Erro Interno — melhorar processo/qualidade</option>
+      <option value="EXTERNO">🟠 Pedido Externo — alteração solicitada pelo cliente</option>
+    </select>
+    <label for="rework-obs-input">O que precisa ser alterado?</label>
+    <textarea id="rework-obs-input" rows="3" placeholder="Descreva a alteração necessária..."></textarea>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeReworkModal(false)">Cancelar</button>
+      <button style="background:#d946ef;" onclick="closeReworkModal(true)">🔄 Iniciar Revisão</button>
     </div>
+  </div>
 </div>
 
-<div id="custom-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 id="modal-title" class="modal-title">Título</h3>
-        <p id="modal-desc" class="modal-desc">Descrição</p>
-        <textarea id="modal-input" rows="3" placeholder="Escreva a sua observação..."></textarea>
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closeModal(false)">Cancelar</button>
-            <button onclick="closeModal(true)">Confirmar</button>
-        </div>
+<div id="custom-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-content">
+    <h3 id="modal-title" class="modal-title"></h3>
+    <p id="modal-desc" class="modal-desc"></p>
+    <label for="modal-input" class="hidden" id="modal-input-label">Texto</label>
+    <textarea id="modal-input" rows="3" placeholder="Escreva aqui..."></textarea>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeCustomModal(false)">Cancelar</button>
+      <button onclick="closeCustomModal(true)">Confirmar</button>
     </div>
+  </div>
 </div>
 
-<div id="password-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
-        <p id="pwd-modal-desc" class="modal-desc">Insira a senha.</p>
-        <input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password">
-        <div class="modal-buttons">
-            <button class="secondary" onclick="closePasswordModal(false)">Cancelar</button>
-            <button onclick="closePasswordModal(true)">Confirmar</button>
-        </div>
+<div id="password-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwd-modal-title">
+  <div class="modal-content">
+    <h3 id="pwd-modal-title" class="modal-title">🔑 Autenticação</h3>
+    <p id="pwd-modal-desc" class="modal-desc">Insira sua senha para continuar.</p>
+    <label for="pwd-modal-input">Senha</label>
+    <input type="password" id="pwd-modal-input" placeholder="••••••••" autocomplete="current-password" style="margin-bottom:0;">
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closePasswordModal(false)">Cancelar</button>
+      <button onclick="closePasswordModal(true)">Entrar</button>
     </div>
+  </div>
 </div>
 
-<div id="confirm-modal" class="modal-overlay hidden">
-    <div class="modal-content" style="text-align: center;">
-        <h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
-        <p id="confirm-desc" class="modal-desc">Tem certeza de que deseja fazer isto?</p>
-        <div class="modal-buttons" style="justify-content: center;">
-            <button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button>
-            <button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button>
-        </div>
+<div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal-content" style="text-align:center;">
+    <h3 id="confirm-title" class="modal-title" style="color:var(--danger);">⚠️ Confirmar Ação</h3>
+    <p id="confirm-desc" class="modal-desc"></p>
+    <div class="modal-buttons" style="justify-content:center;">
+      <button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button>
+      <button class="danger" onclick="closeConfirmModal(true)">Confirmar</button>
     </div>
+  </div>
 </div>
 
 <div class="container">
-    
-    <div id="view-profiles" class="hidden">
-        <div class="header">
-            <h1><span onclick="handleMasterLogin()" style="cursor: pointer;" title="Bem-vindo">🏢</span> Bem-vindo ao Sistema de Projetos</h1>
-            <p>Selecione como deseja acessar a plataforma hoje.</p>
-            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin: 20px auto;">
-                <button class="global-btn" onclick="proceedAsViewer()" style="background: #059669; padding: 15px; font-size: 1.1rem; border-radius: 8px;">
-                    👁️ ENTRAR COMO VISUALIZADOR (Gerência/Vendas)
-                </button>
-            </div>
-            <h3 style="margin-top: 40px;">Entrar como Desenhista (Requer Senha):</h3>
-            <div class="profiles-grid" id="profiles-container"></div>
-            
-            <div style="background: var(--card); padding: 15px; border-radius: 8px; max-width: 400px; margin: 20px auto; border: 1px solid var(--border);">
-                <h4 style="margin-top: 0;">Cadastrar Novo Desenhista</h4>
-                <input type="text" id="new-user-name" placeholder="Nome do colega...">
-                <button onclick="addUser()" style="width: 100%;">+ Adicionar Equipe</button>
-            </div>
-            
-            <div style="text-align: center; margin-top: 40px;">
-                <button class="icon-btn" onclick="exportBackup()" title="Backup">💾 Gerar Backup</button>
-                <button class="icon-btn" onclick="document.getElementById('import-file').click()" title="Restaurar">📂 Restaurar Backup</button>
-                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
-            </div>
+
+  <div id="view-profiles" class="hidden">
+    <div class="header-card" style="text-align:center; padding:30px 20px;">
+      <span onclick="handleMasterLogin()" style="cursor:pointer; font-size:2rem;" title="Acesso administrativo">🏢</span>
+      <h1 style="margin:8px 0 4px;">Sistema de Controle de Projetos</h1>
+      <p style="color:var(--text-light); margin:0 0 20px;">Selecione seu perfil para acessar o sistema.</p>
+
+      <button onclick="proceedAsViewer()" style="background:#059669; padding:14px 28px; font-size:1.05rem; border-radius:8px; margin-bottom:28px;">
+        👁️ Entrar como Visualizador (Gerência / Vendas)
+      </button>
+
+      <h3 style="margin-bottom:12px;">Desenhistas — Acesso com Senha</h3>
+      <div class="profiles-grid" id="profiles-container"></div>
+
+      <div style="max-width:380px; margin:24px auto 0;" class="card padded">
+        <h4 style="margin-bottom:10px;">Cadastrar novo membro</h4>
+        <label for="new-user-name">Nome</label>
+        <input type="text" id="new-user-name" placeholder="Nome do colega...">
+        <button onclick="addUser()" style="width:100%;">+ Adicionar à Equipe</button>
+      </div>
+
+      <div style="margin-top:32px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="ghost" onclick="exportBackup()">💾 Gerar Backup</button>
+        <button class="ghost" onclick="document.getElementById('import-file').click()">📂 Restaurar Backup</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
+      </div>
+
+      <p style="font-size:0.78rem; color:var(--text-light); margin-top:20px;">
+        <span class="firebase-dot" id="firebase-dot"></span>
+        <span id="firebase-status-text">Verificando conexão...</span>
+      </p>
+    </div>
+  </div>
+
+  <div id="view-manager" class="hidden">
+    <div class="header-card">
+      <div class="top-bar">
+        <div>
+          <h2 style="margin:0; display:flex; align-items:center; gap:8px;">👔 Painel Corporativo</h2>
+          <p style="margin:4px 0 0; color:var(--text-light); font-size:0.88rem;">Acompanhamento em tempo real — somente leitura.</p>
         </div>
+        <div class="top-bar-actions">
+          <select id="manager-sort-select" onchange="renderGlobalFeed()">
+            <option value="DATE_DESC">Mais Recentes</option>
+            <option value="DATE_ASC">Mais Antigos</option>
+            <option value="VENDEDOR">Por Vendedor A-Z</option>
+            <option value="TIPO_NOVO">Apenas NOVOS</option>
+            <option value="TIPO_REVISAO">Apenas REVISÕES</option>
+          </select>
+          <div class="search-wrap">
+            <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Obra ou CÓD...">
+          </div>
+          <button onclick="exportManagerReport()" style="background:#111827;">📊 PDF da Aba</button>
+          <button class="secondary" onclick="logout()">← Sair</button>
+        </div>
+      </div>
     </div>
 
-    <div id="view-manager" class="hidden">
-        <div class="header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <div style="text-align: left;">
-                <h2 style="margin: 0; color: #111827; display: flex; align-items: center; gap: 8px;">👔 Status Geral dos Projetos (Painel da Empresa)</h2>
-                <p style="margin: 5px 0 0 0; color: var(--text-light); font-size: 0.9rem;">Acompanhamento corporativo em tempo real. Apenas Visualização.</p>
-            </div>
-            <div class="top-bar-actions">
-                <select id="manager-sort-filter-select" onchange="renderGlobalFeed()">
-                    <option value="DATE_DESC" selected>Mais Recentes</option>
-                    <option value="DATE_ASC">Mais Antigos</option>
-                    <option value="VENDEDOR">Por Vendedor (A-Z)</option>
-                    <option value="TIPO_NOVO">Apenas NOVOS</option>
-                    <option value="TIPO_REVISAO">Apenas REVISÕES</option>
-                </select>
-
-                <div class="search-bar">
-                    <input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Procurar obra ou CÓD...">
-                </div>
-                <button class="manager-btn" onclick="exportManagerReport()">📊 PDF da Aba Atual</button>
-                <button class="secondary" onclick="logout()">← Sair</button>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button id="tab-fila" class="tab-btn active" onclick="switchManagerTab('fila')">⏳ Fila de Orçamento</button>
-            <button id="tab-andamento" class="tab-btn" onclick="switchManagerTab('andamento')">▶ Em Andamento</button>
-            <button id="tab-concluidos" class="tab-btn" onclick="switchManagerTab('concluidos')">✅ Concluídos</button>
-            <button id="tab-graficos" class="tab-btn" onclick="switchManagerTab('graficos')">📊 Gráficos (Pareto)</button>
-        </div>
-        <div class="projects-list" id="global-feed-container"></div>
-
-        <div id="view-graphics" class="hidden">
-            <div style="background: var(--card); padding: 15px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <strong style="white-space: nowrap;">Analisar:</strong>
-                <select id="graph-filter-select" onchange="renderGraph()" style="margin-bottom: 0; max-width: 400px;">
-                    <option value="ALL">Geral (Todos os Projetos do Sistema)</option>
-                </select>
-            </div>
-            <div class="chart-container"><canvas id="paretoChart"></canvas></div>
-            <div class="kpi-container" id="kpi-panel">
-                <div class="kpi-card">
-                    <h4>Total de Projetos</h4>
-                    <p class="kpi-value" id="kpi-total">0</p>
-                </div>
-                <div class="kpi-card purple">
-                    <h4>Tempo Médio (Concluídos)</h4>
-                    <p class="kpi-value" id="kpi-avg-time">0h</p>
-                </div>
-            </div>
-        </div>
+    <div class="tabs">
+      <button id="tab-fila" class="tab-btn active" onclick="switchManagerTab('fila')">⏳ Fila <span class="tab-badge" id="badge-fila">0</span></button>
+      <button id="tab-andamento" class="tab-btn" onclick="switchManagerTab('andamento')">▶ Em Andamento <span class="tab-badge" id="badge-andamento">0</span></button>
+      <button id="tab-concluidos" class="tab-btn" onclick="switchManagerTab('concluidos')">✅ Concluídos <span class="tab-badge" id="badge-concluidos">0</span></button>
+      <button id="tab-graficos" class="tab-btn" onclick="switchManagerTab('graficos')">📊 Pareto</button>
     </div>
 
-    <div id="view-dashboard" class="hidden">
-        <div class="header" style="margin-bottom: 5px;">
-            <div class="top-bar">
-                <div>
-                    <button onclick="logout()">← Sair</button>
-                </div>
-                <h1 id="dashboard-title" style="margin: 0;">Área de Trabalho</h1>
-                <div class="top-bar-actions">
-                    <button class="warning" onclick="changeMyPassword()" title="Alterar a minha senha">🔑 Mudar Senha</button>
-                    <button id="admin-btn" class="hidden warning" style="background:#dc2626;" onclick="openAdminModal()">⚙️ Gerenciar Equipe</button>
-                    
-                    <select id="user-filter-select" onchange="renderProjects()" style="margin-bottom: 0; max-width: 210px; font-size: 0.9rem;">
-                        <option value="ALL">Visualizar Todos</option>
-                        <option value="MEUS" selected>Apenas os Meus Projetos</option>
-                    </select>
+    <div class="projects-list" id="global-feed-container"></div>
 
-                    <select id="sort-filter-select" onchange="renderProjects()">
-                        <option value="DATE_DESC" selected>Mais Recentes</option>
-                        <option value="DATE_ASC">Mais Antigos</option>
-                        <option value="VENDEDOR">Por Vendedor (A-Z)</option>
-                        <option value="TIPO_NOVO">Apenas NOVOS</option>
-                        <option value="TIPO_REVISAO">Apenas REVISÕES</option>
-                    </select>
+    <div id="view-graphics" class="hidden">
+      <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
+        <strong style="white-space:nowrap;">Analisar:</strong>
+        <select id="graph-filter-select" onchange="renderPareto('manager')" style="margin-bottom:0; max-width:400px;"></select>
+      </div>
+      <div class="chart-container"><canvas id="paretoChart"></canvas></div>
+      <div class="kpi-container">
+        <div class="kpi-card"><h4>Total de Projetos</h4><p class="kpi-value" id="kpi-total">0</p></div>
+        <div class="kpi-card purple"><h4>Tempo Médio (Concluídos)</h4><p class="kpi-value" id="kpi-avg-time">0h</p></div>
+        <div class="kpi-card success"><h4>Concluídos</h4><p class="kpi-value" id="kpi-completed">0</p></div>
+      </div>
+    </div>
+  </div>
 
-                    <div class="search-bar">
-                        <input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD...">
-                    </div>
-                    <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF do Separador</button>
-                </div>
-            </div>
+  <div id="view-dashboard" class="hidden">
+    <div class="header-card">
+      <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="secondary" onclick="logout()" style="white-space:nowrap;">← Sair</button>
+          <h2 id="dashboard-title" style="margin:0;">Área de Trabalho</h2>
         </div>
-
-        <div id="add-project-row" style="background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-            <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apaga a sua conta do sistema">🗑️ Excluir Meu Perfil</button>
-            <button class="success" onclick="openCreateProjectModal()" style="font-size: 1.05rem; padding: 12px 25px; margin-left:auto;">➕ Iniciar Novo Projeto na Fila</button>
+        <div class="top-bar-actions">
+          <button class="ghost" onclick="changeMyPassword()" title="Alterar senha">🔑 Senha</button>
+          <button id="admin-btn" class="hidden danger" onclick="openAdminModal()">⚙️ Equipe</button>
+          <select id="user-filter-select" onchange="renderProjects()" style="max-width:200px;margin-bottom:0;">
+            <option value="ALL">Todos</option>
+            <option value="MEUS" selected>Só os Meus</option>
+          </select>
+          <select id="sort-filter-select" onchange="renderProjects()" style="margin-bottom:0;">
+            <option value="DATE_DESC">Mais Recentes</option>
+            <option value="DATE_ASC">Mais Antigos</option>
+            <option value="VENDEDOR">Por Vendedor</option>
+            <option value="TIPO_NOVO">Apenas NOVOS</option>
+            <option value="TIPO_REVISAO">Apenas REVISÕES</option>
+          </select>
+          <div class="search-wrap">
+            <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Obra ou CÓD...">
+          </div>
+          <button id="pdf-dashboard-btn" onclick="exportDraftsmanReport()" style="background:#1f2937;">📊 PDF</button>
         </div>
-
-        <div class="tabs" style="margin-bottom: 20px;">
-            <button id="tab-draftsman-fila" class="tab-btn active" onclick="switchDraftsmanTab('fila')">⏳ Fila de Orçamento</button>
-            <button id="tab-draftsman-andamento" class="tab-btn" onclick="switchDraftsmanTab('andamento')">▶ Em Andamento</button>
-            <button id="tab-draftsman-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos</button>
-            <button id="tab-draftsman-graficos" class="tab-btn" onclick="switchDraftsmanTab('graficos')">📊 Meus Gráficos (Pareto)</button>
-        </div>
-
-        <div class="projects-list" id="projects-container"></div>
-        
-        <div id="view-draftsman-graphics" class="hidden">
-            <div style="background: var(--card); padding: 15px; border-radius: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <strong style="white-space: nowrap;">Analisar Gráfico:</strong>
-                <select id="draftsman-graph-filter-select" onchange="renderDraftsmanGraph()" style="margin-bottom: 0; max-width: 400px;"></select>
-            </div>
-            <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
-            <div class="kpi-container">
-                <div class="kpi-card">
-                    <h4>Meus Projetos</h4>
-                    <p class="kpi-value" id="dkpi-total">0</p>
-                </div>
-                <div class="kpi-card purple">
-                    <h4>Meu Tempo Médio (Concluídos)</h4>
-                    <p class="kpi-value" id="dkpi-avg-time">0h</p>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-</div>
+    <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apagar meu perfil do sistema">🗑️ Excluir Meu Perfil</button>
+      <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Projeto na Fila</button>
+    </div>
 
-<script>
-window.abrirPastaLocalPeloAjudante = function(caminho) {
-    fetch('http://127.0.0.1:49152/abrir-pasta?caminho=' + encodeURIComponent(caminho))
-    .then(res => res.text())
-    .then(text => { 
-        if(text !== "Sucesso") alert("O ajudante local avisou que deu erro:\n" + text); 
-    })
-    .catch(err => { 
-        alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais automaticamente com 1 clique, você precisa abrir o arquivo 'ajudante.py' no seu computador."); 
-    });
-};
+    <div class="tabs">
+      <button id="tab-d-fila" class="tab-btn active" onclick="switchDraftsmanTab('fila')">⏳ Fila <span class="tab-badge" id="badge-d-fila">0</span></button>
+      <button id="tab-d-andamento" class="tab-btn" onclick="switchDraftsmanTab('andamento')">▶ Andamento <span class="tab-badge" id="badge-d-andamento">0</span></button>
+      <button id="tab-d-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos <span class="tab-badge" id="badge-d-concluidos">0</span></button>
+      <button id="tab-d-graficos" class="tab-btn" onclick="switchDraftsmanTab('graficos')">📊 Meus Gráficos</button>
+    </div>
 
+    <div class="projects-list" id="projects-container"></div>
+
+    <div id="view-draftsman-graphics" class="hidden">
+      <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
+        <strong>Analisar:</strong>
+        <select id="draftsman-graph-select" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:400px;"></select>
+      </div>
+      <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
+      <div class="kpi-container">
+        <div class="kpi-card"><h4>Meus Projetos</h4><p class="kpi-value" id="dkpi-total">0</p></div>
+        <div class="kpi-card purple"><h4>Meu Tempo Médio</h4><p class="kpi-value" id="dkpi-avg-time">0h</p></div>
+      </div>
+    </div>
+  </div>
+
+</div><script>
+/* ==================================================
+   CONSTANTES E ESTADO GLOBAL
+================================================== */
 const STAGES = [
-"Aguardando Início (Fila)", // 0
-"Em Desenho",               // 1
-"Orçamento",                // 2
-"Correção 1",               // 3
-"Correção 2",               // 4
-"Luis",                     // 5
-"Cristian",                 // 6
-"Desenhista",               // 7
-"Entregue"                  // 8
+  "Aguardando Início (Fila)", // 0
+  "Em Desenho",               // 1
+  "Orçamento",                // 2
+  "Correção 1",               // 3
+  "Correção 2",               // 4
+  "Luis",                     // 5
+  "Cristian",                 // 6
+  "Desenhista",               // 7
+  "Entregue"                  // 8
 ];
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
-    authDomain: "controle-projetos-comerciais.firebaseapp.com",
-    projectId: "controle-projetos-comerciais",
-    storageBucket: "controle-projetos-comerciais.firebasestorage.app",
-    messagingSenderId: "154256368322",
-    appId: "1:154256368322:web:9c580e7886abfc9779515b"
+const FIREBASE_CFG = {
+  apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
+  authDomain: "controle-projetos-comerciais.firebaseapp.com",
+  projectId: "controle-projetos-comerciais",
+  storageBucket: "controle-projetos-comerciais.firebasestorage.app",
+  messagingSenderId: "154256368322",
+  appId: "1:154256368322:web:9c580e7886abfc9779515b"
 };
+
+const DRIVE_API_KEY    = "AIzaSyBXRRYBP83kDBTvlFXqEUiodgQNacd0Hso";
+const DRIVE_CLIENT_ID  = "607516224981-moe9q8ces9tgns26mo8e6hhkc0chg8dl.apps.googleusercontent.com";
+const DRIVE_APP_ID     = "607516224981";
+const MASTER_KEY       = "070522";
+
 let db, docRef;
-
-const DRIVE_API_KEY = "AIzaSyBXRRYBP83kDBTvlFXqEUiodgQNacd0Hso"; 
-const DRIVE_CLIENT_ID = "607516224981-moe9q8ces9tgns26mo8e6hhkc0chg8dl.apps.googleusercontent.com";
-const DRIVE_APP_ID = "607516224981";
-let DRIVE_VIEW_MODE = "docs"; 
-let tokenClient; 
-let accessToken = null; 
-let driveProjectId = null;
-
-function initGoogleDrivePicker() {
-    try {
-        if(window.google && google.picker) DRIVE_VIEW_MODE = google.picker.ViewId.DOCS;
-        if(window.gapi) { gapi.load('picker', () => {}); }
-        if(window.google && window.google.accounts) {
-            tokenClient = google.accounts.oauth2.initTokenClient({ 
-                client_id: DRIVE_CLIENT_ID, 
-                scope: 'https://www.googleapis.com/auth/drive.readonly', 
-                callback: '', 
-            });
-        }
-    } catch(err) {}
-}
-window.addEventListener('load', initGoogleDrivePicker);
-
-function openPicker() {
-    if(!tokenClient || !window.gapi) { 
-        alert("Conexão ao Google Drive bloqueada pelo navegador."); 
-        return; 
-    }
-    if (!accessToken) {
-        tokenClient.callback = async (response) => { 
-            if (response.error !== undefined) throw (response); 
-            accessToken = response.access_token; 
-            createPicker(); 
-        };
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    } else {
-        createPicker();
-    }
-}
-
-function createPicker() {
-    if(!window.google || !google.picker) return;
-    const picker = new google.picker.PickerBuilder()
-        .addView(DRIVE_VIEW_MODE)
-        .setOAuthToken(accessToken)
-        .setDeveloperKey(DRIVE_API_KEY)
-        .setAppId(DRIVE_APP_ID)
-        .setCallback(pickerCallback)
-        .build();
-    picker.setVisible(true);
-}
-
-function pickerCallback(data) {
-    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-        document.getElementById('drive-url-input').value = data[google.picker.Response.DOCUMENTS][0][google.picker.Document.URL];
-    }
-}
-
 let appData = { users: [], passwords: {}, projects: [] };
-let currentUser = null; 
-let isViewerMode = false;
-let managerCurrentTab = 'andamento'; 
-let draftsmanCurrentTab = 'fila';
-let modalResolve = null, confirmResolve = null, passwordResolve = null;
-let activeEditProjectId = null; 
-let activeEditHistoryIndex = null; 
+let currentUser   = null;
+let isViewerMode  = false;
+let managerTab    = "andamento";
+let draftsmanTab  = "fila";
+let fbSynced      = false;
+let activeCharts  = {};
+
+let customModalResolve   = null;
+let passwordModalResolve = null;
+let confirmModalResolve  = null;
+
+let dateEditCtx = { projectId: null, histIndex: null };
+let driveProjectId = null;
 let reworkProjectId = null;
-let firebaseSincronizado = false; 
-let maiorNumeroDeProjetosVistos = 0;
-let currentChart = null; 
-let currentDraftsmanChart = null;
 
-function iniciarSistemaSeguro() {
-    const loader = document.getElementById('global-loader'); 
-    if (loader) loader.style.display = 'none';
-
-    try {
-        if (!firebaseSincronizado) { 
-            const offBanner = document.getElementById('offline-banner');
-            if(offBanner) offBanner.style.display = 'block';
-            const local = localStorage.getItem('appData_teste_local'); 
-            if (local) { 
-                try { 
-                    const p = JSON.parse(local); 
-                    if(p) appData = p; 
-                } catch(e) {} 
-            } 
-        }
-        
-        if (!appData) appData = {};
-        if (!appData.users) appData.users = []; 
-        if (!appData.projects) appData.projects = []; 
-        if (!appData.passwords) appData.passwords = {};
-
-        if (!currentUser && !isViewerMode) {
-            document.getElementById('view-profiles').classList.remove('hidden'); 
-            renderProfiles();
-        } else if (isViewerMode) {
-            document.getElementById('view-manager').classList.remove('hidden'); 
-            renderGlobalFeed();
-        } else {
-            document.getElementById('view-dashboard').classList.remove('hidden'); 
-            renderProjects();
-        }
-    } catch(err) { 
-        console.error("Falha ao inicializar a tela:", err); 
-    }
+/* ==================================================
+   TOAST (substitui alert() para mensagens informativas)
+================================================== */
+function toast(msg, type = "info", duration = 3500) {
+  const c = document.getElementById("toast-container");
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = "fadeOut 0.3s ease forwards";
+    setTimeout(() => t.remove(), 300);
+  }, duration);
 }
 
-setTimeout(() => {
-    try {
-        if(window.firebase) {
-            firebase.initializeApp(firebaseConfig); 
-            db = firebase.firestore(); 
-            docRef = db.collection("sistema").doc("bancoDeDados");
-            
-            docRef.onSnapshot((doc) => {
-                if (doc.exists) { 
-                    const data = doc.data(); 
-                    if(data) appData = data;
-                    if(!appData.users) appData.users = [];
-                    if(!appData.projects) appData.projects = [];
-                    if(!appData.passwords) appData.passwords = {};
-                    firebaseSincronizado = true; 
-                    
-                    maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-                    
-                    const off = document.getElementById('offline-banner'); 
-                    if(off) off.style.display = 'none';
-                } else if(!firebaseSincronizado) { 
-                    docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
-                }
-                iniciarSistemaSeguro();
-            }, (error) => { 
-                iniciarSistemaSeguro(); 
-            });
-        } else { 
-            iniciarSistemaSeguro(); 
-        }
-    } catch (error) { 
-        iniciarSistemaSeguro(); 
-    }
-}, 200);
+/* ==================================================
+   HASHING DE SENHA (Web Crypto API)
+================================================== */
+async function hashPassword(pass) {
+  const enc = new TextEncoder().encode(pass);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
 
-window.addEventListener('load', () => {
-    setTimeout(() => { 
-        iniciarSistemaSeguro(); 
-    }, 2500); 
+async function checkPassword(stored, input) {
+  if (stored && stored.length !== 64) return stored === input;
+  return stored === await hashPassword(input);
+}
+
+/* ==================================================
+   DEBOUNCE para search
+================================================== */
+function debounce(fn, ms = 300) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+const debounceRenderProjects = debounce(() => renderProjects());
+const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
+
+/* ==================================================
+   MODAIS — helpers genéricos
+================================================== */
+function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
+
+function openCustomModal(title, desc, placeholder, defaultVal = "") {
+  const m = document.getElementById("custom-modal");
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-desc").textContent  = desc;
+  const inp = document.getElementById("modal-input");
+  inp.value = defaultVal; inp.placeholder = placeholder;
+  m.classList.remove("hidden");
+  requestAnimationFrame(() => inp.focus());
+  return new Promise(r => { customModalResolve = r; });
+}
+function closeCustomModal(confirm) {
+  document.getElementById("custom-modal").classList.add("hidden");
+  if (customModalResolve) {
+    customModalResolve(confirm ? document.getElementById("modal-input").value : null);
+    customModalResolve = null;
+  }
+}
+document.getElementById("modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); closeCustomModal(true); }
 });
 
-function saveData() {
-    if (!firebaseSincronizado) { 
-        localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
-        return; 
-    }
-    
-    if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) {
-        console.error("Tentativa de salvar banco vazio bloqueada pela Trava de Segurança!");
-        return;
-    }
-    
-    if (docRef) {
-        const loader = document.getElementById('global-loader');
-        const loaderTitle = document.getElementById('loader-title');
-        const loaderText = document.getElementById('loader-text');
-        
-        if(loader && loaderText && loaderTitle) {
-            loaderTitle.innerText = "Registrando...";
-            loaderText.innerText = "Aguarde um momento";
-            loader.style.display = 'flex';
-        }
+function openPasswordModal(title, desc) {
+  document.getElementById("pwd-modal-title").textContent = title;
+  document.getElementById("pwd-modal-desc").textContent  = desc;
+  const inp = document.getElementById("pwd-modal-input");
+  inp.value = "";
+  document.getElementById("password-modal").classList.remove("hidden");
+  requestAnimationFrame(() => inp.focus());
+  return new Promise(r => { passwordModalResolve = r; });
+}
+function closePasswordModal(confirm) {
+  document.getElementById("password-modal").classList.add("hidden");
+  if (passwordModalResolve) {
+    passwordModalResolve(confirm ? document.getElementById("pwd-modal-input").value : null);
+    passwordModalResolve = null;
+  }
+}
+document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") closePasswordModal(true);
+});
 
-        docRef.set(appData).then(() => {
-            if(loader) loader.style.display = 'none';
-            maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-        }).catch(err => {
-            if(loader) loader.style.display = 'none';
-            alert("⚠️ Erro de conexão ao salvar na nuvem.");
-        });
-    }
+function openConfirmModal(title, desc) {
+  document.getElementById("confirm-title").textContent = title;
+  document.getElementById("confirm-desc").textContent  = desc;
+  document.getElementById("confirm-modal").classList.remove("hidden");
+  return new Promise(r => { confirmModalResolve = r; });
+}
+function closeConfirmModal(confirm) {
+  document.getElementById("confirm-modal").classList.add("hidden");
+  if (confirmModalResolve) { confirmModalResolve(confirm); confirmModalResolve = null; }
 }
 
-// INTELIGÊNCIA DE AUTO-ASSUMIR APENAS AO MUDAR DE ETAPA
-function autoAssumirSeFila(p) {
-    if (!currentUser || isViewerMode) return false; 
-    if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
-        p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-        return true;
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  ["custom-modal","password-modal","confirm-modal","admin-modal","drive-modal","date-modal","rework-modal","create-project-modal","edit-project-modal"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
+    });
+  if (customModalResolve)  { customModalResolve(null);  customModalResolve  = null; }
+  if (passwordModalResolve){ passwordModalResolve(null); passwordModalResolve = null; }
+  if (confirmModalResolve) { confirmModalResolve(false); confirmModalResolve  = null; }
+});
+
+/* ==================================================
+   DATA / HORA
+================================================== */
+function dateToLocalString(ds) {
+  try {
+    const [d, t] = ds.replace(",","").trim().split(" ");
+    const [dd, mm, yy] = d.split("/");
+    const [hh, mn] = (t || "00:00").split(":");
+    return `${yy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}T${hh.padStart(2,"0")}:${mn.padStart(2,"0")}`;
+  } catch { return ""; }
+}
+function localStringToDate(ls) {
+  const [d, t] = ls.split("T");
+  const [yy, mm, dd] = d.split("-");
+  const [hh, mn] = (t || "00:00").split(":");
+  return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`;
+}
+function nowBR() { return new Date().toLocaleString("pt-BR"); }
+function parseDateBR(str) {
+  try {
+    const parts = str.split(/[\s,]+/);
+    const [dd, mm, yy] = parts[0].split("/");
+    const [hh, mn] = (parts[1] || "00:00").split(":");
+    return new Date(yy, mm - 1, dd, hh || 0, mn || 0).getTime();
+  } catch { return Date.now(); }
+}
+
+/* ==================================================
+   HORAS ÚTEIS
+================================================== */
+function getBusinessHours(startMs, endMs) {
+  if (startMs >= endMs) return 0;
+  let total = 0;
+  const cur = new Date(startMs);
+  cur.setHours(0, 0, 0, 0);
+  const end = new Date(endMs);
+  while (cur <= end) {
+    const day = cur.getDay();
+    if (day !== 0 && day !== 6) {
+      const bizStart = new Date(cur); bizStart.setHours(7, 15, 0, 0);
+      const bizEnd   = new Date(cur); bizEnd.setHours(17, 18, 0, 0);
+      const aStart = Math.max(startMs, bizStart.getTime());
+      const aEnd   = Math.min(endMs,   bizEnd.getTime());
+      if (aStart < aEnd) total += (aEnd - aStart) / 3_600_000;
     }
-    return false;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return total;
 }
 
-// MODAIS GENÉRICOS
-function openModal(t, d, p, v = '') {
-    document.getElementById('custom-modal').classList.remove('hidden'); 
-    document.getElementById('modal-title').textContent = t;
-    document.getElementById('modal-desc').textContent = d; 
-    const i = document.getElementById('modal-input'); 
-    i.value = v; 
-    i.placeholder = p; 
-    i.focus();
-    return new Promise(r => { modalResolve = r; });
-}
-
-function closeModal(c) {
-    document.getElementById('custom-modal').classList.add('hidden');
-    if (modalResolve) { 
-        modalResolve(c ? document.getElementById('modal-input').value : null); 
-        modalResolve = null; 
+/* ==================================================
+   GOOGLE DRIVE PICKER
+================================================== */
+let tokenClient, accessToken;
+window.addEventListener("load", () => {
+  try {
+    if (window.gapi)  gapi.load("picker", () => {});
+    if (window.google?.accounts) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: DRIVE_CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/drive.readonly",
+        callback: "",
+      });
     }
-}
+  } catch {}
+});
 
-// MODAL DA SENHA COM O ENTER 100% FUNCIONAL
-function openPasswordModal(t, d) {
-    document.getElementById('password-modal').classList.remove('hidden'); 
-    document.getElementById('pwd-modal-title').textContent = t;
-    document.getElementById('pwd-modal-desc').textContent = d; 
-    
-    const input = document.getElementById('pwd-modal-input');
-    input.value = ''; 
-    input.focus();
-    
-    input.onkeydown = function(e) { 
-        if (e.key === 'Enter') { 
-            e.preventDefault(); 
-            closePasswordModal(true); 
-        } 
+function openPicker() {
+  if (!tokenClient || !window.gapi) { toast("Google Drive bloqueado pelo navegador.", "warning"); return; }
+  if (!accessToken) {
+    tokenClient.callback = r => {
+      if (r.error) return;
+      accessToken = r.access_token;
+      createPicker();
     };
-    
-    return new Promise(r => { passwordResolve = r; });
+    tokenClient.requestAccessToken({ prompt: "consent" });
+  } else createPicker();
+}
+function createPicker() {
+  if (!window.google?.picker) return;
+  new google.picker.PickerBuilder()
+    .addView(google.picker.ViewId.DOCS)
+    .setOAuthToken(accessToken)
+    .setDeveloperKey(DRIVE_API_KEY)
+    .setAppId(DRIVE_APP_ID)
+    .setCallback(d => {
+      if (d[google.picker.Response.ACTION] === google.picker.Action.PICKED)
+        document.getElementById("drive-url-input").value = d[google.picker.Response.DOCUMENTS][0][google.picker.Document.URL];
+    })
+    .build().setVisible(true);
 }
 
-function closePasswordModal(c) {
-    document.getElementById('password-modal').classList.add('hidden');
-    if (passwordResolve) { 
-        passwordResolve(c ? document.getElementById('pwd-modal-input').value : null); 
-        passwordResolve = null; 
+function openDriveModal(id) {
+  driveProjectId = id;
+  document.getElementById("drive-url-input").value = "";
+  document.getElementById("drive-obs-input").value = "";
+  document.getElementById("drive-modal").classList.remove("hidden");
+}
+function closeDriveModal(confirm) {
+  document.getElementById("drive-modal").classList.add("hidden");
+  if (!confirm || !driveProjectId) { driveProjectId = null; return; }
+  const url = document.getElementById("drive-url-input").value.trim();
+  const obs = document.getElementById("drive-obs-input").value.trim();
+  if (url) {
+    const p = findProject(driveProjectId);
+    if (p) {
+      pushHistory(p, "📂 ARQUIVO/CAMINHO ANEXADO", obs || "Diretório vinculado.", url);
+      saveData(); updateViews(); toast("Arquivo vinculado!", "success");
     }
+  }
+  driveProjectId = null;
 }
 
-function openConfirmModal(t, d, a = false) {
-    document.getElementById('confirm-modal').classList.remove('hidden'); 
-    document.getElementById('confirm-title').textContent = t;
-    document.getElementById('confirm-desc').textContent = d;
-    
-    if (a) {
-        document.getElementById('confirm-btn-yes').classList.add('hidden'); 
-    } else {
-        document.getElementById('confirm-btn-yes').classList.remove('hidden');
+/* ==================================================
+   AJUDANTE LOCAL (abrir pasta no Windows)
+================================================== */
+window.abrirPastaLocalPeloAjudante = function(caminho) {
+  fetch("http://127.0.0.1:49152/abrir-pasta?caminho=" + encodeURIComponent(caminho))
+    .then(r => r.text())
+    .then(t => { if (t !== "Sucesso") toast("Ajudante local: " + t, "warning"); })
+    .catch(() => toast("⚠️ Ajudante local não está rodando! Abra o arquivo ajudante.py no seu computador.", "danger", 6000));
+};
+
+/* ==================================================
+   FIREBASE — INICIALIZAÇÃO
+================================================== */
+function setFirebaseStatus(state) {
+  const dot  = document.getElementById("firebase-dot");
+  const text = document.getElementById("firebase-status-text");
+  if (!dot || !text) return;
+  dot.className  = `firebase-dot ${state}`;
+  text.textContent = { connected:"Conectado ao Firebase", error:"Erro de conexão", "":"Verificando..." }[state] || "Verificando...";
+}
+function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+
+function ensureDefaults(data) {
+  if (!data)             data = {};
+  if (!data.users)    data.users = [];
+  if (!data.projects) data.projects = [];
+  if (!data.passwords)data.passwords = {};
+  return data;
+}
+
+function bootUI() {
+  hideLoader();
+  appData = ensureDefaults(appData);
+  if (!currentUser && !isViewerMode) {
+    show("view-profiles"); renderProfiles();
+  } else if (isViewerMode) {
+    show("view-manager");  renderGlobalFeed();
+  } else {
+    show("view-dashboard"); renderProjects();
+  }
+}
+
+function show(id) {
+  ["view-profiles","view-manager","view-dashboard"].forEach(v => document.getElementById(v).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 4000);
+
+try {
+  firebase.initializeApp(FIREBASE_CFG);
+  db = firebase.firestore();
+  docRef = db.collection("sistema").doc("bancoDeDados");
+  docRef.onSnapshot(doc => {
+    clearTimeout(fbTimeout);
+    if (doc.exists) {
+      appData = ensureDefaults(doc.data());
+      fbSynced = true;
+      document.getElementById("offline-banner").style.display = "none";
+      setFirebaseStatus("connected");
+    } else if (!fbSynced) {
+      docRef.set(ensureDefaults(appData)).catch(() => {});
+      fbSynced = true;
     }
-    return new Promise(r => { confirmResolve = r; });
+    bootUI();
+    updateBadges();
+  }, () => { setFirebaseStatus("error"); bootUI(); });
+} catch { bootUI(); }
+
+/* ==================================================
+   SALVAR DADOS
+================================================== */
+function saveData() {
+  if (!fbSynced) {
+    localStorage.setItem("appData_offline_bkp", JSON.stringify(appData));
+    return;
+  }
+  if (!docRef) return;
+  docRef.set(appData).catch(() => toast("Erro ao salvar no Firebase.", "danger"));
 }
 
-function closeConfirmModal(c) {
-    document.getElementById('confirm-modal').classList.add('hidden');
-    if (confirmResolve) { 
-        confirmResolve(c); 
-        confirmResolve = null; 
-    }
+/* ==================================================
+   HELPERS DE PROJETO
+================================================== */
+function findProject(id) { return (appData.projects || []).find(p => p.id === id) || null; }
+
+function pushHistory(p, stage, obs, driveUrl = null) {
+  if (!p.history) p.history = [];
+  const item = { stage, obs: obs || "", date: nowBR(), author: currentUser || "Visualizador" };
+  if (driveUrl) item.driveUrl = driveUrl;
+  p.history.unshift(item);
 }
 
-// DATAS E DRIVE
-function dateToLocalString(ds) { 
-    try { 
-        let [d, t] = ds.replace(',','').trim().split(' '); 
-        let [dd, mm, yy] = d.split('/'); 
-        let [hh, mn] = t ? t.split(':') : ['00','00']; 
-        return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${hh.padStart(2,'0')}:${mn.padStart(2,'0')}`; 
-    } catch(e) { 
-        return ""; 
-    } 
+/* ==================================================
+   BADGES NAS ABAS
+================================================== */
+function updateBadges() {
+  const projs = appData.projects || [];
+  const setBadge = (id, count) => { const el = document.getElementById(id); if(el) el.textContent = count; };
+  setBadge("badge-fila",       projs.filter(p => p.stageIndex === 0).length);
+  setBadge("badge-andamento",  projs.filter(p => p.stageIndex > 0 && p.stageIndex < 8).length);
+  setBadge("badge-concluidos", projs.filter(p => p.stageIndex >= 8).length);
+  if (currentUser) {
+    const mine = projs.filter(p => p.owner === currentUser || p.owner === "Fila" || p.owner === "Sem Desenhista");
+    setBadge("badge-d-fila",       mine.filter(p => p.stageIndex === 0).length);
+    setBadge("badge-d-andamento",  mine.filter(p => p.stageIndex > 0 && p.stageIndex < 8).length);
+    setBadge("badge-d-concluidos", mine.filter(p => p.stageIndex >= 8).length);
+  }
 }
 
-function localStringToDate(ls) { 
-    let [d, t] = ls.split('T'); 
-    let [yy, mm, dd] = d.split('-'); 
-    let [hh, mn] = t ? t.split(':') : ['00','00']; 
-    return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`; 
-}
-
-function openDateModal(id, i) {
-    if(isViewerMode) return; 
-    activeEditProjectId = id; 
-    activeEditHistoryIndex = i;
-    const s = appData.projects.find(p => p.id === id).history[i].date;
-    document.getElementById('date-modal').classList.remove('hidden'); 
-    document.getElementById('date-modal-input').value = dateToLocalString(s);
-}
-
-function closeDateModal(c) {
-    document.getElementById('date-modal').classList.add('hidden');
-    if (c && activeEditProjectId !== null) {
-        const v = document.getElementById('date-modal-input').value;
-        if(v) { 
-            appData.projects.find(p => p.id === activeEditProjectId).history[activeEditHistoryIndex].date = localStringToDate(v); 
-            saveData(); 
-            updateViews(); 
-        }
-    }
-    activeEditProjectId = null; 
-    activeEditHistoryIndex = null;
-}
-
-function openDriveModal(id) { 
-    driveProjectId = id; 
-    document.getElementById('drive-url-input').value = ''; 
-    document.getElementById('drive-obs-input').value = ''; 
-    document.getElementById('drive-modal').classList.remove('hidden'); 
-}
-
-function closeDriveModal(c) {
-    document.getElementById('drive-modal').classList.add('hidden');
-    if (c && driveProjectId) {
-        let u = document.getElementById('drive-url-input').value.trim(); 
-        const o = document.getElementById('drive-obs-input').value.trim();
-        if (u) {
-            const p = appData.projects.find(p => p.id === driveProjectId);
-            if(!p.history) p.history = [];
-            p.history.unshift({ 
-                stage: "📂 ARQUIVO/CAMINHO ANEXADO", 
-                obs: o ? `${o}` : "Diretório vinculado ao projeto.", 
-                driveUrl: u, 
-                date: new Date().toLocaleString('pt-BR'), 
-                author: isViewerMode ? "Visualizador" : currentUser 
-            });
-            saveData(); 
-            updateViews();
-        }
-    }
-    driveProjectId = null;
-}
-
-function openEditProjectModal(id) {
-    const p = appData.projects.find(proj => proj.id === id); 
-    if (!p) return;
-    document.getElementById('ep-id').value = id;
-    document.getElementById('ep-cod').value = p.cod || '';
-    document.getElementById('ep-cidade').value = p.cidade || '';
-    document.getElementById('ep-vendedor').value = p.vendedor || '';
-    document.getElementById('ep-tipo').value = p.tipo || 'NOVO';
-    document.getElementById('ep-probabilidade').value = p.probabilidade || '';
-    document.getElementById('edit-project-modal').classList.remove('hidden');
-}
-
-function closeEditProjectModal(confirm) {
-    document.getElementById('edit-project-modal').classList.add('hidden');
-    if (confirm) {
-        const id = document.getElementById('ep-id').value;
-        const p = appData.projects.find(proj => proj.id === id);
-        if (p) {
-            p.cod = document.getElementById('ep-cod').value.trim();
-            p.cidade = document.getElementById('ep-cidade').value.trim();
-            p.vendedor = document.getElementById('ep-vendedor').value;
-            p.tipo = document.getElementById('ep-tipo').value;
-            p.probabilidade = document.getElementById('ep-probabilidade').value;
-            saveData(); 
-            updateViews();
-        }
-    }
-}
-
-async function toggleRework(id) {
-    const p = appData.projects.find(p => p.id === id);
-    if (p.reworkType) {
-        const o = await openModal("Finalizar Revisão", "O retrabalho foi concluído?", "Observações...");
-        if (o !== null) { 
-            p.reworkType = null; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "✅ RETRABALHO CONCLUÍDO", obs: o || "Revisão finalizada", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); 
-            renderProjects(); 
-        }
-    } else {
-        reworkProjectId = id; 
-        document.getElementById('rework-obs-input').value = ''; 
-        document.getElementById('rework-modal').classList.remove('hidden');
-    }
-}
-
-function closeReworkModal(c) {
-    document.getElementById('rework-modal').classList.add('hidden');
-    if (c && reworkProjectId !== null) {
-        const t = document.getElementById('rework-type-select').value; 
-        const o = document.getElementById('rework-obs-input').value;
-        const p = appData.projects.find(p => p.id === reworkProjectId); 
-        p.reworkType = t.toLowerCase();
-        if(!p.history) p.history = [];
-        p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo não informado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
-        saveData(); 
-        renderProjects();
-    }
-    reworkProjectId = null;
-}
-
-// PERFIS
+/* ==================================================
+   PERFIS
+================================================== */
 function renderProfiles() {
-    const c = document.getElementById('profiles-container'); 
-    if(!c) return; 
-    c.innerHTML = '';
-    
-    if(appData.users && Array.isArray(appData.users)) {
-        appData.users.forEach(user => {
-            if(user === "ADMIN") return; 
-            const div = document.createElement('div'); 
-            div.className = 'profile-card'; 
-            div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${user}')">👤 ${user}</span>`;
-            c.appendChild(div);
-        });
-    }
+  const c = document.getElementById("profiles-container");
+  if (!c) return;
+  c.innerHTML = "";
+  (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
+    const div = document.createElement("div");
+    div.className = "profile-card";
+    div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${u}')">👤 ${u}</span>`;
+    c.appendChild(div);
+  });
 }
 
 async function addUser() {
-    const i = document.getElementById('new-user-name'); 
-    const n = i.value.trim();
-    if(!n) return; 
-    
-    if(!appData.users) appData.users = [];
-    if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { 
-        alert("Este nome já existe!"); 
-        return; 
-    }
-    
-    const pass = await openPasswordModal("Criar Senha", `Defina a senha para ${n}:`);
-    if (pass !== null && pass.trim() !== "") { 
-        appData.users.push(n); 
-        if(!appData.passwords) appData.passwords = {}; 
-        appData.passwords[n] = pass; 
-        saveData(); 
-        i.value = ''; 
-        renderProfiles(); 
-    }
+  const inp  = document.getElementById("new-user-name");
+  const name = inp.value.trim();
+  if (!name) return;
+  if (!appData.users) appData.users = [];
+  if (appData.users.includes(name) || name.toUpperCase() === "ADMIN") {
+    toast("Este nome já existe!", "warning"); return;
+  }
+  const pass = await openPasswordModal("Criar Senha", `Defina a senha para "${name}":`);
+  if (pass !== null && pass.trim()) {
+    appData.users.push(name);
+    appData.passwords[name] = await hashPassword(pass);
+    saveData(); inp.value = ""; renderProfiles();
+    toast(`${name} adicionado à equipe!`, "success");
+  }
 }
 
-function deleteCurrentUser() {
-    if(confirm(`Deseja apagar seu perfil?`)) { 
-        appData.users = appData.users.filter(u => u !== currentUser); 
-        if(appData.passwords && appData.passwords[currentUser]) delete appData.passwords[currentUser]; 
-        saveData(); 
-        logout(); 
-    }
-}
-
-async function handleLoginClick(user) {
-    if (!appData.passwords) appData.passwords = {};
-    if (!appData.passwords[user]) { 
-        const pass = await openPasswordModal("Segurança", `Crie uma senha para ${user}:`); 
-        if (pass !== null && pass.trim() !== "") { 
-            appData.passwords[user] = pass; 
-            saveData(); 
-            proceedLogin(user); 
-        } 
-    } else { 
-        const pass = await openPasswordModal("Acesso", `Senha:`); 
-        if (pass === appData.passwords[user] || pass === "070522") {
-            proceedLogin(user); 
-        } else if (pass !== null) {
-            alert("Senha Incorreta!"); 
-        }
-    }
-}
-
-async function handleMasterLogin() {
-    const pass = await openPasswordModal("Acesso Restrito", "Senha Master:");
-    if (pass === "070522" || (appData.passwords && pass === appData.passwords["ADMIN"])) { 
-        if(!appData.passwords) appData.passwords = {}; 
-        proceedLogin("ADMIN"); 
-    } else if (pass !== null) {
-        alert("Senha Incorreta!");
-    }
-}
-
-function changeMyPassword() {
-    openModal("Segurança", `Insira a sua nova senha:`, "Nova senha...").then(newPass => {
-        if (newPass !== null && newPass.trim() !== '') {
-            if(!appData.passwords) appData.passwords = {};
-            appData.passwords[currentUser] = newPass; 
-            saveData(); 
-            alert(`Senha atualizada com sucesso!`);
-        }
-    });
-}
-
-function openAdminModal() {
-    const list = document.getElementById('admin-users-list'); 
-    list.innerHTML = '';
-    (appData.users || []).forEach(u => {
-        if(u === "ADMIN") return;
-        list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #e5e7eb;"><strong>👤 ${u}</strong><button class="warning" style="padding: 6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar</button></div>`;
-    });
-    document.getElementById('admin-modal').classList.remove('hidden');
-}
-
-function changeUserPassword(u) {
-    openModal("Alterar Senha", `Insira a nova senha para ${u}:`, "Nova senha...").then(newPass => {
-        if (newPass !== null && newPass.trim() !== '') {
-            if(!appData.passwords) appData.passwords = {};
-            appData.passwords[u] = newPass; 
-            saveData(); 
-            alert(`Senha de ${u} atualizada com sucesso!`);
-        }
-    });
+async function deleteCurrentUser() {
+  const ok = await openConfirmModal("Excluir Perfil", `Deseja apagar permanentemente o perfil "${currentUser}"? Esta ação não pode ser desfeita.`);
+  if (!ok) return;
+  appData.users = appData.users.filter(u => u !== currentUser);
+  delete appData.passwords[currentUser];
+  saveData(); logout();
 }
 
 function populateUserFilter() {
-    const sel = document.getElementById('user-filter-select'); 
-    if(!sel) return;
-    sel.innerHTML = '<option value="ALL">Visualizar Todos</option><option value="MEUS">Apenas os Meus Projetos</option>';
-    (appData.users || []).forEach(u => {
-        if (u !== currentUser && u !== "ADMIN") { 
-            sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; 
-        }
-    });
-    if(currentUser === "ADMIN") {
-        sel.value = "ALL"; 
-    } else {
-        sel.value = "MEUS";
+  const sel = document.getElementById("user-filter-select");
+  if (!sel) return;
+  sel.innerHTML = '<option value="ALL">Todos</option><option value="MEUS">Só os Meus</option>';
+  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => {
+    sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`;
+  });
+  sel.value = currentUser === "ADMIN" ? "ALL" : "MEUS";
+}
+
+async function handleLoginClick(user) {
+  if (!appData.passwords) appData.passwords = {};
+  const stored = appData.passwords[user];
+  if (!stored) {
+    const pass = await openPasswordModal("Criar Senha", `Crie uma senha para "${user}":`);
+    if (pass !== null && pass.trim()) {
+      appData.passwords[user] = await hashPassword(pass);
+      saveData(); proceedLogin(user);
     }
+  } else {
+    const pass = await openPasswordModal("Acesso", `Senha de ${user}:`);
+    if (pass === null) return;
+    if (pass === MASTER_KEY || await checkPassword(stored, pass)) {
+      proceedLogin(user);
+    } else {
+      toast("Senha incorreta.", "danger");
+    }
+  }
+}
+
+async function handleMasterLogin() {
+  const pass = await openPasswordModal("Acesso Master", "Senha administrativa:");
+  if (pass === null) return;
+  const storedAdmin = appData.passwords?.["ADMIN"];
+  const ok = pass === MASTER_KEY || (storedAdmin && await checkPassword(storedAdmin, pass));
+  if (ok) {
+    if (!appData.users.includes("ADMIN")) appData.users.push("ADMIN");
+    proceedLogin("ADMIN");
+  } else {
+    toast("Senha incorreta.", "danger");
+  }
 }
 
 function proceedLogin(user) {
-    currentUser = user; 
-    isViewerMode = false;
-    document.getElementById('view-profiles').classList.add('hidden');
-    document.getElementById('view-manager').classList.add('hidden');
-    document.getElementById('view-dashboard').classList.remove('hidden');
-    document.getElementById('dashboard-title').textContent = user === "ADMIN" ? `Área de Trabalho (Gestão)` : `Área de Trabalho: ${user}`;
-    
-    if (user === "ADMIN") { 
-        document.getElementById('admin-btn').classList.remove('hidden'); 
-        document.getElementById('delete-profile-btn').classList.add('hidden'); 
-    } else { 
-        document.getElementById('admin-btn').classList.add('hidden'); 
-        document.getElementById('delete-profile-btn').classList.remove('hidden'); 
-    }
-    populateUserFilter(); 
-    switchDraftsmanTab('fila');
+  currentUser = user; isViewerMode = false;
+  show("view-dashboard");
+  document.getElementById("dashboard-title").textContent = user === "ADMIN" ? "Área de Trabalho (Gestão)" : `Área de Trabalho — ${user}`;
+  document.getElementById("admin-btn").classList.toggle("hidden", user !== "ADMIN");
+  document.getElementById("delete-profile-btn").classList.toggle("hidden", user === "ADMIN");
+  populateUserFilter(); switchDraftsmanTab("fila");
 }
 
 function proceedAsViewer() {
-    currentUser = null; 
-    isViewerMode = true;
-    document.getElementById('view-profiles').classList.add('hidden');
-    document.getElementById('view-dashboard').classList.add('hidden');
-    document.getElementById('view-manager').classList.remove('hidden');
-    switchManagerTab('andamento');
+  currentUser = null; isViewerMode = true;
+  show("view-manager"); switchManagerTab("andamento");
 }
 
 function logout() {
-    currentUser = null; 
-    isViewerMode = false;
-    document.getElementById('view-dashboard').classList.add('hidden');
-    document.getElementById('view-manager').classList.add('hidden');
-    document.getElementById('view-profiles').classList.remove('hidden');
-    renderProfiles();
+  currentUser = null; isViewerMode = false;
+  show("view-profiles"); renderProfiles();
 }
 
-function updateViews() {
-    if (isViewerMode) {
-        renderGlobalFeed(); 
-    } else if (currentUser) {
-        renderProjects();
-    }
+async function changeMyPassword() {
+  const pass = await openPasswordModal("Alterar Senha", "Digite sua nova senha:");
+  if (pass !== null && pass.trim()) {
+    appData.passwords[currentUser] = await hashPassword(pass);
+    saveData(); toast("Senha atualizada com sucesso!", "success");
+  }
 }
+
+function openAdminModal() {
+  const list = document.getElementById("admin-users-list");
+  list.innerHTML = "";
+  (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);";
+    row.innerHTML = `<strong>👤 ${u}</strong><button class="warning" style="padding:6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar Senha</button>`;
+    list.appendChild(row);
+  });
+  document.getElementById("admin-modal").classList.remove("hidden");
+}
+
+async function changeUserPassword(u) {
+  const pass = await openCustomModal("Alterar Senha", `Nova senha para ${u}:`, "Nova senha...");
+  if (pass !== null && pass.trim()) {
+    appData.passwords[u] = await hashPassword(pass);
+    saveData(); toast(`Senha de ${u} atualizada!`, "success");
+  }
+}
+
+/* ==================================================
+   RENDER GLOBAL (GERÊNCIA)
+================================================== */
+function updateViews() { isViewerMode ? renderGlobalFeed() : renderProjects(); updateBadges(); }
 
 function switchManagerTab(tab) {
-    managerCurrentTab = tab;
-    ['fila','andamento','concluidos','graficos'].forEach(t => {
-        document.getElementById(`tab-${t}`).classList.toggle('active', tab === t);
-    });
-    
-    if(tab === 'graficos'){ 
-        document.getElementById('global-feed-container').classList.add('hidden'); 
-        document.getElementById('view-graphics').classList.remove('hidden'); 
-        populateGraphSelect(); 
-        renderGraph(); 
-    } else { 
-        document.getElementById('view-graphics').classList.add('hidden'); 
-        document.getElementById('global-feed-container').classList.remove('hidden'); 
-        renderGlobalFeed(); 
-    }
+  managerTab = tab;
+  ["fila","andamento","concluidos","graficos"].forEach(t =>
+    document.getElementById(`tab-${t}`)?.classList.toggle("active", tab === t)
+  );
+  const isGraph = tab === "graficos";
+  document.getElementById("global-feed-container").classList.toggle("hidden", isGraph);
+  document.getElementById("view-graphics").classList.toggle("hidden", !isGraph);
+  if (isGraph) { populateGraphSelect(); renderPareto("manager"); }
+  else renderGlobalFeed();
 }
 
 function renderGlobalFeed() {
-    const container = document.getElementById('global-feed-container'); 
-    if(!container) return; 
-    container.innerHTML = '';
-    
-    const src = (document.getElementById('manager-search-input').value || '').toLowerCase();
-    const sortFilter = document.getElementById('manager-sort-filter-select') ? document.getElementById('manager-sort-filter-select').value : 'DATE_DESC';
-    
-    let flt = (appData.projects||[]).filter(p => {
-        if(!p) return false;
-        const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
-        let tb = false;
-        
-        if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0); 
-        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8); 
-        else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 8); 
-        
-        if (!m || !tb) return false;
-        if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
-        if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
-        return true;
-    });
-    
-    flt.sort((a, b) => { 
-        if (sortFilter === 'VENDEDOR') { 
-            const vA = (a.vendedor || '').toLowerCase(); 
-            const vB = (b.vendedor || '').toLowerCase(); 
-            if (vA < vB) return -1; 
-            if (vA > vB) return 1; 
-            return b.id - a.id; 
-        } 
-        if (sortFilter === 'DATE_ASC') return a.id - b.id; 
-        return b.id - a.id; 
-    });
-    
-    buildCardsStructure(flt, container, false);
+  const container = document.getElementById("global-feed-container");
+  if (!container) return;
+  const src    = (document.getElementById("manager-search")?.value || "").toLowerCase();
+  const sort   = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
+  const list   = filterAndSort(appData.projects || [], src, sort, managerTab);
+  buildCards(list, container, false);
 }
 
+/* ==================================================
+   RENDER DESENHISTA
+================================================== */
 function switchDraftsmanTab(tab) {
-    draftsmanCurrentTab = tab;
-    ['fila','andamento','concluidos', 'graficos'].forEach(t => {
-        document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t);
-    });
-    
-    if (tab === 'graficos') { 
-        document.getElementById('projects-container').classList.add('hidden'); 
-        document.getElementById('view-draftsman-graphics').classList.remove('hidden'); 
-        populateDraftsmanGraphSelect(); 
-        renderDraftsmanGraph(); 
-    } else { 
-        document.getElementById('view-draftsman-graphics').classList.add('hidden'); 
-        document.getElementById('projects-container').classList.remove('hidden'); 
-        renderProjects(); 
-    }
+  draftsmanTab = tab;
+  ["fila","andamento","concluidos","graficos"].forEach(t =>
+    document.getElementById(`tab-d-${t}`)?.classList.toggle("active", tab === t)
+  );
+  const isGraph = tab === "graficos";
+  document.getElementById("projects-container").classList.toggle("hidden", isGraph);
+  document.getElementById("view-draftsman-graphics").classList.toggle("hidden", !isGraph);
+  if (isGraph) { populateDraftsmanGraphSelect(); renderPareto("draftsman"); }
+  else renderProjects();
 }
 
 function renderProjects() {
-    const container = document.getElementById('projects-container'); 
-    if(!container) return; 
-    container.innerHTML = '';
-    
-    if(draftsmanCurrentTab === 'graficos') return;
-    
-    const src = (document.getElementById('search-input').value || '').toLowerCase();
-    const filterUser = document.getElementById('user-filter-select') ? document.getElementById('user-filter-select').value : 'ALL';
-    const sortFilter = document.getElementById('sort-filter-select') ? document.getElementById('sort-filter-select').value : 'DATE_DESC';
-    
-    let flt = (appData.projects||[]).filter(p => {
-        if(!p) return false; 
-        let tabMatch = false;
-        
-        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0);
-        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8);
-        else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 8);
-        
-        if(!tabMatch) return false;
-        
-        const isOwner = p.owner === currentUser;
-        let userMatch = false;
-        if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
-            userMatch = true;
-        } else if (filterUser === 'MEUS') {
-            userMatch = isOwner;
-        } else if (filterUser === 'ALL') {
-            userMatch = true; 
-        } else {
-            userMatch = (p.owner === filterUser);
-        }
-        if(!userMatch) return false;
-        
-        if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
-        if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
-        
-        return (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src);
-    });
-    
-    flt.sort((a, b) => { 
-        if (sortFilter === 'VENDEDOR') { 
-            const vA = (a.vendedor || '').toLowerCase(); 
-            const vB = (b.vendedor || '').toLowerCase(); 
-            if (vA < vB) return -1; 
-            if (vA > vB) return 1; 
-            return b.id - a.id; 
-        } 
-        if (sortFilter === 'DATE_ASC') return a.id - b.id; 
-        return b.id - a.id; 
-    });
-    
-    buildCardsStructure(flt, container, true);
+  const container = document.getElementById("projects-container");
+  if (!container || draftsmanTab === "graficos") return;
+  container.innerHTML = "";
+  const src        = (document.getElementById("search-input")?.value || "").toLowerCase();
+  const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
+  const sort       = document.getElementById("sort-filter-select")?.value  || "DATE_DESC";
+
+  let list = filterAndSort(appData.projects || [], src, sort, draftsmanTab);
+
+  // Filtro por usuário
+  list = list.filter(p => {
+    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
+    if (isFila) return true;
+    if (filterUser === "ALL") return true;
+    if (filterUser === "MEUS") return p.owner === currentUser;
+    return p.owner === filterUser;
+  });
+
+  buildCards(list, container, true);
 }
 
-function buildCardsStructure(list, container, isDash) {
-    if(!list || list.length === 0) { 
-        container.style.display = 'block'; 
-        container.innerHTML = '<p style="text-align:center;color:gray;padding:20px;">Nenhum projeto encontrado nesta visualização.</p>'; 
-        return; 
-    } else {
-        container.style.display = 'grid';
-    }
-    
-    list.forEach(p => {
-        if(!p) return;
-        const isC = p.stageIndex >= 8; 
-        const own = p.owner === currentUser; 
-        const isMaster = currentUser === "ADMIN";
-        const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
-        const edit = !isViewerMode && isDash && (own || isMaster || isFila);
-        
-        let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
-        if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; 
-        if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
-        
-        const card = document.createElement('div'); 
-        card.className = `project-card ${cClass}`;
-        const prog = Math.round(((p.stageIndex||0) / (STAGES.length - 1)) * 100);
-        
-        let opts = ''; 
-        STAGES.forEach((s, idx) => { 
-            opts += `<option value="${idx}" ${idx === (p.stageIndex||0) ? 'selected' : ''}>${idx+1}. ${s}</option>`; 
-        });
-        
-        let hist = '';
-        if(p.history) p.history.forEach((h, i) => {
-            if(!h) return; 
-            const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
-            const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
-            
-            let drv = ''; 
-            if (h.driveUrl) { 
-                if (h.driveUrl.toUpperCase().startsWith('G:') || h.driveUrl.startsWith('\\\\') || (!h.driveUrl.startsWith('http') && h.driveUrl.includes('\\'))) { 
-                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); 
-                    drv = `<br><button class="drive-link" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; cursor:pointer;" onclick="window.abrirPastaLocalPeloAjudante('${safePath}')">📂 Abrir Caminho / Pasta</button>`; 
-                } else { 
-                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive Web</a>`; 
-                } 
-            }
-            
-            let col = ''; 
-            if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea; font-weight:bold;';
-            if(h.stage && h.stage.includes('CORRIGIDO')) col = 'color:#16a34a; font-weight:bold;';
-            if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
-            hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
-        });
-        
-        let bt = p.isImpeded ? '⚠️ PAUSADO' : (isC ? '✅ CONCLUÍDO' : '▶ ' + (STAGES[p.stageIndex||0] || 'Etapa'));
-        if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; 
-        if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
-        
-        let acts = '';
-        
-        // 1. Assumir
-        if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
-            acts += `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>`;
-        }
-        
-        // 2. Marcar como Corrigido
-        if (!isViewerMode && isDash && !isC && (p.stageIndex === 3 || p.stageIndex === 4)) {
-            acts += `<button class="success" onclick="markAsCorrected('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#16a34a; margin-bottom:5px;">✅ Marcar como Corrigido</button>`;
-        }
-        
-        // 3. Ações de Edição
-        if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
-             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>`;
-        } else if (edit && !isC) {
-             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button></div>`;
-        } else if (edit && isC) {
-             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button></div>`;
-        }
-        
-        // 4. PDF
-        acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
-        
-        card.innerHTML = `
-        <div class="project-header">
-            <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
-            <div class="project-title-container" style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
-                <h2 style="margin:0;">${p.name||'Sem Nome'}</h2>
-                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome da Obra">✏️</button>` : ''}
-            </div>
-            <div class="project-details-box" style="position: relative;">
-                ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px; background:#e5e7eb; padding:4px 8px; font-size: 0.8rem; font-weight: bold; border-radius: 4px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️ Editar Info</button>` : ''}
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px; padding-right: 80px;">
-                    <span><strong>CÓD:</strong> ${p.cod || '-'}</span>
-                    <span><strong>Vend:</strong> ${p.vendedor || '-'}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span><strong>Tipo:</strong> <span style="color:${p.tipo==='REVISÃO'?'#ea580c':'#16a34a'}"><b>${p.tipo || '-'}</b></span></span>
-                    <span><strong>Prob:</strong> ${p.probabilidade || '-'}</span>
-                </div>
-                <div style="border-top:1px dashed #e5e7eb; padding-top:5px; margin-top:5px;">
-                    <span><strong>Cid:</strong> ${p.cidade || '-'}</span>
-                </div>
-            </div>
-            ${edit ? `<select onchange="updateStage('${p.id}', this)" ${p.isImpeded || p.reworkType ? 'disabled':''}>${opts}</select>` : ''}
-            <div style="font-weight:bold; color:var(--primary); margin-top:8px;">${bt}</div>
-        </div>
-        <div class="progress-container"><div class="progress-bar" style="width: ${prog||0}%;"></div></div>
-        <div class="timeline"><strong>Histórico:</strong><br>${hist}</div>
-        <div class="actions">${acts}</div>`;
-        
-        container.appendChild(card);
+function filterAndSort(projects, search, sort, tab) {
+  return projects
+    .filter(p => {
+      if (!p) return false;
+      const inTab = tab === "fila"      ? p.stageIndex === 0
+                  : tab === "andamento" ? p.stageIndex > 0 && p.stageIndex < 8
+                  : tab === "concluidos"? p.stageIndex >= 8
+                  : false;
+      if (!inTab) return false;
+      if (sort === "TIPO_NOVO"    && p.tipo !== "NOVO")    return false;
+      if (sort === "TIPO_REVISAO" && p.tipo !== "REVISÃO") return false;
+      const hay = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")).toLowerCase();
+      return hay.includes(search);
+    })
+    .sort((a, b) => {
+      if (sort === "VENDEDOR") {
+        const cmp = (a.vendedor||"").localeCompare(b.vendedor||"");
+        return cmp !== 0 ? cmp : b.id - a.id;
+      }
+      return sort === "DATE_ASC" ? a.id - b.id : b.id - a.id;
     });
+}
+
+/* ==================================================
+   BUILD CARDS
+================================================== */
+function buildCards(list, container, isDash) {
+  container.innerHTML = "";
+  if (!list.length) {
+    container.style.display = "block";
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado nesta visualização.</p></div>`;
+    return;
+  }
+  container.style.display = "grid";
+
+  list.forEach(p => {
+    if (!p) return;
+    const isC    = p.stageIndex >= 8;
+    const isMine = p.owner === currentUser;
+    const isAdmin= currentUser === "ADMIN";
+    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
+    const canEdit= !isViewerMode && isDash && (isMine || isAdmin || isFila);
+
+    let cardClass = isC ? "completed" : (p.isImpeded ? "impediment" : "");
+    if (!isC && p.reworkType === "interno") cardClass += " rework-int";
+    if (!isC && p.reworkType === "externo") cardClass += " rework-ext";
+
+    const progress = Math.round(((p.stageIndex || 0) / (STAGES.length - 1)) * 100);
+
+    // Seletor de etapas
+    const stageOpts = STAGES.map((s, i) =>
+      `<option value="${i}" ${i === (p.stageIndex||0) ? "selected" : ""}>${i+1}. ${s}</option>`
+    ).join("");
+
+    // Histórico
+    const histHTML = (p.history || []).map((h, i) => {
+      if (!h) return "";
+      const canEditHist = canEdit;
+      const editBtns = canEditHist
+        ? `<div class="timeline-actions">
+             <button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})" title="Editar observação">✏️</button>
+             <button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})" title="Remover item">🗑️</button>
+           </div>` : "";
+      const dateAttr = canEditHist ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})" title="Clique para editar data"` : `class="timeline-date"`;
+
+      let linkHTML = "";
+      if (h.driveUrl) {
+        const isLocal = h.driveUrl.toUpperCase().startsWith("G:") || h.driveUrl.includes("\\");
+        if (isLocal) {
+          const safe = h.driveUrl.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+          linkHTML = `<br><button class="drive-link local" onclick="window.abrirPastaLocalPeloAjudante('${safe}')">📂 Abrir Pasta</button>`;
+        } else {
+          linkHTML = `<br><a href="${h.driveUrl}" target="_blank" rel="noopener" class="drive-link web">📂 Abrir no Drive</a>`;
+        }
+      }
+
+      let stageStyle = "";
+      if (h.stage?.includes("RECADO") || h.stage?.includes("CAMINHO") || h.stage?.includes("ASSUMIU") || h.stage?.includes("ARQUIVO")) stageStyle = "color:var(--purple);font-weight:700;";
+      if (h.stage?.includes("CORRIGIDO")) stageStyle = "color:var(--success);font-weight:700;";
+      if (h.stage?.includes("RETRABALHO")) stageStyle = "color:var(--orange);";
+
+      return `<div class="timeline-item">
+        <div class="timeline-top">
+          <span class="timeline-stage" style="${stageStyle}">${h.stage||""}</span>${editBtns}
+        </div>
+        <div class="timeline-obs">↳ ${h.obs||""}${linkHTML}</div>
+        <div class="timeline-meta">
+          <span class="timeline-author">👤 ${h.author||p.owner}</span>
+          <span ${dateAttr}>${h.date||""}${canEditHist?" ✏️":""}</span>
+        </div>
+      </div>`;
+    }).join("");
+
+    // Status label
+    let statusLabel = p.isImpeded ? "⚠️ PAUSADO"
+      : isC ? "✅ CONCLUÍDO"
+      : !isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO"
+      : !isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO"
+      : "▶ " + (STAGES[p.stageIndex||0] || "—");
+
+    // Ações
+    let actions = "";
+    if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
+      actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
+    }
+    if (!isViewerMode && isDash && !isC && (p.stageIndex === 3 || p.stageIndex === 4)) {
+      actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
+    }
+
+    const commonBtns = (isDash && canEdit || isViewerMode) ? `
+      <button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>
+      <button class="info" onclick="openDriveModal('${p.id}')">📂 Anexar</button>` : "";
+
+    if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
+      actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
+    } else if (canEdit && !isC) {
+      actions += `<div class="actions-row">${commonBtns}
+        <button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?"▶":"⏸"}</button>
+        <button class="danger" onclick="deleteProject('${p.id}')">🗑️</button>
+      </div>`;
+    } else if (canEdit && isC) {
+      actions += `<div class="actions-row">${commonBtns}
+        <button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button>
+      </div>`;
+    }
+    actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
+
+    const tipoBadge = `<span style="color:${p.tipo==="REVISÃO"?"var(--orange)":"var(--success)"}; font-weight:700;">${p.tipo||"-"}</span>`;
+
+    const card = document.createElement("div");
+    card.className = `project-card ${cardClass}`;
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <span class="badge-owner">👤 ${p.owner}</span>
+        ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Fechar Revisão" : "🔄 Retrabalho"}</button>` : ""}
+      </div>
+
+      <div class="project-title-row">
+        <h2>${p.name||"Sem Nome"}</h2>
+        ${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar nome">✏️</button>` : ""}
+      </div>
+
+      <div class="info-box">
+        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')" title="Editar informações">✏️</button>` : ""}
+        <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
+        <div class="info-row"><span><strong>Tipo:</strong> ${tipoBadge}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
+        <hr class="info-divider">
+        <span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
+      </div>
+
+      ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
+
+      <div class="status-label">${statusLabel}</div>
+
+      <div class="progress-wrap"><div class="progress-bar" style="width:${progress}%;"></div></div>
+
+      <div class="timeline">
+        <div class="timeline-header">📋 Histórico</div>
+        ${histHTML || '<div style="color:var(--text-light);font-size:0.82rem;">Nenhum registro ainda.</div>'}
+      </div>
+
+      <div class="card-actions">${actions}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* ==================================================
+   MODAIS DE EDIÇÃO DE PROJETO
+================================================== */
+function openEditProjectModal(id) {
+  const p = findProject(id); if (!p) return;
+  document.getElementById("ep-id").value = id;
+  document.getElementById("ep-cod").value  = p.cod || "";
+  document.getElementById("ep-cidade").value = p.cidade || "";
+  document.getElementById("ep-vendedor").value = p.vendedor || "";
+  document.getElementById("ep-tipo").value = p.tipo || "NOVO";
+  document.getElementById("ep-probabilidade").value = p.probabilidade || "";
+  document.getElementById("edit-project-modal").classList.remove("hidden");
+}
+function closeEditProjectModal(confirm) {
+  document.getElementById("edit-project-modal").classList.add("hidden");
+  if (!confirm) return;
+  const id = document.getElementById("ep-id").value;
+  const p  = findProject(id); if (!p) return;
+  p.cod          = document.getElementById("ep-cod").value.trim();
+  p.cidade       = document.getElementById("ep-cidade").value.trim();
+  p.vendedor     = document.getElementById("ep-vendedor").value;
+  p.tipo         = document.getElementById("ep-tipo").value;
+  p.probabilidade= document.getElementById("ep-probabilidade").value;
+  saveData(); updateViews(); toast("Informações atualizadas!", "success");
 }
 
 function openCreateProjectModal() {
-    ['cp-cliente', 'cp-cod', 'cp-cidade', 'cp-vendedor', 'cp-tipo', 'cp-probabilidade', 'cp-obs'].forEach(f => { const el = document.getElementById(f); if(el) el.value = ''; });
-    document.getElementById('create-project-modal').classList.remove('hidden');
+  ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+  document.getElementById("cp-vendedor").value = "";
+  document.getElementById("cp-tipo").value = "NOVO";
+  document.getElementById("cp-probabilidade").value = "";
+  document.getElementById("create-project-modal").classList.remove("hidden");
+  requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
+}
+function closeCreateProjectModal(confirm) {
+  if (!confirm) { document.getElementById("create-project-modal").classList.add("hidden"); return; }
+  const cli = document.getElementById("cp-cliente").value.trim();
+  if (!cli) { toast("Nome do cliente é obrigatório!", "warning"); return; }
+  if (!appData.projects) appData.projects = [];
+  appData.projects.unshift({
+    id: Date.now().toString(),
+    owner: "Fila",
+    name: cli,
+    stageIndex: 0,
+    isImpeded: false,
+    reworkType: null,
+    cod:          document.getElementById("cp-cod").value.trim(),
+    vendedor:     document.getElementById("cp-vendedor").value,
+    tipo:         document.getElementById("cp-tipo").value,
+    probabilidade:document.getElementById("cp-probabilidade").value,
+    cidade:       document.getElementById("cp-cidade").value.trim(),
+    history: [{
+      stage: STAGES[0],
+      obs: document.getElementById("cp-obs").value.trim() || "Adicionado à fila.",
+      date: nowBR(),
+      author: currentUser || "Visualizador"
+    }]
+  });
+  document.getElementById("create-project-modal").classList.add("hidden");
+  saveData(); updateBadges();
+  if (isViewerMode) switchManagerTab("fila"); else switchDraftsmanTab("fila");
+  toast("Projeto criado e colocado na fila!", "success");
 }
 
-function closeCreateProjectModal(c) {
-    if (!c) { document.getElementById('create-project-modal').classList.add('hidden'); return; }
-    const cli = document.getElementById('cp-cliente').value.trim(); 
-    if (!cli) { alert("Nome do Cliente é obrigatório!"); return; }
-    
-    if(!appData.projects) appData.projects = [];
-    appData.projects.unshift({ 
-        id: Date.now().toString(), 
-        owner: "Fila", 
-        name: cli, 
-        stageIndex: 0, 
-        isImpeded: false, 
-        reworkType: null, 
-        cod: document.getElementById('cp-cod').value.trim(), 
-        vendedor: document.getElementById('cp-vendedor').value, 
-        tipo: document.getElementById('cp-tipo').value, 
-        probabilidade: document.getElementById('cp-probabilidade').value, 
-        cidade: document.getElementById('cp-cidade').value.trim(), 
-        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado na fila.", date: new Date().toLocaleString('pt-BR'), author: currentUser || "Visualizador" }] 
-    });
-    
-    saveData(); 
-    document.getElementById('create-project-modal').classList.add('hidden'); 
-    
-    if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
-    if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
-    if(isViewerMode) switchManagerTab('fila'); else switchDraftsmanTab('fila');
-}
-
+/* ==================================================
+   AÇÕES DE PROJETO
+================================================== */
 async function editProjectName(id) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return;
-    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
-    if (n) { 
-        p.name = n; 
-        saveData(); 
-        renderProjects(); 
-    }
+  const p = findProject(id); if (!p) return;
+  const n = await openCustomModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
+  if (n !== null && n.trim()) { p.name = n.trim(); saveData(); updateViews(); }
 }
 
 async function deleteProject(id) {
-    if(confirm("Deseja apagar DEFINITIVAMENTE do sistema?")) { 
-        appData.projects = appData.projects.filter(p => p.id !== id); 
-        saveData(); 
-        renderProjects(); 
-    }
+  const p = findProject(id);
+  const ok = await openConfirmModal("Excluir Projeto", `Deseja excluir permanentemente "${p?.name||"este projeto"}"? Esta ação não pode ser desfeita.`);
+  if (!ok) return;
+  appData.projects = appData.projects.filter(p => p.id !== id);
+  saveData(); updateViews(); updateBadges(); toast("Projeto excluído.", "info");
 }
 
 async function updateStage(id, sel) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return; 
-    const idx = parseInt(sel.value);
-    
-    if (p.stageIndex !== idx) {
-        const s = STAGES[idx] || 'Desconhecido';
-        const obs = await openModal("Avançar", `Avançando para: ${s}`, "Recados...");
-        if (obs === null) { 
-            sel.value = p.stageIndex; 
-        } else { 
-            let assumes = autoAssumirSeFila(p);
-            p.stageIndex = idx; 
-            if(!p.history) p.history = []; 
-            
-            let stageHistoryName = s;
-            if (s === "Desenhista") stageHistoryName = "🔄 Retornou ao Desenhista";
-            
-            p.history.unshift({ stage: stageHistoryName, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            
-            if (assumes) {
-                p.history.unshift({ stage: "🚀 ASSUMIU PROJETO", obs: "Assumiu ao mudar a etapa da obra.", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            }
-            
-            saveData(); 
-            renderProjects(); 
-        }
-    }
+  const p = findProject(id); if (!p) return;
+  const idx = parseInt(sel.value);
+  if (p.stageIndex === idx) return;
+  const stageName = STAGES[idx] || "Desconhecido";
+  const obs = await openCustomModal("Avançar Etapa", `Avançando para: "${stageName}"`, "Observação (opcional)...");
+  if (obs === null) { sel.value = p.stageIndex; return; }
+
+  const wasFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
+  if (wasFila) {
+    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
+    pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido ao avançar a etapa.`);
+  }
+
+  p.stageIndex = idx;
+  const label = stageName === "Desenhista" ? "🔄 Retornou ao Desenhista" : stageName;
+  pushHistory(p, label, obs || "Etapa avançada.");
+  saveData(); renderProjects(); updateBadges();
 }
 
 async function markAsCorrected(id) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return;
-    const obs = await openModal("Marcar como Corrigido", "Adicione uma observação (opcional):", "Tudo certo...");
-    if (obs !== null) { 
-        p.stageIndex = 7; 
-        if(!p.history) p.history = []; 
-        p.history.unshift({ stage: "✅ CORRIGIDO", obs: obs || "Projeto marcado como corrigido.", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-        saveData(); 
-        renderProjects(); 
-    }
+  const p = findProject(id); if (!p) return;
+  const obs = await openCustomModal("Marcar como Corrigido", "Observação (opcional):", "Tudo certo...");
+  if (obs === null) return;
+  p.stageIndex = 7;
+  pushHistory(p, "✅ CORRIGIDO", obs || "Marcado como corrigido.");
+  saveData(); renderProjects(); updateBadges();
 }
 
-function assumirProjeto(id) {
-    const p = appData.projects.find(p => p.id === id);
-    if(!p) return;
-    
-    const responsavelAntigo = p.owner;
-    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
-    p.stageIndex = 1; 
-    
-    if(!p.history) p.history = [];
-    p.history.unshift({
-        stage: "🚀 ASSUMIU PROJETO",
-        obs: `Puxado da fila. Responsabilidade de [${responsavelAntigo}] para [${p.owner}].`,
-        date: new Date().toLocaleString('pt-BR'),
-        author: currentUser
-    });
-    
-    saveData();
-    alert(`Assumiu o projeto da obra "${p.name}" com sucesso! Foi movido para "Em Andamento".`);
-    switchDraftsmanTab('andamento');
+async function assumirProjeto(id) {
+  const p = findProject(id); if (!p) return;
+  const anterior = p.owner;
+  p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
+  p.stageIndex = 1;
+  pushHistory(p, "🚀 ASSUMIU PROJETO", `Puxado da fila. De [${anterior}] → [${p.owner}].`);
+  saveData(); updateBadges();
+  toast(`Você assumiu "${p.name}"!`, "success");
+  switchDraftsmanTab("andamento");
 }
 
 async function createRevisaoFromCompleted(id) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return;
-    const c = await openModal("Criar Revisão", "Qual será o NOVO CÓD?", "Ex: 18455A...");
-    if (c !== null) {
-        const obs = await openModal("Motivo", "Por que está retornando?", "Descreva...");
-        if (obs !== null) {
-            p.stageIndex = 0; 
-            p.tipo = "REVISÃO"; 
-            if (c.trim() !== "") p.cod = c.trim();
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "🔄 RETORNOU", obs: obs || `Nova Revisão`, date: new Date().toLocaleString('pt-BR'), author: currentUser });
-            saveData(); 
-            switchDraftsmanTab('fila'); 
-        }
-    }
+  const p = findProject(id); if (!p) return;
+  const cod = await openCustomModal("Criar Revisão", "Novo CÓD para a revisão (opcional):", "Ex: 18455A...");
+  if (cod === null) return;
+  const motivo = await openCustomModal("Motivo da Revisão", "Por que está retornando?", "Descreva...");
+  if (motivo === null) return;
+  p.stageIndex = 0;
+  p.tipo = "REVISÃO";
+  if (cod.trim()) p.cod = cod.trim();
+  pushHistory(p, "🔄 RETORNOU PARA REVISÃO", motivo || "Nova revisão criada.");
+  saveData(); switchDraftsmanTab("fila"); updateBadges();
+  toast("Projeto voltou para a fila como REVISÃO.", "info");
 }
 
 async function registerEvent(id) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return;
-    const obs = await openModal("Recado", "Insira o recado:", "...");
-    if (obs) { 
-        if(!p.history) p.history = []; 
-        p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); 
-        saveData(); 
-        updateViews(); 
-    }
+  const p = findProject(id); if (!p) return;
+  const obs = await openCustomModal("Registrar Recado", "Insira o recado para o histórico:", "...");
+  if (obs) {
+    pushHistory(p, "📢 RECADO", obs);
+    saveData(); updateViews();
+  }
 }
 
 async function editHistoryItem(id, i) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p || !p.history[i]) return;
-    const n = await openModal("Editar", p.history[i].stage, "Texto...", p.history[i].obs);
-    if (n !== null) { 
-        p.history[i].obs = n || "Sem obs"; 
-        saveData(); 
-        updateViews(); 
-    }
+  const p = findProject(id); if (!p || !p.history[i]) return;
+  const n = await openCustomModal("Editar Histórico", `Editando: ${p.history[i].stage}`, "Texto...", p.history[i].obs);
+  if (n !== null) { p.history[i].obs = n || "Sem obs."; saveData(); updateViews(); }
 }
 
 async function deleteHistoryItem(id, i) {
-    if(confirm("Remover do histórico?")) { 
-        const p = appData.projects.find(p => p.id === id); 
-        if(p && p.history) p.history.splice(i, 1); 
-        saveData(); 
-        updateViews(); 
-    }
+  const ok = await openConfirmModal("Remover Item", "Remover este item do histórico?");
+  if (!ok) return;
+  const p = findProject(id);
+  if (p?.history) { p.history.splice(i, 1); saveData(); updateViews(); }
 }
 
 async function toggleImpediment(id) {
-    const p = appData.projects.find(p => p.id === id); 
-    if(!p) return;
-    if (p.isImpeded) {
-        const obs = await openModal("Retomar", "Resolvido?", "Obs...");
-        if (obs !== null) { 
-            p.isImpeded = false; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); 
-            renderProjects(); 
-        }
-    } else {
-        const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
-        if (obs) { 
-            p.isImpeded = true; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); 
-            renderProjects(); 
-        }
+  const p = findProject(id); if (!p) return;
+  if (p.isImpeded) {
+    const obs = await openCustomModal("Retomar Projeto", "Como foi resolvido?", "Obs...");
+    if (obs === null) return;
+    p.isImpeded = false;
+    pushHistory(p, "🟢 RETOMADO", obs || "Liberado.");
+  } else {
+    const obs = await openCustomModal("Pausar Projeto", "Motivo da pausa (obrigatório):", "Motivo...");
+    if (!obs) { toast("Informe o motivo da pausa.", "warning"); return; }
+    p.isImpeded = true;
+    pushHistory(p, "🔴 PAUSADO", obs);
+  }
+  saveData(); renderProjects();
+}
+
+async function toggleRework(id) {
+  const p = findProject(id); if (!p) return;
+  if (p.reworkType) {
+    const obs = await openCustomModal("Fechar Revisão", "O retrabalho foi concluído? Descreva:", "Observações...");
+    if (obs === null) return;
+    p.reworkType = null;
+    pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Revisão finalizada.");
+    saveData(); renderProjects();
+  } else {
+    reworkProjectId = id;
+    document.getElementById("rework-obs-input").value = "";
+    document.getElementById("rework-modal").classList.remove("hidden");
+  }
+}
+function closeReworkModal(confirm) {
+  document.getElementById("rework-modal").classList.add("hidden");
+  if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
+  const type = document.getElementById("rework-type-select").value;
+  const obs  = document.getElementById("rework-obs-input").value;
+  const p    = findProject(reworkProjectId);
+  if (p) {
+    p.reworkType = type.toLowerCase();
+    pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Motivo não informado.");
+    saveData(); renderProjects();
+  }
+  reworkProjectId = null;
+}
+
+function openDateModal(id, i) {
+  if (isViewerMode) return;
+  dateEditCtx = { projectId: id, histIndex: i };
+  const p = findProject(id); if (!p?.history?.[i]) return;
+  document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date);
+  document.getElementById("date-modal").classList.remove("hidden");
+}
+function closeDateModal(confirm) {
+  document.getElementById("date-modal").classList.add("hidden");
+  if (confirm && dateEditCtx.projectId !== null) {
+    const val = document.getElementById("date-modal-input").value;
+    if (val) {
+      const p = findProject(dateEditCtx.projectId);
+      if (p?.history?.[dateEditCtx.histIndex]) {
+        p.history[dateEditCtx.histIndex].date = localStringToDate(val);
+        saveData(); updateViews();
+      }
     }
+  }
+  dateEditCtx = { projectId: null, histIndex: null };
 }
 
-function parseDateBR(str) { 
-    try { 
-        let parts = str.split(/[\s,]+/); 
-        let d = parts[0].split('/'); 
-        let t = parts[1] ? parts[1].split(':') : ['00','00']; 
-        return new Date(d[2], d[1]-1, d[0], t[0]||0, t[1]||0).getTime(); 
-    } catch(e) { 
-        return new Date().getTime(); 
-    } 
-}
-
-function getBusinessHours(startMs, endMs) {
-    if (startMs >= endMs) return 0;
-    let start = new Date(startMs);
-    let end = new Date(endMs);
-    let totalHours = 0;
-    
-    let current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    
-    while (current <= end) {
-        let day = current.getDay();
-        if (day !== 0 && day !== 6) { 
-            let bizStart = new Date(current);
-            bizStart.setHours(7, 15, 0, 0); 
-            
-            let bizEnd = new Date(current);
-            bizEnd.setHours(17, 18, 0, 0); 
-            
-            let actualStart = (start > bizStart) ? start : bizStart;
-            let actualEnd = (end < bizEnd) ? end : bizEnd;
-            
-            if (actualStart < actualEnd) {
-                totalHours += (actualEnd - actualStart) / (1000 * 60 * 60);
-            }
-        }
-        current.setDate(current.getDate() + 1); 
-    }
-    return totalHours;
-}
-
-function populateGraphSelect() { 
-    const s = document.getElementById('graph-filter-select'); 
-    if(!s) return;
-    s.innerHTML = '<option value="ALL">Geral (Todos)</option>'; 
-    (appData.projects||[]).forEach(p => { 
-        const o = document.createElement('option'); 
-        o.value = p.id; 
-        o.textContent = `${p.name} (${p.owner})`; 
-        s.appendChild(o); 
-    }); 
-}
-
-function renderGraph() {
-    if(typeof Chart === 'undefined') return;
-    const v = document.getElementById('graph-filter-select').value; 
-    let tg = v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v);
-    
-    let a = {}; 
-    STAGES.forEach(s => a[s] = 0); 
-    a["Pausado / Impedido"] = 0;
-    
-    let total = (tg || []).length; 
-    let sumHoursCompleted = 0; 
-    let countCompleted = 0;
-
-    (tg||[]).forEach(p => { 
-        if(!p.history) return; 
-        let startMs = null; 
-        let endMs = null;
-        [...p.history].reverse().forEach(ev => { 
-            if(!ev) return; 
-            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
-            if(ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); 
-        });
-        if(startMs && endMs && endMs > startMs) { 
-            sumHoursCompleted += getBusinessHours(startMs, endMs); 
-            countCompleted++; 
-        }
-
-        let cur=null, lst=null; 
-        [...p.history].reverse().forEach(ev => { 
-            if(!ev) return; 
-            let t=parseDateBR(ev.date); 
-            if(cur&&lst) a[cur] += getBusinessHours(lst, t); 
-            if(STAGES.includes(ev.stage)) cur=ev.stage; 
-            else if(ev.stage==="🔴 PAUSADO") cur="Pausado / Impedido"; 
-            else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
-            lst=t; 
-        }); 
-        if(p.stageIndex!==8&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
-    });
-
-    if(document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
-    if(document.getElementById('kpi-avg-time')) document.getElementById('kpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
-    
-    let fd = []; 
-    for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
-    fd.sort((x,y) => y.h - x.h);
-    
-    let lb = [], br = [], ln = [], cm = 0; 
-    let tt = fd.reduce((s, i) => s + i.h, 0); 
-    fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
-    if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
-    
-    if(currentChart) currentChart.destroy(); 
-    currentChart = new Chart(document.getElementById('paretoChart').getContext('2d'), { 
-        type:'bar', 
-        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#2563eb', yAxisID:'y' } ]}, 
-        options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } 
-    });
+/* ==================================================
+   GRÁFICOS PARETO — função unificada
+================================================== */
+function populateGraphSelect() {
+  const s = document.getElementById("graph-filter-select"); if (!s) return;
+  s.innerHTML = '<option value="ALL">Geral — Todos os Projetos</option>';
+  (appData.projects || []).forEach(p => { s.innerHTML += `<option value="${p.id}">${p.name} (${p.owner})</option>`; });
 }
 
 function populateDraftsmanGraphSelect() {
-    const s = document.getElementById('draftsman-graph-filter-select'); 
-    if(!s) return;
-    s.innerHTML = `<option value="MEUS">Meus Projetos Individuais (${currentUser})</option><option value="ALL">Geral da Empresa (Todos)</option>`;
-    (appData.projects || []).forEach(p => {
-        if(p.owner === currentUser || currentUser === "ADMIN") {
-            s.innerHTML += `<option value="${p.id}">Apenas Obra: ${p.name}</option>`;
-        }
-    });
+  const s = document.getElementById("draftsman-graph-select"); if (!s) return;
+  s.innerHTML = `<option value="MEUS">Meus Projetos (${currentUser})</option><option value="ALL">Geral da Empresa</option>`;
+  (appData.projects || []).filter(p => p.owner === currentUser || currentUser === "ADMIN").forEach(p => {
+    s.innerHTML += `<option value="${p.id}">Só: ${p.name}</option>`;
+  });
 }
 
-function renderDraftsmanGraph() {
-    if(typeof Chart === 'undefined' || !document.getElementById('draftsmanParetoChart')) return;
-    const v = document.getElementById('draftsman-graph-filter-select').value;
-    let target = v === "MEUS" ? appData.projects.filter(p => p.owner === currentUser) : (v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v));
-    
-    let a = {}; 
-    STAGES.forEach(s => a[s] = 0); 
-    a["Pausado / Impedido"] = 0;
-    
-    let total = (target || []).length; 
-    let sumHoursCompleted = 0; 
-    let countCompleted = 0;
+function renderPareto(context) {
+  const isManager = context === "manager";
+  const canvasId  = isManager ? "paretoChart" : "draftsmanParetoChart";
+  const selectId  = isManager ? "graph-filter-select" : "draftsman-graph-select";
+  const chartKey  = canvasId;
 
-    (target||[]).forEach(p => { 
-        if(!p.history) return; 
-        let startMs = null; 
-        let endMs = null;
-        [...p.history].reverse().forEach(ev => { 
-            if(!ev) return; 
-            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
-            if(ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); 
-        });
-        if(startMs && endMs && endMs > startMs) { 
-            sumHoursCompleted += getBusinessHours(startMs, endMs); 
-            countCompleted++; 
-        }
+  const selEl  = document.getElementById(selectId); if (!selEl) return;
+  const selVal = selEl.value;
 
-        let cur=null, lst=null; 
-        [...p.history].reverse().forEach(ev => { 
-            if(!ev) return; 
-            let t=parseDateBR(ev.date); 
-            if(cur&&lst) a[cur] += getBusinessHours(lst, t); 
-            if(STAGES.includes(ev.stage)) cur=ev.stage; 
-            else if(ev.stage==="🔴 PAUSADO") cur="Pausado / Impedido"; 
-            else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
-            lst=t; 
-        }); 
-        if(p.stageIndex!==8&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
+  let target;
+  if (selVal === "ALL")  target = appData.projects || [];
+  else if (selVal === "MEUS") target = (appData.projects || []).filter(p => p.owner === currentUser);
+  else target = (appData.projects || []).filter(p => p.id === selVal);
+
+  // Calcular horas por etapa
+  const hours = {};
+  STAGES.forEach(s => hours[s] = 0);
+  hours["Pausado / Impedido"] = 0;
+
+  let total = target.length, sumCompleted = 0, countCompleted = 0;
+
+  target.forEach(p => {
+    if (!p.history) return;
+    const rev = [...p.history].reverse();
+    let startMs = null, endMs = null;
+    rev.forEach(ev => {
+      if (!ev) return;
+      if (!startMs && (ev.stage === STAGES[1] || ev.stage?.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
+      if (ev.stage === STAGES[8]) endMs = parseDateBR(ev.date);
     });
+    if (startMs && endMs && endMs > startMs) {
+      sumCompleted += getBusinessHours(startMs, endMs); countCompleted++;
+    }
 
-    if(document.getElementById('dkpi-total')) document.getElementById('dkpi-total').textContent = total;
-    if(document.getElementById('dkpi-avg-time')) document.getElementById('dkpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
-    
-    let fd = []; 
-    for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
-    fd.sort((x,y) => y.h - x.h);
-    
-    let lb = [], br = [], ln = [], cm = 0; 
-    let tt = fd.reduce((s, i) => s + i.h, 0); 
-    fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
-    if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
-    
-    if(currentDraftsmanChart) currentDraftsmanChart.destroy(); 
-    currentDraftsmanChart = new Chart(document.getElementById('draftsmanParetoChart').getContext('2d'), { 
-        type:'bar', 
-        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#4f46e5', yAxisID:'y' } ]}, 
-        options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } 
+    let curStage = null, lastTime = null;
+    rev.forEach(ev => {
+      if (!ev) return;
+      const t = parseDateBR(ev.date);
+      if (curStage && lastTime) hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, t);
+      if (STAGES.includes(ev.stage))       curStage = ev.stage;
+      else if (ev.stage === "🔴 PAUSADO")  curStage = "Pausado / Impedido";
+      else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0];
+      lastTime = t;
     });
+    if (p.stageIndex !== 8 && lastTime && curStage)
+      hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, Date.now());
+  });
+
+  // KPIs
+  if (isManager) {
+    if (document.getElementById("kpi-total"))     document.getElementById("kpi-total").textContent = total;
+    if (document.getElementById("kpi-avg-time"))  document.getElementById("kpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
+    if (document.getElementById("kpi-completed")) document.getElementById("kpi-completed").textContent = countCompleted;
+  } else {
+    if (document.getElementById("dkpi-total"))    document.getElementById("dkpi-total").textContent = total;
+    if (document.getElementById("dkpi-avg-time")) document.getElementById("dkpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
+  }
+
+  // Pareto
+  const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
+  const totalH = items.reduce((s,[,h]) => s+h, 0);
+  let cumulative = 0;
+  const labels = [], bars = [], line = [];
+  items.forEach(([s, h]) => {
+    labels.push(s); bars.push(h.toFixed(1));
+    cumulative += h;
+    line.push(((cumulative/totalH)*100).toFixed(1));
+  });
+  if (!labels.length) { labels.push("Sem dados"); bars.push(0); line.push(0); }
+
+  if (activeCharts[chartKey]) activeCharts[chartKey].destroy();
+  const canvas = document.getElementById(canvasId); if (!canvas) return;
+  activeCharts[chartKey] = new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "% Acumulada", data: line, type: "line", borderColor: "#dc2626", yAxisID: "y1", tension: 0.3, pointRadius: 4 },
+        { label: "Horas", data: bars, backgroundColor: isManager ? "#2563eb" : "#4f46e5", yAxisID: "y" }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y:  { position: "left", title: { display: true, text: "Horas úteis" } },
+        y1: { position: "right", max: 105, title: { display: true, text: "% Acumulado" }, grid: { drawOnChartArea: false } }
+      },
+      plugins: { legend: { position: "top" } }
+    }
+  });
 }
 
-function sanitizeForPDF(t) { 
-    return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; 
+/* ==================================================
+   PDF EXPORT
+================================================== */
+function sanitizePDF(t) {
+  return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,"");
 }
-
 function exportReportPDF(id) {
-    if(!window.jspdf || !window.jspdf.jsPDF) { alert("Gerador de PDF bloqueado."); return; } 
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    
-    const doc = new window.jspdf.jsPDF();
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.setTextColor(37, 99, 235); 
-    doc.text("DOSSIER DO PROJETO", 14, 22);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Obra: ${sanitizeForPDF(p.name)}`, 14, 32);
-
-    doc.autoTable({
-        startY: 38,
-        theme: 'plain',
-        body: [
-            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
-            ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
-            ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
-        ],
-        styles: { cellPadding: 2, fontSize: 11 }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 10;
-    
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(37, 99, 235);
-    doc.text("HISTÓRICO DE ATIVIDADES", 14, finalY);
-
-    const histData = (p.history || []).map(h => [
-        sanitizeForPDF(h.date || ''),
-        sanitizeForPDF(h.stage || ''),
-        sanitizeForPDF(h.author || ''),
-        sanitizeForPDF(h.obs || '') + (h.driveUrl ? `\n[Caminho: ${sanitizeForPDF(h.driveUrl)}]` : '')
-    ]);
-
-    doc.autoTable({
-        startY: finalY + 5,
-        head: [['Data', 'Etapa', 'Autor', 'Observação / Anexos']],
-        body: histData,
-        theme: 'striped',
-        headStyles: { fillColor: [37, 99, 235] },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: { 3: { cellWidth: 80 } }
-    });
-
-    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  if (!window.jspdf?.jsPDF) { toast("Gerador de PDF não disponível.", "warning"); return; }
+  const p = findProject(id); if (!p) return;
+  const doc = new window.jspdf.jsPDF();
+  doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235);
+  doc.text("DOSSIER DO PROJETO", 14, 22);
+  doc.setFontSize(14); doc.setTextColor(0,0,0);
+  doc.text(`Obra: ${sanitizePDF(p.name)}`, 14, 32);
+  doc.autoTable({ startY:38, theme:"plain",
+    body:[
+      ["COD:",sanitizePDF(p.cod),"Vendedor:",sanitizePDF(p.vendedor)],
+      ["Tipo:",sanitizePDF(p.tipo),"Probabilidade:",sanitizePDF(p.probabilidade)],
+      ["Cidade:",sanitizePDF(p.cidade),"Responsavel:",sanitizePDF(p.owner)]
+    ], styles:{cellPadding:2,fontSize:11}
+  });
+  let y = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235);
+  doc.text("HISTORICO DE ATIVIDADES", 14, y);
+  const rows = (p.history||[]).map(h => [
+    sanitizePDF(h.date||""), sanitizePDF(h.stage||""),
+    sanitizePDF(h.author||""), sanitizePDF(h.obs||"")+(h.driveUrl?`\n[${sanitizePDF(h.driveUrl)}]`:"")
+  ]);
+  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows,
+    theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3},
+    columnStyles:{3:{cellWidth:80}}
+  });
+  window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-function exportDraftsmanReport() { 
-    if(!window.jspdf) return; 
-    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 8), `Relatório de ${currentUser}`); 
+function exportDraftsmanReport() {
+  if (!window.jspdf) return;
+  const list = (appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8);
+  generateListPDF(list, `Relatorio de ${currentUser}`);
 }
-
-function exportManagerReport() { 
-    if(!window.jspdf) return; 
-    generateListPDF(appData.projects, `Relatório Geral de Obras`); 
+function exportManagerReport() {
+  if (!window.jspdf) return;
+  let tab = managerTab === "fila"      ? (appData.projects||[]).filter(p => p.stageIndex === 0)
+          : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8)
+          : (appData.projects||[]).filter(p => p.stageIndex >= 8);
+  generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`);
 }
 
 function generateListPDF(list, title) {
-    if(!window.jspdf || !window.jspdf.jsPDF) return;
-    const doc = new window.jspdf.jsPDF(); 
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(37, 99, 235);
-    doc.text(sanitizeForPDF(title), 14, 22);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont("helvetica", "normal");
-    doc.text("Gerado a: " + new Date().toLocaleString('pt-BR'), 14, 28);
-
-    const tableData = list.map(p => [
-        sanitizeForPDF(p.cod || '-'),
-        sanitizeForPDF(p.name),
-        sanitizeForPDF(p.vendedor || '-'),
-        sanitizeForPDF(p.owner),
-        sanitizeForPDF(STAGES[p.stageIndex] || '-')
-    ]);
-
-    doc.autoTable({
-        startY: 35,
-        head: [['CÓD', 'Cliente / Obra', 'Vend.', 'Desenhista', 'Status Atual']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [37, 99, 235] },
-        styles: { fontSize: 9 }
-    });
-
-    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  if (!window.jspdf?.jsPDF) return;
+  const doc = new window.jspdf.jsPDF();
+  doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(37,99,235);
+  doc.text(sanitizePDF(title), 14, 22);
+  doc.setFontSize(10); doc.setTextColor(100,100,100); doc.setFont("helvetica","normal");
+  doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
+  const rows = list.map(p => [
+    sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"),
+    sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")
+  ]);
+  doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows,
+    theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9}
+  });
+  window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-// BACKUP SALVO COM A DATA NO NOME
+/* ==================================================
+   BACKUP
+================================================== */
 function exportBackup() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const dataAtual = `${yyyy}-${mm}-${dd}`; 
-
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `backup_projetos_${dataAtual}.json`);
-    downloadAnchorNode.click();
+  const d = new Date();
+  const name = `backup_projetos_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+  const a = document.createElement("a");
+  a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+  a.download = name; a.click();
+  toast("Backup gerado!", "success");
 }
-
-function importBackup(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) { 
-        appData = JSON.parse(e.target.result); 
-        saveData(); 
-        alert("Importado com sucesso!"); 
-        renderProfiles(); 
-    };
-    reader.readAsText(file);
+function importBackup(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      appData = JSON.parse(ev.target.result);
+      saveData(); renderProfiles();
+      toast("Backup restaurado com sucesso!", "success");
+    } catch { toast("Arquivo de backup inválido.", "danger"); }
+  };
+  reader.readAsText(file);
 }
 </script>
 </body>
