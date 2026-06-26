@@ -74,7 +74,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
 .project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
 .project-header { margin-bottom: 10px; }
-.project-title-container { display: flex; justify-content: space-between; align-items: start; gap: 10px; margin-bottom: 10px; }
+.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
 .draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
 .project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
@@ -119,110 +119,168 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <div id="create-project-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">📋 Cadastrar Novo Projeto</h3>
-<p class="modal-desc">Preencha as informações básicas para iniciar.</p>
-<div class="form-grid full"><input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)"></div>
-<div class="form-grid"><input type="text" id="cp-cod" placeholder="CÓD / Ordem"><input type="text" id="cp-cidade" placeholder="Cidade"></div>
-<div class="form-grid">
-    <select id="cp-vendedor"><option value="">Selecione Vendedor...</option><option value="CARLA">CARLA</option><option value="JONES">JONES</option><option value="SHANA">SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
-    <select id="cp-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
-</div>
-<div class="form-grid full">
-    <select id="cp-probabilidade"><option value="">Probabilidade de Venda...</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
-</div>
-<textarea id="cp-obs" rows="2" placeholder="Observação Inicial / Recado..."></textarea>
-<div class="modal-buttons">
-<button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
-<button class="success" onclick="closeCreateProjectModal(true)">Colocar na Fila</button>
-</div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">📋 Cadastrar Novo Projeto</h3>
+        <p class="modal-desc">Preencha as informações básicas para iniciar.</p>
+        <div class="form-grid full">
+            <input type="text" id="cp-cliente" placeholder="Nome do Cliente / Obra (Obrigatório)">
+        </div>
+        <div class="form-grid">
+            <input type="text" id="cp-cod" placeholder="CÓD / Ordem">
+            <input type="text" id="cp-cidade" placeholder="Cidade">
+        </div>
+        <div class="form-grid">
+            <select id="cp-vendedor">
+                <option value="">Selecione Vendedor...</option>
+                <option value="CARLA">CARLA</option>
+                <option value="JONES">JONES</option>
+                <option value="SHANA">SHANA</option>
+                <option value="OUTRO">Outro / Terceiros</option>
+            </select>
+            <select id="cp-tipo">
+                <option value="NOVO">NOVO</option>
+                <option value="REVISÃO">REVISÃO</option>
+            </select>
+        </div>
+        <div class="form-grid full">
+            <select id="cp-probabilidade">
+                <option value="">Probabilidade de Venda...</option>
+                <option value="BAIXA">BAIXA</option>
+                <option value="MÉDIA">MÉDIA</option>
+                <option value="ALTA">ALTA</option>
+            </select>
+        </div>
+        <textarea id="cp-obs" rows="2" placeholder="Observação Inicial / Recado..."></textarea>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
+            <button class="success" onclick="closeCreateProjectModal(true)">Colocar na Fila</button>
+        </div>
+    </div>
 </div>
 
 <div id="edit-project-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">✏️ Editar Informações</h3>
-<p class="modal-desc">Altere os detalhes do projeto atual.</p>
-<input type="hidden" id="ep-id">
-<div class="form-grid">
-    <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
-    <input type="text" id="ep-cidade" placeholder="Cidade">
-</div>
-<div class="form-grid">
-    <select id="ep-vendedor"><option value="">Selecione Vendedor...</option><option value="CARLA">CARLA</option><option value="JONES">JONES</option><option value="SHANA">SHANA</option><option value="OUTRO">Outro / Terceiros</option></select>
-    <select id="ep-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
-</div>
-<div class="form-grid full">
-    <select id="ep-probabilidade"><option value="">Probabilidade...</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
-</div>
-<div class="modal-buttons">
-<button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
-<button class="success" onclick="closeEditProjectModal(true)">Salvar Alterações</button>
-</div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">✏️ Editar Informações</h3>
+        <p class="modal-desc">Altere os detalhes do projeto atual.</p>
+        <input type="hidden" id="ep-id">
+        <div class="form-grid">
+            <input type="text" id="ep-cod" placeholder="CÓD / Ordem">
+            <input type="text" id="ep-cidade" placeholder="Cidade">
+        </div>
+        <div class="form-grid">
+            <select id="ep-vendedor">
+                <option value="">Selecione Vendedor...</option>
+                <option value="CARLA">CARLA</option>
+                <option value="JONES">JONES</option>
+                <option value="SHANA">SHANA</option>
+                <option value="OUTRO">Outro / Terceiros</option>
+            </select>
+            <select id="ep-tipo">
+                <option value="NOVO">NOVO</option>
+                <option value="REVISÃO">REVISÃO</option>
+            </select>
+        </div>
+        <div class="form-grid full">
+            <select id="ep-probabilidade">
+                <option value="">Probabilidade...</option>
+                <option value="BAIXA">BAIXA</option>
+                <option value="MÉDIA">MÉDIA</option>
+                <option value="ALTA">ALTA</option>
+            </select>
+        </div>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeEditProjectModal(false)">Cancelar</button>
+            <button class="success" onclick="closeEditProjectModal(true)">Salvar Alterações</button>
+        </div>
+    </div>
 </div>
 
 <div id="admin-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">⚙️ Painel de Segurança</h3>
-<p class="modal-desc">Altere a senha de qualquer usuário da equipe.</p>
-<div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
-<div class="modal-buttons"><button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button></div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">⚙️ Painel de Segurança</h3>
+        <p class="modal-desc">Altere a senha de qualquer usuário da equipe.</p>
+        <div id="admin-users-list" style="margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fechar Painel</button>
+        </div>
+    </div>
 </div>
 
 <div id="drive-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">📂 Vincular Pasta ou Arquivo</h3>
-<p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
-<input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
-<textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
-<div style="margin-bottom: 15px;"><button class="info" onclick="openPicker()" style="width: 100%;">🔍 Seletor Oficial do Google Drive</button></div>
-<div class="modal-buttons"><button class="secondary" onclick="closeDriveModal(false)">Cancelar</button><button onclick="closeDriveModal(true)">Vincular Caminho</button></div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">📂 Vincular Pasta ou Arquivo</h3>
+        <p class="modal-desc">Cole o link do Google Drive OU o caminho do Explorador de Arquivos (Ex: G:\Meu PC\...):</p>
+        <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... OU G:\Outros computadores...">
+        <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado enviado pelo vendedor..."></textarea>
+        <div style="margin-bottom: 15px;">
+            <button class="info" onclick="openPicker()" style="width: 100%;">🔍 Seletor Oficial do Google Drive</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeDriveModal(false)">Cancelar</button>
+            <button onclick="closeDriveModal(true)">Vincular Caminho</button>
+        </div>
+    </div>
 </div>
 
 <div id="date-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">📅 Editar Data do Evento</h3>
-<input type="datetime-local" id="date-modal-input">
-<div class="modal-buttons"><button class="secondary" onclick="closeDateModal(false)">Cancelar</button><button onclick="closeDateModal(true)">Salvar Data</button></div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">📅 Editar Data do Evento</h3>
+        <input type="datetime-local" id="date-modal-input">
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeDateModal(false)">Cancelar</button>
+            <button onclick="closeDateModal(true)">Salvar Data</button>
+        </div>
+    </div>
 </div>
 
 <div id="rework-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 class="modal-title">🔄 Classificar Revisão</h3>
-<select id="rework-type-select" style="margin-bottom: 15px;"><option value="INTERNO">🔴 Erro Interno (Melhorar Qualidade/Processos)</option><option value="EXTERNO">🟠 Solicitação Externa (Alteração a pedido do Cliente)</option></select>
-<textarea id="rework-obs-input" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
-<div class="modal-buttons"><button class="secondary" onclick="closeReworkModal(false)">Cancelar</button><button class="warning" style="background-color: #d946ef; color: white;" onclick="closeReworkModal(true)">Iniciar Revisão</button></div>
-</div>
+    <div class="modal-content">
+        <h3 class="modal-title">🔄 Classificar Revisão</h3>
+        <select id="rework-type-select" style="margin-bottom: 15px;">
+            <option value="INTERNO">🔴 Erro Interno (Melhorar Qualidade/Processos)</option>
+            <option value="EXTERNO">🟠 Solicitação Externa (Alteração a pedido do Cliente)</option>
+        </select>
+        <textarea id="rework-obs-input" rows="3" placeholder="Descreva o que precisa ser alterado..."></textarea>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeReworkModal(false)">Cancelar</button>
+            <button class="warning" style="background-color: #d946ef; color: white;" onclick="closeReworkModal(true)">Iniciar Revisão</button>
+        </div>
+    </div>
 </div>
 
 <div id="custom-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 id="modal-title" class="modal-title">Título</h3>
-<p id="modal-desc" class="modal-desc">Descrição</p>
-<textarea id="modal-input" rows="3" placeholder="Escreva a sua observação..."></textarea>
-<div class="modal-buttons"><button class="secondary" onclick="closeModal(false)">Cancelar</button><button onclick="closeModal(true)">Confirmar</button></div>
-</div>
+    <div class="modal-content">
+        <h3 id="modal-title" class="modal-title">Título</h3>
+        <p id="modal-desc" class="modal-desc">Descrição</p>
+        <textarea id="modal-input" rows="3" placeholder="Escreva a sua observação..."></textarea>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closeModal(false)">Cancelar</button>
+            <button onclick="closeModal(true)">Confirmar</button>
+        </div>
+    </div>
 </div>
 
 <div id="password-modal" class="modal-overlay hidden">
-<div class="modal-content">
-<h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
-<p id="pwd-modal-desc" class="modal-desc">Insira a senha.</p>
-<input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password" onkeydown="if(event.key === 'Enter') closePasswordModal(true)">
-<div class="modal-buttons"><button class="secondary" onclick="closePasswordModal(false)">Cancelar</button><button onclick="closePasswordModal(true)">Confirmar</button></div>
-</div>
+    <div class="modal-content">
+        <h3 id="pwd-modal-title" class="modal-title">Segurança</h3>
+        <p id="pwd-modal-desc" class="modal-desc">Insira a senha.</p>
+        <input type="password" id="pwd-modal-input" placeholder="Sua senha..." autocomplete="new-password">
+        <div class="modal-buttons">
+            <button class="secondary" onclick="closePasswordModal(false)">Cancelar</button>
+            <button onclick="closePasswordModal(true)">Confirmar</button>
+        </div>
+    </div>
 </div>
 
 <div id="confirm-modal" class="modal-overlay hidden">
-<div class="modal-content" style="text-align: center;">
-<h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
-<p id="confirm-desc" class="modal-desc">Tem certeza de que deseja fazer isto?</p>
-<div class="modal-buttons" style="justify-content: center;"><button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button><button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button></div>
-</div>
+    <div class="modal-content" style="text-align: center;">
+        <h3 id="confirm-title" class="modal-title" style="color: var(--danger);">Atenção</h3>
+        <p id="confirm-desc" class="modal-desc">Tem certeza de que deseja fazer isto?</p>
+        <div class="modal-buttons" style="justify-content: center;">
+            <button class="secondary" onclick="closeConfirmModal(false)">Cancelar</button>
+            <button class="danger" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirmar</button>
+        </div>
+    </div>
 </div>
 
 <div class="container">
@@ -268,7 +326,9 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                     <option value="TIPO_REVISAO">Apenas REVISÕES</option>
                 </select>
 
-                <div class="search-bar"><input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Procurar obra ou CÓD..."></div>
+                <div class="search-bar">
+                    <input type="text" id="manager-search-input" onkeyup="renderGlobalFeed()" placeholder="🔍 Procurar obra ou CÓD...">
+                </div>
                 <button class="manager-btn" onclick="exportManagerReport()">📊 PDF da Aba Atual</button>
                 <button class="secondary" onclick="logout()">← Sair</button>
             </div>
@@ -291,8 +351,14 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
             </div>
             <div class="chart-container"><canvas id="paretoChart"></canvas></div>
             <div class="kpi-container" id="kpi-panel">
-                <div class="kpi-card"><h4>Total de Projetos</h4><p class="kpi-value" id="kpi-total">0</p></div>
-                <div class="kpi-card purple"><h4>Tempo Médio (Concluídos)</h4><p class="kpi-value" id="kpi-avg-time">0h</p></div>
+                <div class="kpi-card">
+                    <h4>Total de Projetos</h4>
+                    <p class="kpi-value" id="kpi-total">0</p>
+                </div>
+                <div class="kpi-card purple">
+                    <h4>Tempo Médio (Concluídos)</h4>
+                    <p class="kpi-value" id="kpi-avg-time">0h</p>
+                </div>
             </div>
         </div>
     </div>
@@ -321,7 +387,9 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
                         <option value="TIPO_REVISAO">Apenas REVISÕES</option>
                     </select>
 
-                    <div class="search-bar"><input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD..."></div>
+                    <div class="search-bar">
+                        <input type="text" id="search-input" onkeyup="renderProjects()" placeholder="🔍 Procurar obra ou CÓD...">
+                    </div>
                     <button class="global-btn" id="pdf-dashboard-btn" onclick="exportDraftsmanReport()">📊 PDF do Separador</button>
                 </div>
             </div>
@@ -348,8 +416,14 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
             </div>
             <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
             <div class="kpi-container">
-                <div class="kpi-card"><h4>Meus Projetos</h4><p class="kpi-value" id="dkpi-total">0</p></div>
-                <div class="kpi-card purple"><h4>Meu Tempo Médio (Concluídos)</h4><p class="kpi-value" id="dkpi-avg-time">0h</p></div>
+                <div class="kpi-card">
+                    <h4>Meus Projetos</h4>
+                    <p class="kpi-value" id="dkpi-total">0</p>
+                </div>
+                <div class="kpi-card purple">
+                    <h4>Meu Tempo Médio (Concluídos)</h4>
+                    <p class="kpi-value" id="dkpi-avg-time">0h</p>
+                </div>
             </div>
         </div>
     </div>
@@ -361,8 +435,12 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 window.abrirPastaLocalPeloAjudante = function(caminho) {
     fetch('http://127.0.0.1:49152/abrir-pasta?caminho=' + encodeURIComponent(caminho))
     .then(res => res.text())
-    .then(text => { if(text !== "Sucesso") alert("O ajudante local avisou que deu erro:\n" + text); })
-    .catch(err => { alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais automaticamente com 1 clique, você precisa abrir o arquivo 'ajudante.py' no seu computador."); });
+    .then(text => { 
+        if(text !== "Sucesso") alert("O ajudante local avisou que deu erro:\n" + text); 
+    })
+    .catch(err => { 
+        alert("⚠️ O AJUDANTE LOCAL NÃO ESTÁ RODANDO!\n\nPara abrir pastas locais automaticamente com 1 clique, você precisa abrir o arquivo 'ajudante.py' no seu computador."); 
+    });
 };
 
 const STAGES = [
@@ -373,7 +451,8 @@ const STAGES = [
 "Correção 2",               // 4
 "Luis",                     // 5
 "Cristian",                 // 6
-"Entregue"                  // 7
+"Desenhista",               // 7
+"Entregue"                  // 8
 ];
 
 const firebaseConfig = {
@@ -390,30 +469,51 @@ const DRIVE_API_KEY = "AIzaSyBXRRYBP83kDBTvlFXqEUiodgQNacd0Hso";
 const DRIVE_CLIENT_ID = "607516224981-moe9q8ces9tgns26mo8e6hhkc0chg8dl.apps.googleusercontent.com";
 const DRIVE_APP_ID = "607516224981";
 let DRIVE_VIEW_MODE = "docs"; 
-let tokenClient; let accessToken = null; let driveProjectId = null;
+let tokenClient; 
+let accessToken = null; 
+let driveProjectId = null;
 
 function initGoogleDrivePicker() {
     try {
         if(window.google && google.picker) DRIVE_VIEW_MODE = google.picker.ViewId.DOCS;
         if(window.gapi) { gapi.load('picker', () => {}); }
         if(window.google && window.google.accounts) {
-            tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly', callback: '', });
+            tokenClient = google.accounts.oauth2.initTokenClient({ 
+                client_id: DRIVE_CLIENT_ID, 
+                scope: 'https://www.googleapis.com/auth/drive.readonly', 
+                callback: '', 
+            });
         }
     } catch(err) {}
 }
 window.addEventListener('load', initGoogleDrivePicker);
 
 function openPicker() {
-    if(!tokenClient || !window.gapi) { alert("Conexão ao Google Drive bloqueada pelo navegador."); return; }
+    if(!tokenClient || !window.gapi) { 
+        alert("Conexão ao Google Drive bloqueada pelo navegador."); 
+        return; 
+    }
     if (!accessToken) {
-        tokenClient.callback = async (response) => { if (response.error !== undefined) throw (response); accessToken = response.access_token; createPicker(); };
+        tokenClient.callback = async (response) => { 
+            if (response.error !== undefined) throw (response); 
+            accessToken = response.access_token; 
+            createPicker(); 
+        };
         tokenClient.requestAccessToken({prompt: 'consent'});
-    } else createPicker();
+    } else {
+        createPicker();
+    }
 }
 
 function createPicker() {
     if(!window.google || !google.picker) return;
-    const picker = new google.picker.PickerBuilder().addView(DRIVE_VIEW_MODE).setOAuthToken(accessToken).setDeveloperKey(DRIVE_API_KEY).setAppId(DRIVE_APP_ID).setCallback(pickerCallback).build();
+    const picker = new google.picker.PickerBuilder()
+        .addView(DRIVE_VIEW_MODE)
+        .setOAuthToken(accessToken)
+        .setDeveloperKey(DRIVE_API_KEY)
+        .setAppId(DRIVE_APP_ID)
+        .setCallback(pickerCallback)
+        .build();
     picker.setVisible(true);
 }
 
@@ -424,14 +524,19 @@ function pickerCallback(data) {
 }
 
 let appData = { users: [], passwords: {}, projects: [] };
-let currentUser = null; let isViewerMode = false;
-let managerCurrentTab = 'andamento'; let draftsmanCurrentTab = 'fila';
+let currentUser = null; 
+let isViewerMode = false;
+let managerCurrentTab = 'andamento'; 
+let draftsmanCurrentTab = 'fila';
 let modalResolve = null, confirmResolve = null, passwordResolve = null;
-let activeEditProjectId = null; let activeEditHistoryIndex = null; let reworkProjectId = null;
-let firebaseSincronizado = false; let maiorNumeroDeProjetosVistos = 0;
-let currentChart = null; let currentDraftsmanChart = null;
+let activeEditProjectId = null; 
+let activeEditHistoryIndex = null; 
+let reworkProjectId = null;
+let firebaseSincronizado = false; 
+let maiorNumeroDeProjetosVistos = 0;
+let currentChart = null; 
+let currentDraftsmanChart = null;
 
-// MOTOR DE INICIALIZAÇÃO - DESTRAVA A TELA E MOSTRA OS DADOS
 function iniciarSistemaSeguro() {
     const loader = document.getElementById('global-loader'); 
     if (loader) loader.style.display = 'none';
@@ -441,7 +546,12 @@ function iniciarSistemaSeguro() {
             const offBanner = document.getElementById('offline-banner');
             if(offBanner) offBanner.style.display = 'block';
             const local = localStorage.getItem('appData_teste_local'); 
-            if (local) { try { const p = JSON.parse(local); if(p) appData = p; } catch(e) {} } 
+            if (local) { 
+                try { 
+                    const p = JSON.parse(local); 
+                    if(p) appData = p; 
+                } catch(e) {} 
+            } 
         }
         
         if (!appData) appData = {};
@@ -450,20 +560,27 @@ function iniciarSistemaSeguro() {
         if (!appData.passwords) appData.passwords = {};
 
         if (!currentUser && !isViewerMode) {
-            document.getElementById('view-profiles').classList.remove('hidden'); renderProfiles();
+            document.getElementById('view-profiles').classList.remove('hidden'); 
+            renderProfiles();
         } else if (isViewerMode) {
-            document.getElementById('view-manager').classList.remove('hidden'); renderGlobalFeed();
+            document.getElementById('view-manager').classList.remove('hidden'); 
+            renderGlobalFeed();
         } else {
-            document.getElementById('view-dashboard').classList.remove('hidden'); renderProjects();
+            document.getElementById('view-dashboard').classList.remove('hidden'); 
+            renderProjects();
         }
-    } catch(err) { console.error("Falha ao inicializar a tela:", err); }
+    } catch(err) { 
+        console.error("Falha ao inicializar a tela:", err); 
+    }
 }
 
 setTimeout(() => {
     try {
         if(window.firebase) {
             firebase.initializeApp(firebaseConfig); 
-            db = firebase.firestore(); docRef = db.collection("sistema").doc("bancoDeDados");
+            db = firebase.firestore(); 
+            docRef = db.collection("sistema").doc("bancoDeDados");
+            
             docRef.onSnapshot((doc) => {
                 if (doc.exists) { 
                     const data = doc.data(); 
@@ -475,24 +592,29 @@ setTimeout(() => {
                     
                     maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
                     
-                    const off = document.getElementById('offline-banner'); if(off) off.style.display = 'none';
+                    const off = document.getElementById('offline-banner'); 
+                    if(off) off.style.display = 'none';
                 } else if(!firebaseSincronizado) { 
                     docRef.set(appData).then(() => { firebaseSincronizado = true; }).catch(e => {}); 
                 }
-                
                 iniciarSistemaSeguro();
-            }, (error) => { iniciarSistemaSeguro(); });
-        } else { iniciarSistemaSeguro(); }
-    } catch (error) { iniciarSistemaSeguro(); }
+            }, (error) => { 
+                iniciarSistemaSeguro(); 
+            });
+        } else { 
+            iniciarSistemaSeguro(); 
+        }
+    } catch (error) { 
+        iniciarSistemaSeguro(); 
+    }
 }, 200);
 
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        iniciarSistemaSeguro();
+    setTimeout(() => { 
+        iniciarSistemaSeguro(); 
     }, 2500); 
 });
 
-// FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
 function saveData() {
     if (!firebaseSincronizado) { 
         localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
@@ -508,6 +630,7 @@ function saveData() {
         const loader = document.getElementById('global-loader');
         const loaderTitle = document.getElementById('loader-title');
         const loaderText = document.getElementById('loader-text');
+        
         if(loader && loaderText && loaderTitle) {
             loaderTitle.innerText = "Registrando...";
             loaderText.innerText = "Aguarde um momento";
@@ -524,31 +647,34 @@ function saveData() {
     }
 }
 
-// INTELIGÊNCIA: AUTO-ASSUMIR PROJETOS DA FILA
+// INTELIGÊNCIA DE AUTO-ASSUMIR APENAS AO MUDAR DE ETAPA
 function autoAssumirSeFila(p) {
-    if (!currentUser || isViewerMode) return; 
+    if (!currentUser || isViewerMode) return false; 
     if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
-        const responsavelAntigo = p.owner;
         p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-        if(!p.history) p.history = [];
-        p.history.unshift({ 
-            stage: "🚀 ASSUMIU PROJETO", 
-            obs: `Assumiu automaticamente ao interagir com a obra.`, 
-            date: new Date().toLocaleString('pt-BR'), 
-            author: currentUser 
-        });
+        return true;
     }
+    return false;
 }
 
-// MODAIS
+// MODAIS GENÉRICOS
 function openModal(t, d, p, v = '') {
-    document.getElementById('custom-modal').classList.remove('hidden'); document.getElementById('modal-title').textContent = t;
-    document.getElementById('modal-desc').textContent = d; const i = document.getElementById('modal-input'); i.value = v; i.placeholder = p; i.focus();
+    document.getElementById('custom-modal').classList.remove('hidden'); 
+    document.getElementById('modal-title').textContent = t;
+    document.getElementById('modal-desc').textContent = d; 
+    const i = document.getElementById('modal-input'); 
+    i.value = v; 
+    i.placeholder = p; 
+    i.focus();
     return new Promise(r => { modalResolve = r; });
 }
+
 function closeModal(c) {
     document.getElementById('custom-modal').classList.add('hidden');
-    if (modalResolve) { modalResolve(c ? document.getElementById('modal-input').value : null); modalResolve = null; }
+    if (modalResolve) { 
+        modalResolve(c ? document.getElementById('modal-input').value : null); 
+        modalResolve = null; 
+    }
 }
 
 // MODAL DA SENHA COM O ENTER 100% FUNCIONAL
@@ -556,71 +682,123 @@ function openPasswordModal(t, d) {
     document.getElementById('password-modal').classList.remove('hidden'); 
     document.getElementById('pwd-modal-title').textContent = t;
     document.getElementById('pwd-modal-desc').textContent = d; 
+    
     const input = document.getElementById('pwd-modal-input');
     input.value = ''; 
     input.focus();
     
-    input.onkeydown = function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            closePasswordModal(true);
-        }
+    input.onkeydown = function(e) { 
+        if (e.key === 'Enter') { 
+            e.preventDefault(); 
+            closePasswordModal(true); 
+        } 
     };
     
     return new Promise(r => { passwordResolve = r; });
 }
+
 function closePasswordModal(c) {
     document.getElementById('password-modal').classList.add('hidden');
-    if (passwordResolve) { passwordResolve(c ? document.getElementById('pwd-modal-input').value : null); passwordResolve = null; }
+    if (passwordResolve) { 
+        passwordResolve(c ? document.getElementById('pwd-modal-input').value : null); 
+        passwordResolve = null; 
+    }
 }
 
 function openConfirmModal(t, d, a = false) {
-    document.getElementById('confirm-modal').classList.remove('hidden'); document.getElementById('confirm-title').textContent = t;
+    document.getElementById('confirm-modal').classList.remove('hidden'); 
+    document.getElementById('confirm-title').textContent = t;
     document.getElementById('confirm-desc').textContent = d;
-    if (a) document.getElementById('confirm-btn-yes').classList.add('hidden'); else document.getElementById('confirm-btn-yes').classList.remove('hidden');
+    
+    if (a) {
+        document.getElementById('confirm-btn-yes').classList.add('hidden'); 
+    } else {
+        document.getElementById('confirm-btn-yes').classList.remove('hidden');
+    }
     return new Promise(r => { confirmResolve = r; });
 }
+
 function closeConfirmModal(c) {
     document.getElementById('confirm-modal').classList.add('hidden');
-    if (confirmResolve) { confirmResolve(c); confirmResolve = null; }
+    if (confirmResolve) { 
+        confirmResolve(c); 
+        confirmResolve = null; 
+    }
 }
 
 // DATAS E DRIVE
-function dateToLocalString(ds) { try { let [d, t] = ds.replace(',','').trim().split(' '); let [dd, mm, yy] = d.split('/'); let [hh, mn] = t ? t.split(':') : ['00','00']; return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${hh.padStart(2,'0')}:${mn.padStart(2,'0')}`; } catch(e) { return ""; } }
-function localStringToDate(ls) { let [d, t] = ls.split('T'); let [yy, mm, dd] = d.split('-'); let [hh, mn] = t ? t.split(':') : ['00','00']; return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`; }
-function openDateModal(id, i) {
-    if(isViewerMode) return; activeEditProjectId = id; activeEditHistoryIndex = i;
-    const s = appData.projects.find(p => p.id === id).history[i].date;
-    document.getElementById('date-modal').classList.remove('hidden'); document.getElementById('date-modal-input').value = dateToLocalString(s);
+function dateToLocalString(ds) { 
+    try { 
+        let [d, t] = ds.replace(',','').trim().split(' '); 
+        let [dd, mm, yy] = d.split('/'); 
+        let [hh, mn] = t ? t.split(':') : ['00','00']; 
+        return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${hh.padStart(2,'0')}:${mn.padStart(2,'0')}`; 
+    } catch(e) { 
+        return ""; 
+    } 
 }
+
+function localStringToDate(ls) { 
+    let [d, t] = ls.split('T'); 
+    let [yy, mm, dd] = d.split('-'); 
+    let [hh, mn] = t ? t.split(':') : ['00','00']; 
+    return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`; 
+}
+
+function openDateModal(id, i) {
+    if(isViewerMode) return; 
+    activeEditProjectId = id; 
+    activeEditHistoryIndex = i;
+    const s = appData.projects.find(p => p.id === id).history[i].date;
+    document.getElementById('date-modal').classList.remove('hidden'); 
+    document.getElementById('date-modal-input').value = dateToLocalString(s);
+}
+
 function closeDateModal(c) {
     document.getElementById('date-modal').classList.add('hidden');
     if (c && activeEditProjectId !== null) {
         const v = document.getElementById('date-modal-input').value;
-        if(v) { appData.projects.find(p => p.id === activeEditProjectId).history[activeEditHistoryIndex].date = localStringToDate(v); saveData(); updateViews(); }
+        if(v) { 
+            appData.projects.find(p => p.id === activeEditProjectId).history[activeEditHistoryIndex].date = localStringToDate(v); 
+            saveData(); 
+            updateViews(); 
+        }
     }
-    activeEditProjectId = null; activeEditHistoryIndex = null;
+    activeEditProjectId = null; 
+    activeEditHistoryIndex = null;
 }
 
-function openDriveModal(id) { driveProjectId = id; document.getElementById('drive-url-input').value = ''; document.getElementById('drive-obs-input').value = ''; document.getElementById('drive-modal').classList.remove('hidden'); }
+function openDriveModal(id) { 
+    driveProjectId = id; 
+    document.getElementById('drive-url-input').value = ''; 
+    document.getElementById('drive-obs-input').value = ''; 
+    document.getElementById('drive-modal').classList.remove('hidden'); 
+}
+
 function closeDriveModal(c) {
     document.getElementById('drive-modal').classList.add('hidden');
     if (c && driveProjectId) {
-        let u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
+        let u = document.getElementById('drive-url-input').value.trim(); 
+        const o = document.getElementById('drive-obs-input').value.trim();
         if (u) {
             const p = appData.projects.find(p => p.id === driveProjectId);
-            autoAssumirSeFila(p);
             if(!p.history) p.history = [];
-            p.history.unshift({ stage: "📂 ARQUIVO/CAMINHO ANEXADO", obs: o ? `${o}` : "Diretório vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
-            saveData(); updateViews();
+            p.history.unshift({ 
+                stage: "📂 ARQUIVO/CAMINHO ANEXADO", 
+                obs: o ? `${o}` : "Diretório vinculado ao projeto.", 
+                driveUrl: u, 
+                date: new Date().toLocaleString('pt-BR'), 
+                author: isViewerMode ? "Visualizador" : currentUser 
+            });
+            saveData(); 
+            updateViews();
         }
     }
     driveProjectId = null;
 }
 
-// EDIÇÃO DE INFORMAÇÕES GERAIS DO PROJETO
 function openEditProjectModal(id) {
-    const p = appData.projects.find(proj => proj.id === id);
+    const p = appData.projects.find(proj => proj.id === id); 
     if (!p) return;
     document.getElementById('ep-id').value = id;
     document.getElementById('ep-cod').value = p.cod || '';
@@ -637,13 +815,12 @@ function closeEditProjectModal(confirm) {
         const id = document.getElementById('ep-id').value;
         const p = appData.projects.find(proj => proj.id === id);
         if (p) {
-            autoAssumirSeFila(p);
             p.cod = document.getElementById('ep-cod').value.trim();
             p.cidade = document.getElementById('ep-cidade').value.trim();
             p.vendedor = document.getElementById('ep-vendedor').value;
             p.tipo = document.getElementById('ep-tipo').value;
             p.probabilidade = document.getElementById('ep-probabilidade').value;
-            saveData();
+            saveData(); 
             updateViews();
         }
     }
@@ -653,32 +830,46 @@ async function toggleRework(id) {
     const p = appData.projects.find(p => p.id === id);
     if (p.reworkType) {
         const o = await openModal("Finalizar Revisão", "O retrabalho foi concluído?", "Observações...");
-        if (o !== null) { p.reworkType = null; if(!p.history) p.history = []; p.history.unshift({ stage: "✅ RETRABALHO CONCLUÍDO", obs: o || "Revisão finalizada", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+        if (o !== null) { 
+            p.reworkType = null; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "✅ RETRABALHO CONCLUÍDO", obs: o || "Revisão finalizada", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); 
+            renderProjects(); 
+        }
     } else {
-        reworkProjectId = id; document.getElementById('rework-obs-input').value = ''; document.getElementById('rework-modal').classList.remove('hidden');
+        reworkProjectId = id; 
+        document.getElementById('rework-obs-input').value = ''; 
+        document.getElementById('rework-modal').classList.remove('hidden');
     }
 }
+
 function closeReworkModal(c) {
     document.getElementById('rework-modal').classList.add('hidden');
     if (c && reworkProjectId !== null) {
-        const t = document.getElementById('rework-type-select').value; const o = document.getElementById('rework-obs-input').value;
+        const t = document.getElementById('rework-type-select').value; 
+        const o = document.getElementById('rework-obs-input').value;
         const p = appData.projects.find(p => p.id === reworkProjectId); 
-        autoAssumirSeFila(p);
         p.reworkType = t.toLowerCase();
         if(!p.history) p.history = [];
         p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo não informado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
-        saveData(); renderProjects();
+        saveData(); 
+        renderProjects();
     }
     reworkProjectId = null;
 }
 
-// PERFIS E SEGURANÇA
+// PERFIS
 function renderProfiles() {
-    const c = document.getElementById('profiles-container'); if(!c) return; c.innerHTML = '';
+    const c = document.getElementById('profiles-container'); 
+    if(!c) return; 
+    c.innerHTML = '';
+    
     if(appData.users && Array.isArray(appData.users)) {
         appData.users.forEach(user => {
             if(user === "ADMIN") return; 
-            const div = document.createElement('div'); div.className = 'profile-card'; 
+            const div = document.createElement('div'); 
+            div.className = 'profile-card'; 
             div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${user}')">👤 ${user}</span>`;
             c.appendChild(div);
         });
@@ -686,57 +877,77 @@ function renderProfiles() {
 }
 
 async function addUser() {
-    const i = document.getElementById('new-user-name'); const n = i.value.trim();
-    if(!n) return; if(!appData.users) appData.users = [];
-    if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { alert("Este nome já existe ou é reservado!"); return; }
+    const i = document.getElementById('new-user-name'); 
+    const n = i.value.trim();
+    if(!n) return; 
     
-    const pass = await openPasswordModal("Criar Senha", `Defina a senha para o novo perfil de ${n}:`);
-    if (pass !== null && pass.trim() !== "") {
-        appData.users.push(n);
-        if(!appData.passwords) appData.passwords = {};
-        appData.passwords[n] = pass;
-        saveData(); i.value = ''; renderProfiles(); 
-    } else if (pass !== null) { alert("A senha não pode estar vazia. Criação cancelada."); }
+    if(!appData.users) appData.users = [];
+    if (appData.users.includes(n) || n.toUpperCase() === "ADMIN") { 
+        alert("Este nome já existe!"); 
+        return; 
+    }
+    
+    const pass = await openPasswordModal("Criar Senha", `Defina a senha para ${n}:`);
+    if (pass !== null && pass.trim() !== "") { 
+        appData.users.push(n); 
+        if(!appData.passwords) appData.passwords = {}; 
+        appData.passwords[n] = pass; 
+        saveData(); 
+        i.value = ''; 
+        renderProfiles(); 
+    }
 }
 
 function deleteCurrentUser() {
-    if(confirm(`ATENÇÃO: Deseja apagar o SEU PERFIL ("${currentUser}") do sistema? Esta ação não apaga os seus projetos, mas perderá o acesso.`)) {
-        appData.users = appData.users.filter(u => u !== currentUser);
-        if(appData.passwords && appData.passwords[currentUser]) delete appData.passwords[currentUser];
-        saveData(); logout(); 
+    if(confirm(`Deseja apagar seu perfil?`)) { 
+        appData.users = appData.users.filter(u => u !== currentUser); 
+        if(appData.passwords && appData.passwords[currentUser]) delete appData.passwords[currentUser]; 
+        saveData(); 
+        logout(); 
     }
 }
 
 async function handleLoginClick(user) {
     if (!appData.passwords) appData.passwords = {};
-    if (!appData.passwords[user]) {
-        const pass = await openPasswordModal("Segurança", `O perfil ${user} não tem senha. Crie uma agora:`);
-        if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
-    } else {
-        const pass = await openPasswordModal("Acesso Restrito", `Insira a sua senha:`);
-        if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
-        else if (pass !== null) alert("Senha Incorreta!");
+    if (!appData.passwords[user]) { 
+        const pass = await openPasswordModal("Segurança", `Crie uma senha para ${user}:`); 
+        if (pass !== null && pass.trim() !== "") { 
+            appData.passwords[user] = pass; 
+            saveData(); 
+            proceedLogin(user); 
+        } 
+    } else { 
+        const pass = await openPasswordModal("Acesso", `Senha:`); 
+        if (pass === appData.passwords[user] || pass === "admin123") {
+            proceedLogin(user); 
+        } else if (pass !== null) {
+            alert("Senha Incorreta!"); 
+        }
     }
 }
 
 async function handleMasterLogin() {
-    const pass = await openPasswordModal("Acesso Restrito", "Insira a credencial de segurança (padrão: admin123):");
-    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
-        if(!appData.passwords) appData.passwords = {};
-        proceedLogin("ADMIN");
-    } else if (pass !== null) { alert("Credencial incorreta!"); }
-}
-
-async function changeMyPassword() {
-    const newPass = await openModal("Segurança", `Insira a sua nova senha:`, "Nova senha...");
-    if (newPass !== null && newPass.trim() !== '') {
-        if(!appData.passwords) appData.passwords = {};
-        appData.passwords[currentUser] = newPass; saveData(); alert(`Senha atualizada com sucesso!`);
+    const pass = await openPasswordModal("Acesso Restrito", "Senha Master:");
+    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) { 
+        if(!appData.passwords) appData.passwords = {}; 
+        proceedLogin("ADMIN"); 
     }
 }
 
+function changeMyPassword() {
+    openModal("Segurança", `Insira a sua nova senha:`, "Nova senha...").then(newPass => {
+        if (newPass !== null && newPass.trim() !== '') {
+            if(!appData.passwords) appData.passwords = {};
+            appData.passwords[currentUser] = newPass; 
+            saveData(); 
+            alert(`Senha atualizada com sucesso!`);
+        }
+    });
+}
+
 function openAdminModal() {
-    const list = document.getElementById('admin-users-list'); list.innerHTML = '';
+    const list = document.getElementById('admin-users-list'); 
+    list.innerHTML = '';
     (appData.users || []).forEach(u => {
         if(u === "ADMIN") return;
         list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #e5e7eb;"><strong>👤 ${u}</strong><button class="warning" style="padding: 6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar</button></div>`;
@@ -744,36 +955,55 @@ function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
 }
 
-async function changeUserPassword(u) {
-    const newPass = await openModal("Alterar Senha", `Insira a nova senha para ${u}:`, "Nova senha...");
-    if (newPass !== null && newPass.trim() !== '') {
-        if(!appData.passwords) appData.passwords = {};
-        appData.passwords[u] = newPass; saveData(); alert(`Senha de ${u} atualizada com sucesso!`);
-    }
+function changeUserPassword(u) {
+    openModal("Alterar Senha", `Insira a nova senha para ${u}:`, "Nova senha...").then(newPass => {
+        if (newPass !== null && newPass.trim() !== '') {
+            if(!appData.passwords) appData.passwords = {};
+            appData.passwords[u] = newPass; 
+            saveData(); 
+            alert(`Senha de ${u} atualizada com sucesso!`);
+        }
+    });
 }
 
 function populateUserFilter() {
-    const sel = document.getElementById('user-filter-select'); if(!sel) return;
+    const sel = document.getElementById('user-filter-select'); 
+    if(!sel) return;
     sel.innerHTML = '<option value="ALL">Visualizar Todos</option><option value="MEUS">Apenas os Meus Projetos</option>';
     (appData.users || []).forEach(u => {
-        if (u !== currentUser && u !== "ADMIN") { sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; }
+        if (u !== currentUser && u !== "ADMIN") { 
+            sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; 
+        }
     });
-    if(currentUser === "ADMIN") sel.value = "ALL"; else sel.value = "MEUS";
+    if(currentUser === "ADMIN") {
+        sel.value = "ALL"; 
+    } else {
+        sel.value = "MEUS";
+    }
 }
 
 function proceedLogin(user) {
-    currentUser = user; isViewerMode = false;
+    currentUser = user; 
+    isViewerMode = false;
     document.getElementById('view-profiles').classList.add('hidden');
     document.getElementById('view-manager').classList.add('hidden');
     document.getElementById('view-dashboard').classList.remove('hidden');
     document.getElementById('dashboard-title').textContent = user === "ADMIN" ? `Área de Trabalho (Gestão)` : `Área de Trabalho: ${user}`;
-    if (user === "ADMIN") { document.getElementById('admin-btn').classList.remove('hidden'); document.getElementById('delete-profile-btn').classList.add('hidden'); } 
-    else { document.getElementById('admin-btn').classList.add('hidden'); document.getElementById('delete-profile-btn').classList.remove('hidden'); }
-    populateUserFilter(); switchDraftsmanTab('fila');
+    
+    if (user === "ADMIN") { 
+        document.getElementById('admin-btn').classList.remove('hidden'); 
+        document.getElementById('delete-profile-btn').classList.add('hidden'); 
+    } else { 
+        document.getElementById('admin-btn').classList.add('hidden'); 
+        document.getElementById('delete-profile-btn').classList.remove('hidden'); 
+    }
+    populateUserFilter(); 
+    switchDraftsmanTab('fila');
 }
 
 function proceedAsViewer() {
-    currentUser = null; isViewerMode = true;
+    currentUser = null; 
+    isViewerMode = true;
     document.getElementById('view-profiles').classList.add('hidden');
     document.getElementById('view-dashboard').classList.add('hidden');
     document.getElementById('view-manager').classList.remove('hidden');
@@ -781,7 +1011,8 @@ function proceedAsViewer() {
 }
 
 function logout() {
-    currentUser = null; isViewerMode = false;
+    currentUser = null; 
+    isViewerMode = false;
     document.getElementById('view-dashboard').classList.add('hidden');
     document.getElementById('view-manager').classList.add('hidden');
     document.getElementById('view-profiles').classList.remove('hidden');
@@ -789,217 +1020,108 @@ function logout() {
 }
 
 function updateViews() {
-    if (isViewerMode) renderGlobalFeed(); else if (currentUser) renderProjects();
-}
-
-// PROJETOS
-function openCreateProjectModal() {
-    ['cp-cliente', 'cp-cod', 'cp-cidade', 'cp-vendedor', 'cp-tipo', 'cp-probabilidade', 'cp-obs'].forEach(f => { const el = document.getElementById(f); if(el) el.value = ''; });
-    document.getElementById('create-project-modal').classList.remove('hidden');
-}
-
-function closeCreateProjectModal(c) {
-    if (!c) { document.getElementById('create-project-modal').classList.add('hidden'); return; }
-    const cli = document.getElementById('cp-cliente').value.trim();
-    if (!cli) { alert("Nome do Cliente / Obra é obrigatório!"); return; }
-    if(!appData.projects) appData.projects = [];
-    appData.projects.unshift({
-        id: Date.now().toString(), 
-        owner: "Fila", 
-        name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
-        cod: document.getElementById('cp-cod').value.trim(), vendedor: document.getElementById('cp-vendedor').value, tipo: document.getElementById('cp-tipo').value,
-        probabilidade: document.getElementById('cp-probabilidade').value, cidade: document.getElementById('cp-cidade').value.trim(),
-        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado na fila.", date: new Date().toLocaleString('pt-BR'), author: currentUser || "Visualizador" }]
-    });
-    saveData(); document.getElementById('create-project-modal').classList.add('hidden'); 
-    
-    if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
-    if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
-    
-    if(isViewerMode) switchManagerTab('fila'); else switchDraftsmanTab('fila');
-}
-
-async function editProjectName(id) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
-    if (n) { 
-        autoAssumirSeFila(p);
-        p.name = n; 
-        saveData(); renderProjects(); 
+    if (isViewerMode) {
+        renderGlobalFeed(); 
+    } else if (currentUser) {
+        renderProjects();
     }
 }
 
-async function deleteProject(id) {
-    if(confirm("Deseja apagar DEFINITIVAMENTE do sistema?")) { appData.projects = appData.projects.filter(p => p.id !== id); saveData(); renderProjects(); }
-}
-
-async function updateStage(id, sel) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return; const idx = parseInt(sel.value);
-    if (p.stageIndex !== idx) {
-        const s = STAGES[idx] || 'Desconhecido';
-        const obs = await openModal("Avançar", `Avançando para: ${s}`, "Recados...");
-        if (obs === null) { sel.value = p.stageIndex; } 
-        else { 
-            autoAssumirSeFila(p);
-            p.stageIndex = idx; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); renderProjects(); 
-        }
-    }
-}
-
-function assumirProjeto(id) {
-    const p = appData.projects.find(p => p.id === id);
-    if(!p) return;
-    
-    const responsavelAntigo = p.owner;
-    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
-    p.stageIndex = 1; 
-    
-    if(!p.history) p.history = [];
-    p.history.unshift({
-        stage: "🚀 ASSUMIU PROJETO",
-        obs: `Puxado da fila. Responsabilidade de [${responsavelAntigo}] para [${p.owner}].`,
-        date: new Date().toLocaleString('pt-BR'),
-        author: currentUser
-    });
-    
-    saveData();
-    alert(`Assumiu o projeto da obra "${p.name}" com sucesso! Foi movido para "Em Andamento".`);
-    switchDraftsmanTab('andamento');
-}
-
-async function createRevisaoFromCompleted(id) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    const c = await openModal("Criar Revisão", "Qual será o NOVO CÓD?", "Ex: 18455A...");
-    if (c !== null) {
-        const obs = await openModal("Motivo", "Por que está retornando?", "Descreva...");
-        if (obs !== null) {
-            p.stageIndex = 0; p.tipo = "REVISÃO"; if (c.trim() !== "") p.cod = c.trim();
-            if(!p.history) p.history = []; p.history.unshift({ stage: "🔄 RETORNOU", obs: obs || `Nova Revisão`, date: new Date().toLocaleString('pt-BR'), author: currentUser });
-            saveData(); switchDraftsmanTab('fila'); 
-        }
-    }
-}
-
-async function registerEvent(id) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    const obs = await openModal("Recado", "Insira o recado:", "...");
-    if (obs) { 
-        autoAssumirSeFila(p);
-        if(!p.history) p.history = []; 
-        p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); 
-        saveData(); updateViews(); 
-    }
-}
-
-async function editHistoryItem(id, i) {
-    const p = appData.projects.find(p => p.id === id); if(!p || !p.history[i]) return;
-    const n = await openModal("Editar", p.history[i].stage, "Texto...", p.history[i].obs);
-    if (n !== null) { p.history[i].obs = n || "Sem obs"; saveData(); updateViews(); }
-}
-async function deleteHistoryItem(id, i) {
-    if(confirm("Remover do histórico?")) { const p = appData.projects.find(p => p.id === id); if(p && p.history) p.history.splice(i, 1); saveData(); updateViews(); }
-}
-
-async function toggleImpediment(id) {
-    const p = appData.projects.find(p => p.id === id); if(!p) return;
-    if (p.isImpeded) {
-        const obs = await openModal("Retomar", "Resolvido?", "Obs...");
-        if (obs !== null) { 
-            autoAssumirSeFila(p);
-            p.isImpeded = false; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); renderProjects(); 
-        }
-    } else {
-        const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
-        if (obs) { 
-            autoAssumirSeFila(p);
-            p.isImpeded = true; 
-            if(!p.history) p.history = []; 
-            p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
-            saveData(); renderProjects(); 
-        }
-    }
-}
-
-// GUI E RENDERIZAÇÃO
 function switchManagerTab(tab) {
     managerCurrentTab = tab;
-    ['fila','andamento','concluidos','graficos'].forEach(t => document.getElementById(`tab-${t}`).classList.toggle('active', tab === t));
-    if(tab === 'graficos'){ document.getElementById('global-feed-container').classList.add('hidden'); document.getElementById('view-graphics').classList.remove('hidden'); populateGraphSelect(); renderGraph(); } 
-    else { document.getElementById('view-graphics').classList.add('hidden'); document.getElementById('global-feed-container').classList.remove('hidden'); renderGlobalFeed(); }
+    ['fila','andamento','concluidos','graficos'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('active', tab === t);
+    });
+    
+    if(tab === 'graficos'){ 
+        document.getElementById('global-feed-container').classList.add('hidden'); 
+        document.getElementById('view-graphics').classList.remove('hidden'); 
+        populateGraphSelect(); 
+        renderGraph(); 
+    } else { 
+        document.getElementById('view-graphics').classList.add('hidden'); 
+        document.getElementById('global-feed-container').classList.remove('hidden'); 
+        renderGlobalFeed(); 
+    }
 }
 
 function renderGlobalFeed() {
-    const container = document.getElementById('global-feed-container'); if(!container) return; container.innerHTML = '';
+    const container = document.getElementById('global-feed-container'); 
+    if(!container) return; 
+    container.innerHTML = '';
+    
     const src = (document.getElementById('manager-search-input').value || '').toLowerCase();
     const sortFilter = document.getElementById('manager-sort-filter-select') ? document.getElementById('manager-sort-filter-select').value : 'DATE_DESC';
-
+    
     let flt = (appData.projects||[]).filter(p => {
         if(!p) return false;
         const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
         let tb = false;
         if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0 || p.stageIndex === 2); 
-        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2); 
-        else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 7); 
+        else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8 && p.stageIndex !== 2); 
+        else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 8); 
+        
         if (!m || !tb) return false;
         if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
         if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
         return true;
     });
-
-    flt.sort((a, b) => {
-        if (sortFilter === 'VENDEDOR') {
-            const vA = (a.vendedor || '').toLowerCase(); const vB = (b.vendedor || '').toLowerCase();
-            if (vA < vB) return -1; if (vA > vB) return 1;
+    
+    flt.sort((a, b) => { 
+        if (sortFilter === 'VENDEDOR') { 
+            const vA = (a.vendedor || '').toLowerCase(); 
+            const vB = (b.vendedor || '').toLowerCase(); 
+            if (vA < vB) return -1; 
+            if (vA > vB) return 1; 
             return b.id - a.id; 
-        }
+        } 
         if (sortFilter === 'DATE_ASC') return a.id - b.id; 
         return b.id - a.id; 
     });
-
+    
     buildCardsStructure(flt, container, false);
 }
 
 function switchDraftsmanTab(tab) {
     draftsmanCurrentTab = tab;
-    ['fila','andamento','concluidos', 'graficos'].forEach(t => document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t));
+    ['fila','andamento','concluidos', 'graficos'].forEach(t => {
+        document.getElementById(`tab-draftsman-${t}`).classList.toggle('active', tab === t);
+    });
     
-    if (tab === 'graficos') {
-        document.getElementById('projects-container').classList.add('hidden');
-        document.getElementById('view-draftsman-graphics').classList.remove('hidden');
-        populateDraftsmanGraphSelect();
-        renderDraftsmanGraph();
-    } else {
-        document.getElementById('view-draftsman-graphics').classList.add('hidden');
-        document.getElementById('projects-container').classList.remove('hidden');
-        renderProjects();
+    if (tab === 'graficos') { 
+        document.getElementById('projects-container').classList.add('hidden'); 
+        document.getElementById('view-draftsman-graphics').classList.remove('hidden'); 
+        populateDraftsmanGraphSelect(); 
+        renderDraftsmanGraph(); 
+    } else { 
+        document.getElementById('view-draftsman-graphics').classList.add('hidden'); 
+        document.getElementById('projects-container').classList.remove('hidden'); 
+        renderProjects(); 
     }
 }
 
 function renderProjects() {
-    const container = document.getElementById('projects-container'); if(!container) return; container.innerHTML = '';
+    const container = document.getElementById('projects-container'); 
+    if(!container) return; 
+    container.innerHTML = '';
+    
     if(draftsmanCurrentTab === 'graficos') return;
     
     const src = (document.getElementById('search-input').value || '').toLowerCase();
     const filterUser = document.getElementById('user-filter-select') ? document.getElementById('user-filter-select').value : 'ALL';
     const sortFilter = document.getElementById('sort-filter-select') ? document.getElementById('sort-filter-select').value : 'DATE_DESC';
-
+    
     let flt = (appData.projects||[]).filter(p => {
         if(!p) return false; 
-        
         let tabMatch = false;
-        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0 || p.stageIndex === 2);
-        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 7 && p.stageIndex !== 2);
-        else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 7);
-        if(!tabMatch) return false;
-
-        const isOwner = p.owner === currentUser;
         
+        if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0 || p.stageIndex === 2);
+        else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8 && p.stageIndex !== 2);
+        else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 8);
+        
+        if(!tabMatch) return false;
+        
+        const isOwner = p.owner === currentUser;
         let userMatch = false;
         if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
             userMatch = true;
@@ -1011,19 +1133,21 @@ function renderProjects() {
             userMatch = (p.owner === filterUser);
         }
         if(!userMatch) return false;
-
+        
         if (sortFilter === 'TIPO_NOVO' && p.tipo !== 'NOVO') return false;
         if (sortFilter === 'TIPO_REVISAO' && p.tipo !== 'REVISÃO') return false;
-
+        
         return (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src);
     });
-
-    flt.sort((a, b) => {
-        if (sortFilter === 'VENDEDOR') {
-            const vA = (a.vendedor || '').toLowerCase(); const vB = (b.vendedor || '').toLowerCase();
-            if (vA < vB) return -1; if (vA > vB) return 1;
+    
+    flt.sort((a, b) => { 
+        if (sortFilter === 'VENDEDOR') { 
+            const vA = (a.vendedor || '').toLowerCase(); 
+            const vB = (b.vendedor || '').toLowerCase(); 
+            if (vA < vB) return -1; 
+            if (vA > vB) return 1; 
             return b.id - a.id; 
-        }
+        } 
         if (sortFilter === 'DATE_ASC') return a.id - b.id; 
         return b.id - a.id; 
     });
@@ -1032,70 +1156,82 @@ function renderProjects() {
 }
 
 function buildCardsStructure(list, container, isDash) {
-    if(!list || list.length === 0) { container.style.display = 'block'; container.innerHTML = '<p style="text-align:center;color:gray;padding:20px;">Nenhum projeto encontrado nesta visualização.</p>'; return; } 
-    else container.style.display = 'grid';
-
+    if(!list || list.length === 0) { 
+        container.style.display = 'block'; 
+        container.innerHTML = '<p style="text-align:center;color:gray;padding:20px;">Nenhum projeto encontrado nesta visualização.</p>'; 
+        return; 
+    } else {
+        container.style.display = 'grid';
+    }
+    
     list.forEach(p => {
         if(!p) return;
-        const isC = p.stageIndex >= 7; 
+        const isC = p.stageIndex >= 8; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
         const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
         const edit = !isViewerMode && isDash && (own || isMaster || isFila);
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
-        if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
-
-        const card = document.createElement('div'); card.className = `project-card ${cClass}`;
+        if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; 
+        if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
+        
+        const card = document.createElement('div'); 
+        card.className = `project-card ${cClass}`;
         const prog = Math.round(((p.stageIndex||0) / (STAGES.length - 1)) * 100);
-
-        let opts = ''; STAGES.forEach((s, idx) => { opts += `<option value="${idx}" ${idx === (p.stageIndex||0) ? 'selected' : ''}>${idx+1}. ${s}</option>`; });
+        
+        let opts = ''; 
+        STAGES.forEach((s, idx) => { 
+            opts += `<option value="${idx}" ${idx === (p.stageIndex||0) ? 'selected' : ''}>${idx+1}. ${s}</option>`; 
+        });
         
         let hist = '';
         if(p.history) p.history.forEach((h, i) => {
-            if(!h) return; const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
+            if(!h) return; 
+            const eb = edit ? `<button class="icon-btn" onclick="editHistoryItem('${p.id}', ${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}', ${i})">🗑️</button>` : '';
             const dc = edit ? `onclick="openDateModal('${p.id}', ${i})"` : '';
             
-            let drv = '';
-            if (h.driveUrl) {
-                let uUpper = h.driveUrl.toUpperCase();
-                if (uUpper.startsWith('G:') || h.driveUrl.startsWith('\\\\') || (!h.driveUrl.startsWith('http') && h.driveUrl.includes('\\'))) {
-                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                    drv = `<br><button class="drive-link" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; cursor:pointer;" onclick="window.abrirPastaLocalPeloAjudante('${safePath}')">📂 Abrir Caminho / Pasta</button>`;
-                } else {
-                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive Web</a>`;
-                }
+            let drv = ''; 
+            if (h.driveUrl) { 
+                if (h.driveUrl.toUpperCase().startsWith('G:') || h.driveUrl.startsWith('\\\\') || (!h.driveUrl.startsWith('http') && h.driveUrl.includes('\\'))) { 
+                    let safePath = h.driveUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); 
+                    drv = `<br><button class="drive-link" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; cursor:pointer;" onclick="window.abrirPastaLocalPeloAjudante('${safePath}')">📂 Abrir Caminho / Pasta</button>`; 
+                } else { 
+                    drv = `<br><a href="${h.driveUrl}" target="_blank" class="drive-link" style="background:#e1f5fe; color:#0284c7; border-color:#bae6fd;">📂 Abrir no Drive Web</a>`; 
+                } 
             }
-
-            let col = ''; if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea; font-weight:bold;';
+            
+            let col = ''; 
+            if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
         });
-
+        
         let bt = p.isImpeded ? '⚠️ PAUSADO' : (isC ? '✅ CONCLUÍDO' : '▶ ' + (STAGES[p.stageIndex||0] || 'Etapa'));
-        if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
-
+        if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; 
+        if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
+        
         let acts = '';
         if (isFila && isDash && !isViewerMode) {
-            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>`;
-            acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>`;
-            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>
+            <div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>
+            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
         } else if (edit && !isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
-            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>
+            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
         } else if (edit && isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
-            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
-        } else {
-            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>
+            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+        } else { 
+            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`; 
         }
-
+        
         card.innerHTML = `
         <div class="project-header">
             <span class="draftsman-badge">👤 Atual: ${p.owner}</span>
             <div class="project-title-container" style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
                 <h2 style="margin:0;">${p.name||'Sem Nome'}</h2>
-                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome da Obra">✏️</button>` : ''}
+                ${edit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar Nome">✏️</button>` : ''}
             </div>
             <div class="project-details-box" style="position: relative;">
                 ${edit ? `<button class="icon-btn" style="position:absolute; top:5px; right:5px; background:#e5e7eb; padding:4px 8px; font-size: 0.8rem; font-weight: bold; border-radius: 4px;" onclick="openEditProjectModal('${p.id}')" title="Editar Informações">✏️ Editar Info</button>` : ''}
@@ -1122,14 +1258,193 @@ function buildCardsStructure(list, container, isDash) {
     });
 }
 
-// HORAS COMERCIAIS E GRÁFICOS
+function openCreateProjectModal() {
+    ['cp-cliente', 'cp-cod', 'cp-cidade', 'cp-vendedor', 'cp-tipo', 'cp-probabilidade', 'cp-obs'].forEach(f => { const el = document.getElementById(f); if(el) el.value = ''; });
+    document.getElementById('create-project-modal').classList.remove('hidden');
+}
+
+function closeCreateProjectModal(c) {
+    if (!c) { document.getElementById('create-project-modal').classList.add('hidden'); return; }
+    const cli = document.getElementById('cp-cliente').value.trim(); 
+    if (!cli) { alert("Nome do Cliente é obrigatório!"); return; }
+    
+    if(!appData.projects) appData.projects = [];
+    appData.projects.unshift({ 
+        id: Date.now().toString(), 
+        owner: "Fila", 
+        name: cli, 
+        stageIndex: 0, 
+        isImpeded: false, 
+        reworkType: null, 
+        cod: document.getElementById('cp-cod').value.trim(), 
+        vendedor: document.getElementById('cp-vendedor').value, 
+        tipo: document.getElementById('cp-tipo').value, 
+        probabilidade: document.getElementById('cp-probabilidade').value, 
+        cidade: document.getElementById('cp-cidade').value.trim(), 
+        history: [{ stage: STAGES[0], obs: document.getElementById('cp-obs').value.trim() || "Iniciado na fila.", date: new Date().toLocaleString('pt-BR'), author: currentUser || "Visualizador" }] 
+    });
+    
+    saveData(); 
+    document.getElementById('create-project-modal').classList.add('hidden'); 
+    
+    if(document.getElementById('user-filter-select')) document.getElementById('user-filter-select').value = "ALL"; 
+    if(document.getElementById('sort-filter-select')) document.getElementById('sort-filter-select').value = "DATE_DESC"; 
+    if(isViewerMode) switchManagerTab('fila'); else switchDraftsmanTab('fila');
+}
+
+async function editProjectName(id) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return;
+    const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
+    if (n) { 
+        p.name = n; 
+        saveData(); 
+        renderProjects(); 
+    }
+}
+
+async function deleteProject(id) {
+    if(confirm("Deseja apagar DEFINITIVAMENTE do sistema?")) { 
+        appData.projects = appData.projects.filter(p => p.id !== id); 
+        saveData(); 
+        renderProjects(); 
+    }
+}
+
+async function updateStage(id, sel) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return; 
+    const idx = parseInt(sel.value);
+    
+    if (p.stageIndex !== idx) {
+        const s = STAGES[idx] || 'Desconhecido';
+        const obs = await openModal("Avançar", `Avançando para: ${s}`, "Recados...");
+        if (obs === null) { 
+            sel.value = p.stageIndex; 
+        } else { 
+            let assumes = autoAssumirSeFila(p);
+            p.stageIndex = idx; 
+            if(!p.history) p.history = []; 
+            
+            let stageHistoryName = s;
+            if (s === "Desenhista") stageHistoryName = "🔄 Retornou ao Desenhista";
+            
+            p.history.unshift({ stage: stageHistoryName, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            
+            if (assumes) {
+                p.history.unshift({ stage: "🚀 ASSUMIU PROJETO", obs: "Assumiu ao mudar a etapa da obra.", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            }
+            
+            saveData(); 
+            renderProjects(); 
+        }
+    }
+}
+
+function assumirProjeto(id) {
+    const p = appData.projects.find(p => p.id === id);
+    if(!p) return;
+    
+    const responsavelAntigo = p.owner;
+    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
+    p.stageIndex = 1; 
+    
+    if(!p.history) p.history = [];
+    p.history.unshift({
+        stage: "🚀 ASSUMIU PROJETO",
+        obs: `Puxado da fila. Responsabilidade de [${responsavelAntigo}] para [${p.owner}].`,
+        date: new Date().toLocaleString('pt-BR'),
+        author: currentUser
+    });
+    
+    saveData();
+    alert(`Assumiu o projeto da obra "${p.name}" com sucesso! Foi movido para "Em Andamento".`);
+    switchDraftsmanTab('andamento');
+}
+
+async function createRevisaoFromCompleted(id) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return;
+    const c = await openModal("Criar Revisão", "Qual será o NOVO CÓD?", "Ex: 18455A...");
+    if (c !== null) {
+        const obs = await openModal("Motivo", "Por que está retornando?", "Descreva...");
+        if (obs !== null) {
+            p.stageIndex = 0; 
+            p.tipo = "REVISÃO"; 
+            if (c.trim() !== "") p.cod = c.trim();
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "🔄 RETORNOU", obs: obs || `Nova Revisão`, date: new Date().toLocaleString('pt-BR'), author: currentUser });
+            saveData(); 
+            switchDraftsmanTab('fila'); 
+        }
+    }
+}
+
+async function registerEvent(id) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return;
+    const obs = await openModal("Recado", "Insira o recado:", "...");
+    if (obs) { 
+        if(!p.history) p.history = []; 
+        p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); 
+        saveData(); 
+        updateViews(); 
+    }
+}
+
+async function editHistoryItem(id, i) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p || !p.history[i]) return;
+    const n = await openModal("Editar", p.history[i].stage, "Texto...", p.history[i].obs);
+    if (n !== null) { 
+        p.history[i].obs = n || "Sem obs"; 
+        saveData(); 
+        updateViews(); 
+    }
+}
+
+async function deleteHistoryItem(id, i) {
+    if(confirm("Remover do histórico?")) { 
+        const p = appData.projects.find(p => p.id === id); 
+        if(p && p.history) p.history.splice(i, 1); 
+        saveData(); 
+        updateViews(); 
+    }
+}
+
+async function toggleImpediment(id) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return;
+    if (p.isImpeded) {
+        const obs = await openModal("Retomar", "Resolvido?", "Obs...");
+        if (obs !== null) { 
+            p.isImpeded = false; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); 
+            renderProjects(); 
+        }
+    } else {
+        const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
+        if (obs) { 
+            p.isImpeded = true; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); 
+            renderProjects(); 
+        }
+    }
+}
+
 function parseDateBR(str) { 
     try { 
         let parts = str.split(/[\s,]+/); 
         let d = parts[0].split('/'); 
         let t = parts[1] ? parts[1].split(':') : ['00','00']; 
         return new Date(d[2], d[1]-1, d[0], t[0]||0, t[1]||0).getTime(); 
-    } catch(e) { return new Date().getTime(); } 
+    } catch(e) { 
+        return new Date().getTime(); 
+    } 
 }
 
 function getBusinessHours(startMs, endMs) {
@@ -1162,9 +1477,15 @@ function getBusinessHours(startMs, endMs) {
 }
 
 function populateGraphSelect() { 
-    const s = document.getElementById('graph-filter-select'); if(!s) return;
+    const s = document.getElementById('graph-filter-select'); 
+    if(!s) return;
     s.innerHTML = '<option value="ALL">Geral (Todos)</option>'; 
-    (appData.projects||[]).forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = `${p.name} (${p.owner})`; s.appendChild(o); }); 
+    (appData.projects||[]).forEach(p => { 
+        const o = document.createElement('option'); 
+        o.value = p.id; 
+        o.textContent = `${p.name} (${p.owner})`; 
+        s.appendChild(o); 
+    }); 
 }
 
 function renderGraph() {
@@ -1172,24 +1493,26 @@ function renderGraph() {
     const v = document.getElementById('graph-filter-select').value; 
     let tg = v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v);
     
-    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0;
+    let a = {}; 
+    STAGES.forEach(s => a[s] = 0); 
+    a["Pausado / Impedido"] = 0;
     
-    let total = (tg || []).length;
-    let sumHoursCompleted = 0;
+    let total = (tg || []).length; 
+    let sumHoursCompleted = 0; 
     let countCompleted = 0;
 
     (tg||[]).forEach(p => { 
         if(!p.history) return; 
-        
-        let startMs = null; let endMs = null;
-        [...p.history].reverse().forEach(ev => {
-            if(!ev) return;
-            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
-            if(ev.stage === STAGES[7]) endMs = parseDateBR(ev.date);
+        let startMs = null; 
+        let endMs = null;
+        [...p.history].reverse().forEach(ev => { 
+            if(!ev) return; 
+            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
+            if(ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); 
         });
-        if(startMs && endMs && endMs > startMs) {
-            sumHoursCompleted += getBusinessHours(startMs, endMs);
-            countCompleted++;
+        if(startMs && endMs && endMs > startMs) { 
+            sumHoursCompleted += getBusinessHours(startMs, endMs); 
+            countCompleted++; 
         }
 
         let cur=null, lst=null; 
@@ -1202,29 +1525,32 @@ function renderGraph() {
             else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
             lst=t; 
         }); 
-        if(p.stageIndex!==7&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
+        if(p.stageIndex!==8&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
     });
 
     if(document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
     if(document.getElementById('kpi-avg-time')) document.getElementById('kpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
     
-    let fd = []; for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
+    let fd = []; 
+    for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
     fd.sort((x,y) => y.h - x.h);
     
-    let lb = [], br = [], ln = [], cm = 0; let tt = fd.reduce((s, i) => s + i.h, 0); 
+    let lb = [], br = [], ln = [], cm = 0; 
+    let tt = fd.reduce((s, i) => s + i.h, 0); 
     fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
     if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
     
     if(currentChart) currentChart.destroy(); 
     currentChart = new Chart(document.getElementById('paretoChart').getContext('2d'), { 
         type:'bar', 
-        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas Gastas (Comercial)', data:br, backgroundColor:'#2563eb', yAxisID:'y' } ]}, 
+        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#2563eb', yAxisID:'y' } ]}, 
         options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } 
     });
 }
 
 function populateDraftsmanGraphSelect() {
-    const s = document.getElementById('draftsman-graph-filter-select'); if(!s) return;
+    const s = document.getElementById('draftsman-graph-filter-select'); 
+    if(!s) return;
     s.innerHTML = `<option value="MEUS">Meus Projetos Individuais (${currentUser})</option><option value="ALL">Geral da Empresa (Todos)</option>`;
     (appData.projects || []).forEach(p => {
         if(p.owner === currentUser || currentUser === "ADMIN") {
@@ -1236,30 +1562,28 @@ function populateDraftsmanGraphSelect() {
 function renderDraftsmanGraph() {
     if(typeof Chart === 'undefined' || !document.getElementById('draftsmanParetoChart')) return;
     const v = document.getElementById('draftsman-graph-filter-select').value;
+    let target = v === "MEUS" ? appData.projects.filter(p => p.owner === currentUser) : (v === "ALL" ? appData.projects : appData.projects.filter(p => p.id === v));
     
-    let target = [];
-    if(v === "MEUS") target = appData.projects.filter(p => p.owner === currentUser);
-    else if(v === "ALL") target = appData.projects;
-    else target = appData.projects.filter(p => p.id === v);
-
-    let a = {}; STAGES.forEach(s => a[s] = 0); a["Pausado / Impedido"] = 0;
+    let a = {}; 
+    STAGES.forEach(s => a[s] = 0); 
+    a["Pausado / Impedido"] = 0;
     
-    let total = (target || []).length;
-    let sumHoursCompleted = 0;
+    let total = (target || []).length; 
+    let sumHoursCompleted = 0; 
     let countCompleted = 0;
 
     (target||[]).forEach(p => { 
         if(!p.history) return; 
-
-        let startMs = null; let endMs = null;
-        [...p.history].reverse().forEach(ev => {
-            if(!ev) return;
-            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
-            if(ev.stage === STAGES[7]) endMs = parseDateBR(ev.date);
+        let startMs = null; 
+        let endMs = null;
+        [...p.history].reverse().forEach(ev => { 
+            if(!ev) return; 
+            if(!startMs && (ev.stage === STAGES[1] || ev.stage.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
+            if(ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); 
         });
-        if(startMs && endMs && endMs > startMs) {
-            sumHoursCompleted += getBusinessHours(startMs, endMs);
-            countCompleted++;
+        if(startMs && endMs && endMs > startMs) { 
+            sumHoursCompleted += getBusinessHours(startMs, endMs); 
+            countCompleted++; 
         }
 
         let cur=null, lst=null; 
@@ -1272,29 +1596,32 @@ function renderDraftsmanGraph() {
             else if(ev.stage==="🟢 Retomado") cur=STAGES[0]; 
             lst=t; 
         }); 
-        if(p.stageIndex!==7&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
+        if(p.stageIndex!==8&&lst&&cur) a[cur] += getBusinessHours(lst, new Date().getTime()); 
     });
 
     if(document.getElementById('dkpi-total')) document.getElementById('dkpi-total').textContent = total;
     if(document.getElementById('dkpi-avg-time')) document.getElementById('dkpi-avg-time').textContent = countCompleted > 0 ? Math.round(sumHoursCompleted / countCompleted) + 'h' : '0h';
     
-    let fd = []; for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
+    let fd = []; 
+    for(let s in a) { let h = a[s]; if(h>0.01) fd.push({s:s, h:h}); } 
     fd.sort((x,y) => y.h - x.h);
     
-    let lb = [], br = [], ln = [], cm = 0; let tt = fd.reduce((s, i) => s + i.h, 0); 
+    let lb = [], br = [], ln = [], cm = 0; 
+    let tt = fd.reduce((s, i) => s + i.h, 0); 
     fd.forEach(i => { lb.push(i.s); br.push(i.h.toFixed(1)); cm+=i.h; ln.push(((cm/tt)*100).toFixed(1)); });
     if(lb.length===0){lb=["Sem dados"];br=[0];ln=[0];}
     
     if(currentDraftsmanChart) currentDraftsmanChart.destroy(); 
     currentDraftsmanChart = new Chart(document.getElementById('draftsmanParetoChart').getContext('2d'), { 
         type:'bar', 
-        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas Gastas (Comercial)', data:br, backgroundColor:'#4f46e5', yAxisID:'y' } ]}, 
+        data:{ labels:lb, datasets:[ { label:'% Acumulada', data:ln, type:'line', borderColor:'#dc2626', yAxisID:'y1' }, { label:'Horas', data:br, backgroundColor:'#4f46e5', yAxisID:'y' } ]}, 
         options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{position:'left'}, y1:{position:'right', max:105} } } 
     });
 }
 
-// ---------- PDF RELATÓRIOS ----------
-function sanitizeForPDF(t) { return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; }
+function sanitizeForPDF(t) { 
+    return t ? t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, '') : ""; 
+}
 
 function exportReportPDF(id) {
     if(!window.jspdf || !window.jspdf.jsPDF) { alert("Gerador de PDF bloqueado."); return; } 
@@ -1315,7 +1642,7 @@ function exportReportPDF(id) {
         startY: 38,
         theme: 'plain',
         body: [
-            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
+            ['COD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
             ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
             ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
         ],
@@ -1351,7 +1678,7 @@ function exportReportPDF(id) {
 
 function exportDraftsmanReport() { 
     if(!window.jspdf) return; 
-    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 7), `Relatório de ${currentUser}`); 
+    generateListPDF(appData.projects.filter(p => p.owner === currentUser && p.stageIndex !== 8), `Relatório de ${currentUser}`); 
 }
 
 function exportManagerReport() { 
@@ -1393,20 +1720,32 @@ function generateListPDF(list, title) {
     window.open(URL.createObjectURL(doc.output('blob')), '_blank');
 }
 
-// BACKUPS
+// BACKUP SALVO COM A DATA NO NOME
 function exportBackup() {
-const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-const downloadAnchorNode = document.createElement('a');
-downloadAnchorNode.setAttribute("href", dataStr);
-downloadAnchorNode.setAttribute("download", `backup_projetos.json`);
-downloadAnchorNode.click();
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dataAtual = `${yyyy}-${mm}-${dd}`; 
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `backup_projetos_${dataAtual}.json`);
+    downloadAnchorNode.click();
 }
+
 function importBackup(event) {
-const file = event.target.files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = function(e) { appData = JSON.parse(e.target.result); saveData(); alert("Importado com sucesso!"); renderProfiles(); };
-reader.readAsText(file);
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) { 
+        appData = JSON.parse(e.target.result); 
+        saveData(); 
+        alert("Importado com sucesso!"); 
+        renderProfiles(); 
+    };
+    reader.readAsText(file);
 }
 </script>
 </body>
