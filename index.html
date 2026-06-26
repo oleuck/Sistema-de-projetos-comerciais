@@ -24,8 +24,6 @@ window.onerror = function(msg, url, line) {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
 
 <style>
 /* ===== DESIGN TOKENS ===== */
@@ -299,14 +297,6 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 }
 .timeline-date.editable { cursor: pointer; border-bottom: 1px dashed var(--text-light); }
 .timeline-date.editable:hover { color: var(--primary); border-bottom-color: var(--primary); }
-.drive-link {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: 4px; text-decoration: none;
-  font-weight: 600; font-size: 0.82rem; margin-top: 4px;
-  border: 1px solid; cursor: pointer;
-}
-.drive-link.web   { background: #e1f5fe; color: var(--info); border-color: #bae6fd; }
-.drive-link.local { background: var(--success-light); color: var(--success); border-color: #bbf7d0; }
 
 /* ===== CARD ACTIONS ===== */
 .card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
@@ -445,22 +435,6 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-users-list" style="max-height:260px;overflow-y:auto;"></div>
     <div class="modal-buttons">
       <button class="secondary" onclick="closeModal('admin-modal')">Fechar</button>
-    </div>
-  </div>
-</div>
-
-<div id="drive-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title">
-  <div class="modal-content">
-    <h3 id="drive-modal-title" class="modal-title">📂 Vincular Arquivo ou Pasta</h3>
-    <p class="modal-desc">Cole o link do Google Drive <strong>ou</strong> um caminho local (ex: G:\Projetos\...).</p>
-    <label for="drive-url-input">Caminho ou URL</label>
-    <input type="text" id="drive-url-input" placeholder="https://drive.google.com/... ou G:\...">
-    <label for="drive-obs-input">Observação</label>
-    <textarea id="drive-obs-input" rows="2" placeholder="Ex: Desenho revisado pelo vendedor..."></textarea>
-    <button class="info" onclick="openPicker()" style="width:100%; margin-bottom:10px;">🔍 Seletor Google Drive</button>
-    <div class="modal-buttons">
-      <button class="secondary" onclick="closeDriveModal(false)">Cancelar</button>
-      <button onclick="closeDriveModal(true)">Vincular</button>
     </div>
   </div>
 </div>
@@ -694,10 +668,7 @@ const FIREBASE_CFG = {
   appId: "1:154256368322:web:9c580e7886abfc9779515b"
 };
 
-const DRIVE_API_KEY    = "AIzaSyBXRRYBP83kDBTvlFXqEUiodgQNacd0Hso";
-const DRIVE_CLIENT_ID  = "607516224981-moe9q8ces9tgns26mo8e6hhkc0chg8dl.apps.googleusercontent.com";
-const DRIVE_APP_ID     = "607516224981";
-const MASTER_KEY       = "070522"; // Senha Master Atualizada
+const MASTER_KEY = "070522";
 
 let db, docRef;
 let appData = { users: [], passwords: {}, projects: [] };
@@ -713,7 +684,6 @@ let passwordModalResolve = null;
 let confirmModalResolve  = null;
 
 let dateEditCtx = { projectId: null, histIndex: null };
-let driveProjectId = null;
 let reworkProjectId = null;
 let maiorNumeroDeProjetosVistos = 0;
 
@@ -733,7 +703,7 @@ function toast(msg, type = "info", duration = 3500) {
 }
 
 /* ==================================================
-   HASHING DE SENHA (Segurança)
+   HASHING DE SENHA (Web Crypto API)
 ================================================== */
 async function hashPassword(pass) {
   const enc = new TextEncoder().encode(pass);
@@ -747,7 +717,7 @@ async function checkPassword(stored, input) {
 }
 
 /* ==================================================
-   DEBOUNCE para pesquisa
+   DEBOUNCE para search
 ================================================== */
 function debounce(fn, ms = 300) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
@@ -756,7 +726,7 @@ const debounceRenderProjects = debounce(() => renderProjects());
 const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
 
 /* ==================================================
-   MODAIS (Popups)
+   MODAIS — helpers genéricos
 ================================================== */
 function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
@@ -797,6 +767,9 @@ function closePasswordModal(confirm) {
     passwordModalResolve = null;
   }
 }
+document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); closePasswordModal(true); }
+});
 
 function openConfirmModal(title, desc) {
   document.getElementById("confirm-title").textContent = title;
@@ -811,7 +784,7 @@ function closeConfirmModal(confirm) {
 
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
-  ["custom-modal","password-modal","confirm-modal","admin-modal","drive-modal","date-modal","rework-modal","create-project-modal","edit-project-modal"]
+  ["custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal"]
     .forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
@@ -822,7 +795,7 @@ document.addEventListener("keydown", e => {
 });
 
 /* ==================================================
-   DATA E HORA
+   DATA / HORA
 ================================================== */
 function dateToLocalString(ds) {
   try {
@@ -847,6 +820,10 @@ function parseDateBR(str) {
     return new Date(yy, mm - 1, dd, hh || 0, mn || 0).getTime();
   } catch { return Date.now(); }
 }
+
+/* ==================================================
+   HORAS ÚTEIS
+================================================== */
 function getBusinessHours(startMs, endMs) {
   if (startMs >= endMs) return 0;
   let total = 0;
@@ -868,74 +845,7 @@ function getBusinessHours(startMs, endMs) {
 }
 
 /* ==================================================
-   GOOGLE DRIVE
-================================================== */
-window.addEventListener("load", () => {
-  try {
-    if (window.gapi)  gapi.load("picker", () => {});
-    if (window.google?.accounts) {
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: DRIVE_CLIENT_ID,
-        scope: "https://www.googleapis.com/auth/drive.readonly",
-        callback: "",
-      });
-    }
-  } catch {}
-});
-
-function openPicker() {
-  if (!tokenClient || !window.gapi) { toast("Google Drive bloqueado.", "warning"); return; }
-  if (!accessToken) {
-    tokenClient.callback = r => {
-      if (r.error) return;
-      accessToken = r.access_token;
-      createPicker();
-    };
-    tokenClient.requestAccessToken({ prompt: "consent" });
-  } else createPicker();
-}
-function createPicker() {
-  if (!window.google?.picker) return;
-  new google.picker.PickerBuilder()
-    .addView(google.picker.ViewId.DOCS)
-    .setOAuthToken(accessToken)
-    .setDeveloperKey(DRIVE_API_KEY)
-    .setAppId(DRIVE_APP_ID)
-    .setCallback(d => {
-      if (d[google.picker.Response.ACTION] === google.picker.Action.PICKED)
-        document.getElementById("drive-url-input").value = d[google.picker.Response.DOCUMENTS][0][google.picker.Document.URL];
-    }).build().setVisible(true);
-}
-function openDriveModal(id) {
-  driveProjectId = id;
-  document.getElementById("drive-url-input").value = "";
-  document.getElementById("drive-obs-input").value = "";
-  document.getElementById("drive-modal").classList.remove("hidden");
-}
-function closeDriveModal(confirm) {
-  document.getElementById("drive-modal").classList.add("hidden");
-  if (!confirm || !driveProjectId) { driveProjectId = null; return; }
-  const url = document.getElementById("drive-url-input").value.trim();
-  const obs = document.getElementById("drive-obs-input").value.trim();
-  if (url) {
-    const p = findProject(driveProjectId);
-    if (p) {
-      pushHistory(p, "📂 ARQUIVO/CAMINHO ANEXADO", obs || "Diretório vinculado.", url);
-      saveData(); updateViews(); toast("Arquivo vinculado!", "success");
-    }
-  }
-  driveProjectId = null;
-}
-
-window.abrirPastaLocalPeloAjudante = function(caminho) {
-  fetch("http://127.0.0.1:49152/abrir-pasta?caminho=" + encodeURIComponent(caminho))
-    .then(r => r.text())
-    .then(t => { if (t !== "Sucesso") toast("Ajudante local: " + t, "warning"); })
-    .catch(() => toast("⚠️ Ajudante local não está rodando! Abra o arquivo ajudante.py no PC.", "danger", 6000));
-};
-
-/* ==================================================
-   FIREBASE
+   FIREBASE — INICIALIZAÇÃO
 ================================================== */
 function setFirebaseStatus(state) {
   const dot  = document.getElementById("firebase-dot");
@@ -994,8 +904,14 @@ try {
   }, () => { setFirebaseStatus("error"); bootUI(); });
 } catch { bootUI(); }
 
+/* ==================================================
+   SALVAR DADOS
+================================================== */
 function saveData() {
-  if (!fbSynced) { localStorage.setItem("appData_offline_bkp", JSON.stringify(appData)); return; }
+  if (!fbSynced) {
+    localStorage.setItem("appData_offline_bkp", JSON.stringify(appData));
+    return;
+  }
   if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
   if (!docRef) return;
   docRef.set(appData).then(() => {
@@ -1004,28 +920,30 @@ function saveData() {
 }
 
 /* ==================================================
-   LÓGICA DE PROJETOS E BADGES (Correção dos Contadores)
+   HELPERS DE PROJETO
 ================================================== */
 function findProject(id) { return (appData.projects || []).find(p => p.id === id) || null; }
 
-function pushHistory(p, stage, obs, driveUrl = null) {
+function pushHistory(p, stage, obs) {
   if (!p.history) p.history = [];
   const item = { stage, obs: obs || "", date: nowBR(), author: currentUser || "Visualizador" };
-  if (driveUrl) item.driveUrl = driveUrl;
   p.history.unshift(item);
 }
 
+/* ==================================================
+   BADGES NAS ABAS
+================================================== */
 function updateBadges() {
   const projs = appData.projects || [];
   const setBadge = (id, count) => { const el = document.getElementById(id); if(el) el.textContent = count; };
   const getStage = p => Number(p.stageIndex) || 0;
 
-  // Badges da Gerência (Contam o banco inteiro)
+  // Badges da Gerência
   setBadge("badge-fila",       projs.filter(p => getStage(p) === 0).length);
   setBadge("badge-andamento",  projs.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
   setBadge("badge-concluidos", projs.filter(p => getStage(p) >= 8).length);
 
-  // Badges do Desenhista (Contam respeitando o filtro de usuário selecionado)
+  // Badges do Desenhista
   if (currentUser) {
     const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
     const filtered = projs.filter(p => {
@@ -1173,11 +1091,9 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   RENDER VIEWS
+   RENDER GLOBAL (GERÊNCIA)
 ================================================== */
-function updateViews() { 
-  isViewerMode ? renderGlobalFeed() : renderProjects(); 
-}
+function updateViews() { isViewerMode ? renderGlobalFeed() : renderProjects(); updateBadges(); }
 
 function switchManagerTab(tab) {
   managerTab = tab;
@@ -1198,9 +1114,12 @@ function renderGlobalFeed() {
   const sort   = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
   const list   = filterAndSort(appData.projects || [], src, sort, managerTab);
   buildCards(list, container, false);
-  updateBadges(); // <--- ATUALIZA OS CONTADORES MATEMATICAMENTE AQUI
+  updateBadges();
 }
 
+/* ==================================================
+   RENDER DESENHISTA
+================================================== */
 function switchDraftsmanTab(tab) {
   draftsmanTab = tab;
   ["fila","andamento","concluidos","graficos"].forEach(t =>
@@ -1223,6 +1142,7 @@ function renderProjects() {
 
   let list = filterAndSort(appData.projects || [], src, sort, draftsmanTab);
 
+  // Filtro por usuário
   list = list.filter(p => {
     const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
     if (isFila) return true;
@@ -1232,14 +1152,14 @@ function renderProjects() {
   });
 
   buildCards(list, container, true);
-  updateBadges(); // <--- ATUALIZA OS CONTADORES MATEMATICAMENTE AQUI
+  updateBadges();
 }
 
 function filterAndSort(projects, search, sort, tab) {
   return projects
     .filter(p => {
       if (!p) return false;
-      const stage = Number(p.stageIndex) || 0; // Proteção contra string
+      const stage = Number(p.stageIndex) || 0; 
       const inTab = tab === "fila"      ? stage === 0
                   : tab === "andamento" ? stage > 0 && stage < 8
                   : tab === "concluidos"? stage >= 8
@@ -1259,6 +1179,9 @@ function filterAndSort(projects, search, sort, tab) {
     });
 }
 
+/* ==================================================
+   BUILD CARDS
+================================================== */
 function buildCards(list, container, isDash) {
   container.innerHTML = "";
   if (!list.length) {
@@ -1283,10 +1206,12 @@ function buildCards(list, container, isDash) {
 
     const progress = Math.round((stageVal / (STAGES.length - 1)) * 100);
 
+    // Seletor de etapas
     const stageOpts = STAGES.map((s, i) =>
       `<option value="${i}" ${i === stageVal ? "selected" : ""}>${i+1}. ${s}</option>`
     ).join("");
 
+    // Histórico
     const histHTML = (p.history || []).map((h, i) => {
       if (!h) return "";
       const canEditHist = canEdit;
@@ -1297,19 +1222,8 @@ function buildCards(list, container, isDash) {
            </div>` : "";
       const dateAttr = canEditHist ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})" title="Clique para editar data"` : `class="timeline-date"`;
 
-      let linkHTML = "";
-      if (h.driveUrl) {
-        const isLocal = h.driveUrl.toUpperCase().startsWith("G:") || h.driveUrl.includes("\\");
-        if (isLocal) {
-          const safe = h.driveUrl.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
-          linkHTML = `<br><button class="drive-link local" onclick="window.abrirPastaLocalPeloAjudante('${safe}')">📂 Abrir Pasta</button>`;
-        } else {
-          linkHTML = `<br><a href="${h.driveUrl}" target="_blank" rel="noopener" class="drive-link web">📂 Abrir no Drive</a>`;
-        }
-      }
-
       let stageStyle = "";
-      if (h.stage?.includes("RECADO") || h.stage?.includes("CAMINHO") || h.stage?.includes("ASSUMIU") || h.stage?.includes("ARQUIVO")) stageStyle = "color:var(--purple);font-weight:700;";
+      if (h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU")) stageStyle = "color:var(--purple);font-weight:700;";
       if (h.stage?.includes("CORRIGIDO")) stageStyle = "color:var(--success);font-weight:700;";
       if (h.stage?.includes("RETRABALHO")) stageStyle = "color:var(--orange);";
 
@@ -1317,7 +1231,7 @@ function buildCards(list, container, isDash) {
         <div class="timeline-top">
           <span class="timeline-stage" style="${stageStyle}">${h.stage||""}</span>${editBtns}
         </div>
-        <div class="timeline-obs">↳ ${h.obs||""}${linkHTML}</div>
+        <div class="timeline-obs">↳ ${h.obs||""}</div>
         <div class="timeline-meta">
           <span class="timeline-author">👤 ${h.author||p.owner}</span>
           <span ${dateAttr}>${h.date||""}${canEditHist?" ✏️":""}</span>
@@ -1325,12 +1239,14 @@ function buildCards(list, container, isDash) {
       </div>`;
     }).join("");
 
+    // Status label
     let statusLabel = p.isImpeded ? "⚠️ PAUSADO"
       : isC ? "✅ CONCLUÍDO"
       : !isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO"
       : !isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO"
       : "▶ " + (STAGES[stageVal] || "—");
 
+    // Ações
     let actions = "";
     if (isFila && isDash && !isViewerMode && stageVal === 0) {
       actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
@@ -1340,8 +1256,7 @@ function buildCards(list, container, isDash) {
     }
 
     const commonBtns = (isDash && canEdit || isViewerMode) ? `
-      <button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>
-      <button class="info" onclick="openDriveModal('${p.id}')">📂 Anexar</button>` : "";
+      <button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
 
     if (isFila && isDash && !isViewerMode && stageVal === 0) {
       actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
@@ -1373,7 +1288,7 @@ function buildCards(list, container, isDash) {
       </div>
 
       <div class="info-box">
-        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')" title="Editar informações">✏️</button>` : ""}
+        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')" title="Editar informações">⚙️</button>` : ""}
         <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
         <div class="info-row"><span><strong>Tipo:</strong> ${tipoBadge}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
         <hr class="info-divider">
@@ -1398,8 +1313,31 @@ function buildCards(list, container, isDash) {
 }
 
 /* ==================================================
-   AÇÕES GLOBAIS DE EDIÇÃO E HISTÓRICO
+   MODAIS DE EDIÇÃO DE PROJETO
 ================================================== */
+function openEditProjectModal(id) {
+  const p = findProject(id); if (!p) return;
+  document.getElementById("ep-id").value = id;
+  document.getElementById("ep-cod").value  = p.cod || "";
+  document.getElementById("ep-cidade").value = p.cidade || "";
+  document.getElementById("ep-vendedor").value = p.vendedor || "";
+  document.getElementById("ep-tipo").value = p.tipo || "NOVO";
+  document.getElementById("ep-probabilidade").value = p.probabilidade || "";
+  document.getElementById("edit-project-modal").classList.remove("hidden");
+}
+function closeEditProjectModal(confirm) {
+  document.getElementById("edit-project-modal").classList.add("hidden");
+  if (!confirm) return;
+  const id = document.getElementById("ep-id").value;
+  const p  = findProject(id); if (!p) return;
+  p.cod          = document.getElementById("ep-cod").value.trim();
+  p.cidade       = document.getElementById("ep-cidade").value.trim();
+  p.vendedor     = document.getElementById("ep-vendedor").value;
+  p.tipo         = document.getElementById("ep-tipo").value;
+  p.probabilidade= document.getElementById("ep-probabilidade").value;
+  saveData(); updateViews(); toast("Informações atualizadas!", "success");
+}
+
 function openCreateProjectModal() {
   ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
   document.getElementById("cp-vendedor").value = "";
@@ -1408,7 +1346,6 @@ function openCreateProjectModal() {
   document.getElementById("create-project-modal").classList.remove("hidden");
   requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
 }
-
 function closeCreateProjectModal(confirm) {
   if (!confirm) { document.getElementById("create-project-modal").classList.add("hidden"); return; }
   const cli = document.getElementById("cp-cliente").value.trim();
@@ -1434,11 +1371,14 @@ function closeCreateProjectModal(confirm) {
     }]
   });
   document.getElementById("create-project-modal").classList.add("hidden");
-  saveData(); updateViews(); 
+  saveData(); updateBadges();
   if (isViewerMode) switchManagerTab("fila"); else switchDraftsmanTab("fila");
   toast("Projeto criado e colocado na fila!", "success");
 }
 
+/* ==================================================
+   AÇÕES DE PROJETO
+================================================== */
 async function editProjectName(id) {
   const p = findProject(id); if (!p) return;
   const n = await openCustomModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
@@ -1450,13 +1390,13 @@ async function deleteProject(id) {
   const ok = await openConfirmModal("Excluir Projeto", `Deseja excluir permanentemente "${p?.name||"este projeto"}"? Esta ação não pode ser desfeita.`);
   if (!ok) return;
   appData.projects = appData.projects.filter(p => p.id !== id);
-  saveData(); updateViews(); toast("Projeto excluído.", "info");
+  saveData(); updateViews(); updateBadges(); toast("Projeto excluído.", "info");
 }
 
 async function updateStage(id, sel) {
   const p = findProject(id); if (!p) return;
   const idx = parseInt(sel.value);
-  if (Number(p.stageIndex) === idx) return;
+  if (p.stageIndex === idx) return;
   const stageName = STAGES[idx] || "Desconhecido";
   const obs = await openCustomModal("Avançar Etapa", `Avançando para: "${stageName}"`, "Observação (opcional)...");
   if (obs === null) { sel.value = p.stageIndex; return; }
@@ -1470,7 +1410,7 @@ async function updateStage(id, sel) {
   p.stageIndex = idx;
   const label = stageName === "Desenhista" ? "🔄 Retornou ao Desenhista" : stageName;
   pushHistory(p, label, obs || "Etapa avançada.");
-  saveData(); updateViews();
+  saveData(); renderProjects(); updateBadges();
 }
 
 async function markAsCorrected(id) {
@@ -1479,7 +1419,7 @@ async function markAsCorrected(id) {
   if (obs === null) return;
   p.stageIndex = 7;
   pushHistory(p, "✅ CORRIGIDO", obs || "Marcado como corrigido.");
-  saveData(); updateViews();
+  saveData(); renderProjects(); updateBadges();
 }
 
 async function assumirProjeto(id) {
@@ -1488,7 +1428,7 @@ async function assumirProjeto(id) {
   p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
   p.stageIndex = 1;
   pushHistory(p, "🚀 ASSUMIU PROJETO", `Puxado da fila. De [${anterior}] → [${p.owner}].`);
-  saveData(); updateViews();
+  saveData(); updateBadges();
   toast(`Você assumiu "${p.name}"!`, "success");
   switchDraftsmanTab("andamento");
 }
@@ -1503,7 +1443,7 @@ async function createRevisaoFromCompleted(id) {
   p.tipo = "REVISÃO";
   if (cod.trim()) p.cod = cod.trim();
   pushHistory(p, "🔄 RETORNOU PARA REVISÃO", motivo || "Nova revisão criada.");
-  saveData(); updateViews(); switchDraftsmanTab("fila"); 
+  saveData(); switchDraftsmanTab("fila"); updateBadges();
   toast("Projeto voltou para a fila como REVISÃO.", "info");
 }
 
@@ -1542,7 +1482,7 @@ async function toggleImpediment(id) {
     p.isImpeded = true;
     pushHistory(p, "🔴 PAUSADO", obs);
   }
-  saveData(); updateViews();
+  saveData(); renderProjects();
 }
 
 async function toggleRework(id) {
@@ -1552,14 +1492,13 @@ async function toggleRework(id) {
     if (obs === null) return;
     p.reworkType = null;
     pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Revisão finalizada.");
-    saveData(); updateViews();
+    saveData(); renderProjects();
   } else {
     reworkProjectId = id;
     document.getElementById("rework-obs-input").value = "";
     document.getElementById("rework-modal").classList.remove("hidden");
   }
 }
-
 function closeReworkModal(confirm) {
   document.getElementById("rework-modal").classList.add("hidden");
   if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
@@ -1569,7 +1508,7 @@ function closeReworkModal(confirm) {
   if (p) {
     p.reworkType = type.toLowerCase();
     pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Motivo não informado.");
-    saveData(); updateViews();
+    saveData(); renderProjects();
   }
   reworkProjectId = null;
 }
@@ -1581,7 +1520,6 @@ function openDateModal(id, i) {
   document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date);
   document.getElementById("date-modal").classList.remove("hidden");
 }
-
 function closeDateModal(confirm) {
   document.getElementById("date-modal").classList.add("hidden");
   if (confirm && dateEditCtx.projectId !== null) {
@@ -1598,7 +1536,7 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   GRÁFICOS PARETO
+   GRÁFICOS PARETO — função unificada
 ================================================== */
 function populateGraphSelect() {
   const s = document.getElementById("graph-filter-select"); if (!s) return;
@@ -1628,7 +1566,10 @@ function renderPareto(context) {
   else if (selVal === "MEUS") target = (appData.projects || []).filter(p => p.owner === currentUser);
   else target = (appData.projects || []).filter(p => p.id === selVal);
 
-  const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
+  const hours = {};
+  STAGES.forEach(s => hours[s] = 0);
+  hours["Pausado / Impedido"] = 0;
+
   let total = target.length, sumCompleted = 0, countCompleted = 0;
 
   target.forEach(p => {
@@ -1654,7 +1595,7 @@ function renderPareto(context) {
       else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0];
       lastTime = t;
     });
-    if (Number(p.stageIndex) !== 8 && lastTime && curStage)
+    if (p.stageIndex !== 8 && lastTime && curStage)
       hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, Date.now());
   });
 
@@ -1726,7 +1667,7 @@ function exportReportPDF(id) {
   doc.text("HISTORICO DE ATIVIDADES", 14, y);
   const rows = (p.history||[]).map(h => [
     sanitizePDF(h.date||""), sanitizePDF(h.stage||""),
-    sanitizePDF(h.author||""), sanitizePDF(h.obs||"")+(h.driveUrl?`\n[${sanitizePDF(h.driveUrl)}]`:"")
+    sanitizePDF(h.author||""), sanitizePDF(h.obs||"")
   ]);
   doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows,
     theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3},
@@ -1737,14 +1678,14 @@ function exportReportPDF(id) {
 
 function exportDraftsmanReport() {
   if (!window.jspdf) return;
-  const list = (appData.projects||[]).filter(p => p.owner === currentUser && Number(p.stageIndex) < 8);
+  const list = (appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8);
   generateListPDF(list, `Relatorio de ${currentUser}`);
 }
 function exportManagerReport() {
   if (!window.jspdf) return;
-  let tab = managerTab === "fila"      ? (appData.projects||[]).filter(p => Number(p.stageIndex) === 0)
-          : managerTab === "andamento" ? (appData.projects||[]).filter(p => Number(p.stageIndex) > 0 && Number(p.stageIndex) < 8)
-          : (appData.projects||[]).filter(p => Number(p.stageIndex) >= 8);
+  let tab = managerTab === "fila"      ? (appData.projects||[]).filter(p => p.stageIndex === 0)
+          : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8)
+          : (appData.projects||[]).filter(p => p.stageIndex >= 8);
   generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`);
 }
 
@@ -1757,7 +1698,7 @@ function generateListPDF(list, title) {
   doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
   const rows = list.map(p => [
     sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"),
-    sanitizePDF(p.owner), sanitizePDF(STAGES[Number(p.stageIndex)]||"-")
+    sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")
   ]);
   doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows,
     theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9}
