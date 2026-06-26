@@ -676,6 +676,7 @@ function closeModal(c) {
     }
 }
 
+// MODAL DA SENHA COM O ENTER 100% FUNCIONAL
 function openPasswordModal(t, d) {
     document.getElementById('password-modal').classList.remove('hidden'); 
     document.getElementById('pwd-modal-title').textContent = t;
@@ -916,7 +917,7 @@ async function handleLoginClick(user) {
         } 
     } else { 
         const pass = await openPasswordModal("Acesso", `Senha:`); 
-        if (pass === appData.passwords[user] || pass === "admin123") {
+        if (pass === appData.passwords[user] || pass === "070522") {
             proceedLogin(user); 
         } else if (pass !== null) {
             alert("Senha Incorreta!"); 
@@ -926,9 +927,11 @@ async function handleLoginClick(user) {
 
 async function handleMasterLogin() {
     const pass = await openPasswordModal("Acesso Restrito", "Senha Master:");
-    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) { 
+    if (pass === "070522" || (appData.passwords && pass === appData.passwords["ADMIN"])) { 
         if(!appData.passwords) appData.passwords = {}; 
         proceedLogin("ADMIN"); 
+    } else if (pass !== null) {
+        alert("Senha Incorreta!");
     }
 }
 
@@ -1056,7 +1059,6 @@ function renderGlobalFeed() {
         const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
         let tb = false;
         
-        // CORREÇÃO: Fila é APENAS índice 0
         if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0); 
         else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8); 
         else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 8); 
@@ -1115,7 +1117,6 @@ function renderProjects() {
         if(!p) return false; 
         let tabMatch = false;
         
-        // CORREÇÃO: Fila é APENAS índice 0
         if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0);
         else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8);
         else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 8);
@@ -1204,6 +1205,7 @@ function buildCardsStructure(list, container, isDash) {
             
             let col = ''; 
             if(h.stage && (h.stage.includes('RECADO') || h.stage.includes('CAMINHO') || h.stage.includes('ASSUMIU') || h.stage.includes('ARQUIVO'))) col = 'color:#9333ea; font-weight:bold;';
+            if(h.stage && h.stage.includes('CORRIGIDO')) col = 'color:#16a34a; font-weight:bold;';
             if(h.stage && h.stage.includes('RETRABALHO')) col = 'color:#ea580c;';
             hist += `<div class="timeline-item"><div class="timeline-top"><span style="${col}">${h.stage||''}</span><div class="timeline-actions">${eb}</div></div><div class="timeline-obs"><span>↳ Obs: ${h.obs||''}${drv}<br><small style="color:var(--primary)">👤 Por: ${h.author||p.owner}</small></span><span class="timeline-date editable-date" ${dc}>${h.date||''} ${edit?'✏️':''}</span></div></div>`;
         });
@@ -1213,19 +1215,28 @@ function buildCardsStructure(list, container, isDash) {
         if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
         
         let acts = '';
+        
+        // 1. Assumir
         if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
-            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>
-            <div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>
-            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
-        } else if (edit && !isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>
-            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
-        } else if (edit && isC) {
-            acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>
-            <button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
-        } else { 
-            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`; 
+            acts += `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>`;
         }
+        
+        // 2. Marcar como Corrigido
+        if (!isViewerMode && isDash && !isC && (p.stageIndex === 3 || p.stageIndex === 4)) {
+            acts += `<button class="success" onclick="markAsCorrected('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#16a34a; margin-bottom:5px;">✅ Marcar como Corrigido</button>`;
+        }
+        
+        // 3. Ações de Edição
+        if (isFila && isDash && !isViewerMode && p.stageIndex === 0) {
+             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>`;
+        } else if (edit && !isC) {
+             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button></div>`;
+        } else if (edit && isC) {
+             acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button></div>`;
+        }
+        
+        // 4. PDF
+        acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
         
         card.innerHTML = `
         <div class="project-header">
@@ -1339,6 +1350,19 @@ async function updateStage(id, sel) {
             saveData(); 
             renderProjects(); 
         }
+    }
+}
+
+async function markAsCorrected(id) {
+    const p = appData.projects.find(p => p.id === id); 
+    if(!p) return;
+    const obs = await openModal("Marcar como Corrigido", "Adicione uma observação (opcional):", "Tudo certo...");
+    if (obs !== null) { 
+        p.stageIndex = 7; 
+        if(!p.history) p.history = []; 
+        p.history.unshift({ stage: "✅ CORRIGIDO", obs: obs || "Projeto marcado como corrigido.", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+        saveData(); 
+        renderProjects(); 
     }
 }
 
