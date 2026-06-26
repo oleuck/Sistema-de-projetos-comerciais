@@ -74,7 +74,7 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 .project-card.rework-interno { border-left-color: #9333ea; background-color: #faf5ff; }
 .project-card.rework-externo { border-left-color: #ea580c; background-color: #fff7ed; }
 .project-header { margin-bottom: 10px; }
-.project-title-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.project-title-container { display: flex; justify-content: space-between; align-items: start; gap: 10px; margin-bottom: 10px; }
 .project-header h2 { margin: 0; font-size: 1.3rem; word-break: break-word; color: #111827; }
 .draftsman-badge { display: inline-block; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #374151; margin-bottom: 10px; }
 .project-details-box { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 12px; color: #4b5563; line-height: 1.5; position: relative; }
@@ -487,20 +487,18 @@ setTimeout(() => {
 }, 200);
 
 window.addEventListener('load', () => {
-    // Timeout de fallback para destravar a tela se a net falhar 100%
     setTimeout(() => {
         iniciarSistemaSeguro();
     }, 2500); 
 });
 
-// A NOVA FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
+// FUNÇÃO DE SALVAMENTO COM A TRAVA ANTI-APAGÃO E BLOQUEIO VISUAL
 function saveData() {
     if (!firebaseSincronizado) { 
         localStorage.setItem('appData_teste_local', JSON.stringify(appData)); 
         return; 
     }
     
-    // A SUPER TRAVA: Se tentar salvar 0 projetos e a gente sabe que antes tinha projetos, aborta a missão!
     if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) {
         console.error("Tentativa de salvar banco vazio bloqueada pela Trava de Segurança!");
         return;
@@ -526,6 +524,22 @@ function saveData() {
     }
 }
 
+// INTELIGÊNCIA: AUTO-ASSUMIR PROJETOS DA FILA
+function autoAssumirSeFila(p) {
+    if (!currentUser || isViewerMode) return; 
+    if (p.owner === "Fila" || p.owner === "Sem Desenhista") {
+        const responsavelAntigo = p.owner;
+        p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
+        if(!p.history) p.history = [];
+        p.history.unshift({ 
+            stage: "🚀 ASSUMIU PROJETO", 
+            obs: `Assumiu automaticamente ao interagir com a obra.`, 
+            date: new Date().toLocaleString('pt-BR'), 
+            author: currentUser 
+        });
+    }
+}
+
 // MODAIS
 function openModal(t, d, p, v = '') {
     document.getElementById('custom-modal').classList.remove('hidden'); document.getElementById('modal-title').textContent = t;
@@ -537,6 +551,7 @@ function closeModal(c) {
     if (modalResolve) { modalResolve(c ? document.getElementById('modal-input').value : null); modalResolve = null; }
 }
 
+// MODAL DA SENHA COM O ENTER 100% FUNCIONAL
 function openPasswordModal(t, d) {
     document.getElementById('password-modal').classList.remove('hidden'); 
     document.getElementById('pwd-modal-title').textContent = t;
@@ -594,6 +609,7 @@ function closeDriveModal(c) {
         let u = document.getElementById('drive-url-input').value.trim(); const o = document.getElementById('drive-obs-input').value.trim();
         if (u) {
             const p = appData.projects.find(p => p.id === driveProjectId);
+            autoAssumirSeFila(p);
             if(!p.history) p.history = [];
             p.history.unshift({ stage: "📂 ARQUIVO/CAMINHO ANEXADO", obs: o ? `${o}` : "Diretório vinculado ao projeto.", driveUrl: u, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser });
             saveData(); updateViews();
@@ -621,6 +637,7 @@ function closeEditProjectModal(confirm) {
         const id = document.getElementById('ep-id').value;
         const p = appData.projects.find(proj => proj.id === id);
         if (p) {
+            autoAssumirSeFila(p);
             p.cod = document.getElementById('ep-cod').value.trim();
             p.cidade = document.getElementById('ep-cidade').value.trim();
             p.vendedor = document.getElementById('ep-vendedor').value;
@@ -645,7 +662,9 @@ function closeReworkModal(c) {
     document.getElementById('rework-modal').classList.add('hidden');
     if (c && reworkProjectId !== null) {
         const t = document.getElementById('rework-type-select').value; const o = document.getElementById('rework-obs-input').value;
-        const p = appData.projects.find(p => p.id === reworkProjectId); p.reworkType = t.toLowerCase();
+        const p = appData.projects.find(p => p.id === reworkProjectId); 
+        autoAssumirSeFila(p);
+        p.reworkType = t.toLowerCase();
         if(!p.history) p.history = [];
         p.history.unshift({ stage: `⚠️ RETRABALHO INICIADO - ${t}`, obs: o || "Motivo não informado", date: new Date().toLocaleString('pt-BR'), author: currentUser });
         saveData(); renderProjects();
@@ -695,14 +714,14 @@ async function handleLoginClick(user) {
         if (pass !== null && pass.trim() !== "") { appData.passwords[user] = pass; saveData(); proceedLogin(user); }
     } else {
         const pass = await openPasswordModal("Acesso Restrito", `Insira a sua senha:`);
-        if (pass === appData.passwords[user] || pass === "070522") { proceedLogin(user); } 
+        if (pass === appData.passwords[user] || pass === "admin123") { proceedLogin(user); } 
         else if (pass !== null) alert("Senha Incorreta!");
     }
 }
 
 async function handleMasterLogin() {
     const pass = await openPasswordModal("Acesso Restrito", "Insira a credencial de segurança (padrão: admin123):");
-    if (pass === "070522" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
+    if (pass === "admin123" || (appData.passwords && pass === appData.passwords["ADMIN"])) {
         if(!appData.passwords) appData.passwords = {};
         proceedLogin("ADMIN");
     } else if (pass !== null) { alert("Credencial incorreta!"); }
@@ -803,7 +822,11 @@ function closeCreateProjectModal(c) {
 async function editProjectName(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
     const n = await openModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
-    if (n) { p.name = n; saveData(); renderProjects(); }
+    if (n) { 
+        autoAssumirSeFila(p);
+        p.name = n; 
+        saveData(); renderProjects(); 
+    }
 }
 
 async function deleteProject(id) {
@@ -816,7 +839,13 @@ async function updateStage(id, sel) {
         const s = STAGES[idx] || 'Desconhecido';
         const obs = await openModal("Avançar", `Avançando para: ${s}`, "Recados...");
         if (obs === null) { sel.value = p.stageIndex; } 
-        else { p.stageIndex = idx; if(!p.history) p.history = []; p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+        else { 
+            autoAssumirSeFila(p);
+            p.stageIndex = idx; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: s, obs: obs || "Avançou", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); renderProjects(); 
+        }
     }
 }
 
@@ -857,7 +886,12 @@ async function createRevisaoFromCompleted(id) {
 async function registerEvent(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
     const obs = await openModal("Recado", "Insira o recado:", "...");
-    if (obs) { if(!p.history) p.history = []; p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); saveData(); updateViews(); }
+    if (obs) { 
+        autoAssumirSeFila(p);
+        if(!p.history) p.history = []; 
+        p.history.unshift({ stage: "📢 RECADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: isViewerMode ? "Visualizador" : currentUser }); 
+        saveData(); updateViews(); 
+    }
 }
 
 async function editHistoryItem(id, i) {
@@ -873,10 +907,22 @@ async function toggleImpediment(id) {
     const p = appData.projects.find(p => p.id === id); if(!p) return;
     if (p.isImpeded) {
         const obs = await openModal("Retomar", "Resolvido?", "Obs...");
-        if (obs !== null) { p.isImpeded = false; if(!p.history) p.history = []; p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+        if (obs !== null) { 
+            autoAssumirSeFila(p);
+            p.isImpeded = false; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "🟢 Retomado", obs: obs||"Liberado", date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); renderProjects(); 
+        }
     } else {
         const obs = await openModal("Pausar", "Motivo:", "Obrigatório");
-        if (obs) { p.isImpeded = true; if(!p.history) p.history = []; p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); saveData(); renderProjects(); }
+        if (obs) { 
+            autoAssumirSeFila(p);
+            p.isImpeded = true; 
+            if(!p.history) p.history = []; 
+            p.history.unshift({ stage: "🔴 PAUSADO", obs: obs, date: new Date().toLocaleString('pt-BR'), author: currentUser }); 
+            saveData(); renderProjects(); 
+        }
     }
 }
 
@@ -994,7 +1040,8 @@ function buildCardsStructure(list, container, isDash) {
         const isC = p.stageIndex >= 7; 
         const own = p.owner === currentUser; 
         const isMaster = currentUser === "ADMIN";
-        const edit = !isViewerMode && isDash && (own || isMaster || p.owner === "Fila" || p.owner === "Sem Desenhista");
+        const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
+        const edit = !isViewerMode && isDash && (own || isMaster || isFila);
         
         let cClass = isC ? 'completed' : (p.isImpeded ? 'impediment' : '');
         if (p.reworkType === 'interno' && !isC) cClass += ' rework-interno'; if (p.reworkType === 'externo' && !isC) cClass += ' rework-externo';
@@ -1029,14 +1076,19 @@ function buildCardsStructure(list, container, isDash) {
         if (!isC && p.reworkType === 'interno') bt = '🔄 REVISÃO: ERRO INTERNO'; if (!isC && p.reworkType === 'externo') bt = '🔄 REVISÃO: CLIENTE';
 
         let acts = '';
-        if (edit && !isC) {
+        if (isFila && isDash && !isViewerMode) {
+            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669; margin-bottom:5px;">🚀 Assumir Projeto e Desenhar</button>`;
+            acts += `<div style="display:flex; gap:8px; width:100%;"><button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir</button></div>`;
+            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+        } else if (edit && !isC) {
             acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶ Retomar':'⏸ Pausar'}</button><button class="danger" onclick="deleteProject('${p.id}')">Excluir Obra</button>`;
+            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
         } else if (edit && isC) {
             acts = `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button><button class="info" style="background:#0284c7;" onclick="openDriveModal('${p.id}')">📂 Anexar</button><button onclick="createRevisaoFromCompleted('${p.id}')" style="background:#ea580c; color:white; width:100%;">🔄 CRIAR REVISÃO</button>`;
-        } else if (!edit && isDash && !isC && (p.stageIndex === 0 || p.stageIndex === 2) && !isViewerMode) {
-            acts = `<button class="success" onclick="assumirProjeto('${p.id}')" style="width:100%; padding:10px; font-size:0.95rem; background:#059669;">🚀 Assumir Projeto e Desenhar</button>`;
+            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
+        } else {
+            acts += `<button class="info" style="background: #1f2937; width:100%; margin-top:5px;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
         }
-        acts += `<button class="info" style="background: #1f2937;" onclick="exportReportPDF('${p.id}')">📄 Dossier em PDF</button>`;
 
         card.innerHTML = `
         <div class="project-header">
