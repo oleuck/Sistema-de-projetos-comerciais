@@ -431,7 +431,6 @@ select { font-weight: 500; color: var(--primary); cursor: pointer; border-radius
 </div>
 
 <script>
-// COMUNICAÇÃO COM O SCRIPT PYTHON
 window.abrirPastaLocalPeloAjudante = function(caminho) {
     fetch('http://127.0.0.1:49152/abrir-pasta?caminho=' + encodeURIComponent(caminho))
     .then(res => res.text())
@@ -677,7 +676,6 @@ function closeModal(c) {
     }
 }
 
-// MODAL DA SENHA COM O ENTER 100% FUNCIONAL
 function openPasswordModal(t, d) {
     document.getElementById('password-modal').classList.remove('hidden'); 
     document.getElementById('pwd-modal-title').textContent = t;
@@ -1058,7 +1056,7 @@ function renderGlobalFeed() {
         const m = (p.name||'').toLowerCase().includes(src) || (p.cod||'').toLowerCase().includes(src) || (p.owner||'').toLowerCase().includes(src);
         let tb = false;
         
-        // CORREÇÃO: Fila é apenas o índice 0. Em andamento é do 1 ao 7.
+        // CORREÇÃO: Fila é APENAS índice 0
         if (managerCurrentTab === 'fila') tb = (p.stageIndex === 0); 
         else if (managerCurrentTab === 'andamento') tb = (p.stageIndex > 0 && p.stageIndex < 8); 
         else if (managerCurrentTab === 'concluidos') tb = (p.stageIndex >= 8); 
@@ -1117,7 +1115,7 @@ function renderProjects() {
         if(!p) return false; 
         let tabMatch = false;
         
-        // CORREÇÃO: Fila é apenas o índice 0. Em andamento é do 1 ao 7.
+        // CORREÇÃO: Fila é APENAS índice 0
         if (draftsmanCurrentTab === 'fila') tabMatch = (p.stageIndex === 0);
         else if (draftsmanCurrentTab === 'andamento') tabMatch = (p.stageIndex > 0 && p.stageIndex < 8);
         else if (draftsmanCurrentTab === 'concluidos') tabMatch = (p.stageIndex >= 8);
@@ -1645,7 +1643,7 @@ function exportReportPDF(id) {
         startY: 38,
         theme: 'plain',
         body: [
-            ['COD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
+            ['CÓD:', sanitizeForPDF(p.cod), 'Vendedor:', sanitizeForPDF(p.vendedor)],
             ['Tipo:', sanitizeForPDF(p.tipo), 'Probabilidade:', sanitizeForPDF(p.probabilidade)],
             ['Cidade:', sanitizeForPDF(p.cidade), 'Responsável Atual:', sanitizeForPDF(p.owner)]
         ],
