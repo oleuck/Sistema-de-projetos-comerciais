@@ -200,6 +200,41 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   border-radius: 99px; margin-left: 5px; vertical-align: middle;
 }
 
+/* ===== MODO TABELA (EXCEL) ===== */
+.table-responsive {
+  width: 100%; overflow-x: auto; background: var(--card); 
+  border-radius: var(--radius); box-shadow: var(--shadow); 
+  border: 1px solid var(--border); margin-bottom: 20px;
+}
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;
+  white-space: nowrap; font-family: 'Segoe UI', sans-serif;
+}
+.data-table th {
+  background: #581c87; /* Roxo escuro */
+  color: white; padding: 10px 12px; font-weight: 600; 
+  text-transform: uppercase; border-right: 1px solid #7e22ce;
+}
+.data-table th:last-child { border-right: none; }
+.data-table td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border); 
+  border-right: 1px solid var(--border); vertical-align: middle;
+}
+.data-table tr:hover { background: #f8fafc; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table td:last-child { border-right: none; }
+
+.badge-table {
+  padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; 
+  font-weight: 700; display: inline-block; text-align: center; min-width: 80px;
+}
+.badge-novo { background: #1d4ed8; color: white; }
+.badge-revisao { background: #b91c1c; color: white; }
+.badge-alta { background: #16a34a; color: white; }
+.badge-media { background: #f97316; color: white; }
+.badge-baixa { background: #ef4444; color: white; }
+.badge-stage { background: #e879f9; color: #4a044e; border-radius: 4px; padding: 3px 8px;}
+
 /* ===== KPI ===== */
 .kpi-container { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 .kpi-card {
@@ -260,31 +295,16 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 .info-divider { border: none; border-top: 1px dashed var(--border); margin: 6px 0; }
 
 .stage-select { margin: 0; font-weight: 600; color: var(--primary); }
-
-.status-label {
-  font-weight: 700; font-size: 0.88rem; color: var(--primary); padding: 4px 0;
-}
+.status-label { font-weight: 700; font-size: 0.88rem; color: var(--primary); padding: 4px 0; }
 
 /* ===== PROGRESS ===== */
-.progress-wrap {
-  width: 100%; background: var(--border); border-radius: 99px;
-  height: 10px; overflow: hidden;
-}
-.progress-bar {
-  height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa);
-  border-radius: 99px; transition: width 0.4s ease;
-}
+.progress-wrap { width: 100%; background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 99px; transition: width 0.4s ease; }
 
 /* ===== TIMELINE ===== */
-.timeline {
-  font-size: 0.84rem; background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius-sm); max-height: 210px; overflow-y: auto; padding: 10px;
-}
+.timeline { font-size: 0.84rem; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 210px; overflow-y: auto; padding: 10px; }
 .timeline-header { font-weight: 700; color: var(--text-light); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 8px; }
-.timeline-item {
-  padding: 8px 0; border-bottom: 1px dashed var(--border);
-  display: flex; flex-direction: column; gap: 3px;
-}
+.timeline-item { padding: 8px 0; border-bottom: 1px dashed var(--border); display: flex; flex-direction: column; gap: 3px; }
 .timeline-item:last-child { border-bottom: none; }
 .timeline-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
 .timeline-stage { font-weight: 700; flex: 1; }
@@ -292,9 +312,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 .timeline-obs { color: #4b5563; font-style: italic; }
 .timeline-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .timeline-author { font-size: 0.78rem; color: var(--primary); font-style: normal; font-weight: 600; }
-.timeline-date {
-  color: var(--text-light); font-size: 0.78rem; white-space: nowrap;
-}
+.timeline-date { color: var(--text-light); font-size: 0.78rem; white-space: nowrap; }
 .timeline-date.editable { cursor: pointer; border-bottom: 1px dashed var(--text-light); }
 .timeline-date.editable:hover { color: var(--primary); border-bottom-color: var(--primary); }
 
@@ -307,20 +325,9 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 .btn-pdf { width: 100%; background: #1f2937; margin-top: 2px; font-size: 0.84rem; }
 
 /* ===== MODAIS ===== */
-.modal-overlay {
-  position: fixed; inset: 0; background: var(--modal-bg);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 1000; backdrop-filter: blur(3px); padding: 16px;
-}
-.modal-content {
-  background: var(--card); padding: 24px; border-radius: 14px;
-  width: 100%; max-width: 480px; box-shadow: var(--shadow-lg);
-  animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto;
-}
-@keyframes modalIn {
-  from { opacity:0; transform: translateY(-16px) scale(0.96); }
-  to   { opacity:1; transform: translateY(0) scale(1); }
-}
+.modal-overlay { position: fixed; inset: 0; background: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); padding: 16px; }
+.modal-content { background: var(--card); padding: 24px; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
+@keyframes modalIn { from { opacity:0; transform: translateY(-16px) scale(0.96); } to { opacity:1; transform: translateY(0) scale(1); } }
 .modal-title { color: var(--primary); font-size: 1.2rem; margin-bottom: 6px; }
 .modal-desc  { color: var(--text-light); font-size: 0.9rem; margin-bottom: 14px; line-height: 1.5; }
 .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
@@ -328,21 +335,8 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 .form-grid.full { grid-template-columns: 1fr; }
 .form-grid > * { margin-bottom: 0; }
 
-/* ===== CHART ===== */
-.chart-container {
-  background: var(--card); padding: 20px; border-radius: var(--radius);
-  box-shadow: var(--shadow); margin-top: 16px; height: 430px;
-}
-
-/* ===== FIREBASE STATUS ===== */
-.firebase-dot {
-  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--warning); margin-right: 5px; transition: background 0.5s;
-}
-.firebase-dot.connected { background: var(--success); }
-.firebase-dot.error     { background: var(--danger); }
-
-/* ===== RESPONSIVE ===== */
+/* ===== CHART & RESPONSIVE ===== */
+.chart-container { background: var(--card); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 16px; height: 430px; }
 @media (max-width: 640px) {
   body { padding: 10px; }
   .projects-list { grid-template-columns: 1fr; }
@@ -504,7 +498,6 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
   </div>
 </div>
-
 <div class="container">
 
   <div id="view-profiles" class="hidden">
@@ -548,6 +541,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           <p style="margin:4px 0 0; color:var(--text-light); font-size:0.88rem;">Acompanhamento em tempo real — somente leitura.</p>
         </div>
         <div class="top-bar-actions">
+          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
           <select id="manager-sort-select" onchange="renderGlobalFeed()">
             <option value="DATE_DESC">Mais Recentes</option>
             <option value="DATE_ASC">Mais Antigos</option>
@@ -595,6 +589,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           <h2 id="dashboard-title" style="margin:0;">Área de Trabalho</h2>
         </div>
         <div class="top-bar-actions">
+          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
           <button class="ghost" onclick="changeMyPassword()" title="Alterar senha">🔑 Senha</button>
           <button id="admin-btn" class="hidden danger" onclick="openAdminModal()">⚙️ Equipe</button>
           <select id="user-filter-select" onchange="renderProjects()" style="max-width:200px;margin-bottom:0;">
@@ -617,7 +612,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Apagar meu perfil do sistema">🗑️ Excluir Meu Perfil</button>
+      <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()">🗑️ Excluir Meu Perfil</button>
       <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Projeto na Fila</button>
     </div>
 
@@ -643,9 +638,11 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
   </div>
 
-</div><script>
+</div>
+
+<script>
 /* ==================================================
-   CONSTANTES E ESTADO GLOBAL
+   CONSTANTES, LINKS EXTERNOS E ESTADO GLOBAL
 ================================================== */
 const STAGES = [
   "Aguardando Início (Fila)", // 0
@@ -669,6 +666,7 @@ const FIREBASE_CFG = {
 };
 
 const MASTER_KEY = "070522";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
 
 let db, docRef;
 let appData = { users: [], passwords: {}, projects: [] };
@@ -676,6 +674,7 @@ let currentUser   = null;
 let isViewerMode  = false;
 let managerTab    = "andamento";
 let draftsmanTab  = "fila";
+let viewMode      = "cards"; // 'cards' ou 'table'
 let fbSynced      = false;
 let activeCharts  = {};
 
@@ -688,7 +687,17 @@ let reworkProjectId = null;
 let maiorNumeroDeProjetosVistos = 0;
 
 /* ==================================================
-   TOAST (Mensagens na tela)
+   ALTERAR MODO DE VISUALIZAÇÃO (CARDS / TABELA EXCEL)
+================================================== */
+function toggleViewMode() {
+  viewMode = viewMode === "cards" ? "table" : "cards";
+  const label = viewMode === "cards" ? "📋 Ver em Tabela" : "📇 Ver em Cards";
+  document.querySelectorAll(".toggle-view-btn").forEach(btn => btn.innerHTML = label);
+  updateViews();
+}
+
+/* ==================================================
+   TOAST E SEGURANÇA (HAHSING)
 ================================================== */
 function toast(msg, type = "info", duration = 3500) {
   const c = document.getElementById("toast-container");
@@ -702,9 +711,6 @@ function toast(msg, type = "info", duration = 3500) {
   }, duration);
 }
 
-/* ==================================================
-   HASHING DE SENHA (Web Crypto API)
-================================================== */
 async function hashPassword(pass) {
   const enc = new TextEncoder().encode(pass);
   const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -716,9 +722,6 @@ async function checkPassword(stored, input) {
   return stored === await hashPassword(input);
 }
 
-/* ==================================================
-   DEBOUNCE para search
-================================================== */
 function debounce(fn, ms = 300) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
@@ -726,7 +729,7 @@ const debounceRenderProjects = debounce(() => renderProjects());
 const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
 
 /* ==================================================
-   MODAIS — helpers genéricos
+   MANIPULAÇÃO DE MODAIS GENÉRICOS
 ================================================== */
 function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
@@ -747,9 +750,6 @@ function closeCustomModal(confirm) {
     customModalResolve = null;
   }
 }
-document.getElementById("modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); closeCustomModal(true); }
-});
 
 function openPasswordModal(title, desc) {
   document.getElementById("pwd-modal-title").textContent = title;
@@ -767,9 +767,6 @@ function closePasswordModal(confirm) {
     passwordModalResolve = null;
   }
 }
-document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") { e.preventDefault(); closePasswordModal(true); }
-});
 
 function openConfirmModal(title, desc) {
   document.getElementById("confirm-title").textContent = title;
@@ -789,13 +786,10 @@ document.addEventListener("keydown", e => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
     });
-  if (customModalResolve)  { customModalResolve(null);  customModalResolve  = null; }
-  if (passwordModalResolve){ passwordModalResolve(null); passwordModalResolve = null; }
-  if (confirmModalResolve) { confirmModalResolve(false); confirmModalResolve  = null; }
 });
 
 /* ==================================================
-   DATA / HORA
+   TRATAMENTO DE DATAS E TRABALHO ÚTIL
 ================================================== */
 function dateToLocalString(ds) {
   try {
@@ -821,14 +815,10 @@ function parseDateBR(str) {
   } catch { return Date.now(); }
 }
 
-/* ==================================================
-   HORAS ÚTEIS
-================================================== */
 function getBusinessHours(startMs, endMs) {
   if (startMs >= endMs) return 0;
   let total = 0;
-  const cur = new Date(startMs);
-  cur.setHours(0, 0, 0, 0);
+  const cur = new Date(startMs); cur.setHours(0, 0, 0, 0);
   const end = new Date(endMs);
   while (cur <= end) {
     const day = cur.getDay();
@@ -845,7 +835,7 @@ function getBusinessHours(startMs, endMs) {
 }
 
 /* ==================================================
-   FIREBASE — INICIALIZAÇÃO
+   CONEXÃO SINCRO FIREBASE E TRAVA ANTI-APAGÃO
 ================================================== */
 function setFirebaseStatus(state) {
   const dot  = document.getElementById("firebase-dot");
@@ -857,23 +847,19 @@ function setFirebaseStatus(state) {
 function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
 
 function ensureDefaults(data) {
-  if (!data)             data = {};
-  if (!data.users)    data.users = [];
+  if (!data) data = {};
+  if (!data.users) data.users = [];
   if (!data.projects) data.projects = [];
-  if (!data.passwords)data.passwords = {};
+  if (!data.passwords) data.passwords = {};
   return data;
 }
 
 function bootUI() {
   hideLoader();
   appData = ensureDefaults(appData);
-  if (!currentUser && !isViewerMode) {
-    show("view-profiles"); renderProfiles();
-  } else if (isViewerMode) {
-    show("view-manager");  renderGlobalFeed();
-  } else {
-    show("view-dashboard"); renderProjects();
-  }
+  if (!currentUser && !isViewerMode) { show("view-profiles"); renderProfiles(); }
+  else if (isViewerMode) { show("view-manager"); renderGlobalFeed(); }
+  else { show("view-dashboard"); renderProjects(); }
 }
 
 function show(id) {
@@ -904,14 +890,8 @@ try {
   }, () => { setFirebaseStatus("error"); bootUI(); });
 } catch { bootUI(); }
 
-/* ==================================================
-   SALVAR DADOS
-================================================== */
 function saveData() {
-  if (!fbSynced) {
-    localStorage.setItem("appData_offline_bkp", JSON.stringify(appData));
-    return;
-  }
+  if (!fbSynced) { localStorage.setItem("appData_offline_bkp", JSON.stringify(appData)); return; }
   if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
   if (!docRef) return;
   docRef.set(appData).then(() => {
@@ -920,392 +900,312 @@ function saveData() {
 }
 
 /* ==================================================
-   HELPERS DE PROJETO
+   EXPORTAÇÃO EM SEGUNDO PLANO PARA GOOGLE PLANILHAS
 ================================================== */
-function findProject(id) { return (appData.projects || []).find(p => p.id === id) || null; }
-
-function pushHistory(p, stage, obs) {
-  if (!p.history) p.history = [];
-  const item = { stage, obs: obs || "", date: nowBR(), author: currentUser || "Visualizador" };
-  p.history.unshift(item);
+async function sendToGoogleSheets(p) {
+  if (!GOOGLE_SCRIPT_URL) return;
+  try {
+    const entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "";
+    const payload = {
+      vendedor: p.vendedor,
+      tipo: p.tipo,
+      probabilidade: p.probabilidade,
+      name: p.name,
+      cod: p.cod,
+      cidade: p.cidade,
+      date: entryDate,
+      owner: p.owner
+    };
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    console.log("Exportado com sucesso para a planilha.");
+  } catch (err) {
+    console.error("Falha no envio automático para o Google Sheets:", err);
+  }
 }
 
 /* ==================================================
-   BADGES NAS ABAS
+   CONTROLE DE LOGINS, PERFIS E FLUXOS
 ================================================== */
+function findProject(id) { return (appData.projects || []).find(p => p.id === id) || null; }
+function pushHistory(p, stage, obs) {
+  if (!p.history) p.history = [];
+  p.history.unshift({ stage, obs: obs || "", date: nowBR(), author: currentUser || "Visualizador" });
+}
+
 function updateBadges() {
   const projs = appData.projects || [];
   const setBadge = (id, count) => { const el = document.getElementById(id); if(el) el.textContent = count; };
   const getStage = p => Number(p.stageIndex) || 0;
 
-  // Badges da Gerência
-  setBadge("badge-fila",       projs.filter(p => getStage(p) === 0).length);
-  setBadge("badge-andamento",  projs.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
+  setBadge("badge-fila", projs.filter(p => getStage(p) === 0).length);
+  setBadge("badge-andamento", projs.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
   setBadge("badge-concluidos", projs.filter(p => getStage(p) >= 8).length);
 
-  // Badges do Desenhista
   if (currentUser) {
     const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
     const filtered = projs.filter(p => {
        const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
        if (isFila) return true;
        if (filterUser === "ALL") return true;
-       if (filterUser === "MEUS") return p.owner === currentUser;
-       return p.owner === filterUser;
+       return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
     });
-
-    setBadge("badge-d-fila",       filtered.filter(p => getStage(p) === 0).length);
-    setBadge("badge-d-andamento",  filtered.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
+    setBadge("badge-d-fila", filtered.filter(p => getStage(p) === 0).length);
+    setBadge("badge-d-andamento", filtered.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
     setBadge("badge-d-concluidos", filtered.filter(p => getStage(p) >= 8).length);
   }
 }
 
-/* ==================================================
-   PERFIS
-================================================== */
 function renderProfiles() {
-  const c = document.getElementById("profiles-container");
-  if (!c) return;
-  c.innerHTML = "";
+  const c = document.getElementById("profiles-container"); if (!c) return; c.innerHTML = "";
   (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
-    const div = document.createElement("div");
-    div.className = "profile-card";
+    const div = document.createElement("div"); div.className = "profile-card";
     div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${u}')">👤 ${u}</span>`;
     c.appendChild(div);
   });
 }
 
 async function addUser() {
-  const inp  = document.getElementById("new-user-name");
-  const name = inp.value.trim();
-  if (!name) return;
-  if (!appData.users) appData.users = [];
-  if (appData.users.includes(name) || name.toUpperCase() === "ADMIN") {
-    toast("Este nome já existe!", "warning"); return;
-  }
+  const inp = document.getElementById("new-user-name"); const name = inp.value.trim(); if (!name) return;
+  if (appData.users.includes(name) || name.toUpperCase() === "ADMIN") { toast("Nome existente!", "warning"); return; }
   const pass = await openPasswordModal("Criar Senha", `Defina a senha para "${name}":`);
   if (pass !== null && pass.trim()) {
-    appData.users.push(name);
-    appData.passwords[name] = await hashPassword(pass);
-    saveData(); inp.value = ""; renderProfiles();
-    toast(`${name} adicionado à equipe!`, "success");
+    appData.users.push(name); appData.passwords[name] = await hashPassword(pass);
+    saveData(); inp.value = ""; renderProfiles(); toast(`${name} adicionado!`, "success");
   }
 }
 
 async function deleteCurrentUser() {
-  const ok = await openConfirmModal("Excluir Perfil", `Deseja apagar permanentemente o perfil "${currentUser}"? Esta ação não pode ser desfeita.`);
+  const ok = await openConfirmModal("Excluir Perfil", `Deseja apagar permanentemente o perfil "${currentUser}"?`);
   if (!ok) return;
-  appData.users = appData.users.filter(u => u !== currentUser);
-  delete appData.passwords[currentUser];
+  appData.users = appData.users.filter(u => u !== currentUser); delete appData.passwords[currentUser];
   saveData(); logout();
 }
 
 function populateUserFilter() {
-  const sel = document.getElementById("user-filter-select");
-  if (!sel) return;
+  const sel = document.getElementById("user-filter-select"); if (!sel) return;
   sel.innerHTML = '<option value="ALL">Todos</option><option value="MEUS">Só os Meus</option>';
-  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => {
-    sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`;
-  });
+  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => { sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; });
   sel.value = currentUser === "ADMIN" ? "ALL" : "MEUS";
 }
 
 async function handleLoginClick(user) {
-  if (!appData.passwords) appData.passwords = {};
   const stored = appData.passwords[user];
   if (!stored) {
     const pass = await openPasswordModal("Criar Senha", `Crie uma senha para "${user}":`);
-    if (pass !== null && pass.trim()) {
-      appData.passwords[user] = await hashPassword(pass);
-      saveData(); proceedLogin(user);
-    }
+    if (pass !== null && pass.trim()) { appData.passwords[user] = await hashPassword(pass); saveData(); proceedLogin(user); }
   } else {
-    const pass = await openPasswordModal("Acesso", `Senha de ${user}:`);
-    if (pass === null) return;
-    if (pass === MASTER_KEY || await checkPassword(stored, pass)) {
-      proceedLogin(user);
-    } else {
-      toast("Senha incorreta.", "danger");
-    }
+    const pass = await openPasswordModal("Acesso", `Senha de ${user}:`); if (pass === null) return;
+    if (pass === MASTER_KEY || await checkPassword(stored, pass)) { proceedLogin(user); } else { toast("Senha incorreta.", "danger"); }
   }
 }
 
 async function handleMasterLogin() {
-  const pass = await openPasswordModal("Acesso Master", "Senha administrativa:");
-  if (pass === null) return;
-  const storedAdmin = appData.passwords?.["ADMIN"];
-  const ok = pass === MASTER_KEY || (storedAdmin && await checkPassword(storedAdmin, pass));
-  if (ok) {
-    if (!appData.users.includes("ADMIN")) appData.users.push("ADMIN");
-    proceedLogin("ADMIN");
-  } else {
-    toast("Senha incorreta.", "danger");
-  }
+  const pass = await openPasswordModal("Acesso Master", "Senha administrativa:"); if (pass === null) return;
+  const ok = pass === MASTER_KEY || (appData.passwords?.["ADMIN"] && await checkPassword(appData.passwords["ADMIN"], pass));
+  if (ok) { if (!appData.users.includes("ADMIN")) appData.users.push("ADMIN"); proceedLogin("ADMIN"); } else { toast("Senha incorreta.", "danger"); }
 }
 
 function proceedLogin(user) {
-  currentUser = user; isViewerMode = false;
-  show("view-dashboard");
+  currentUser = user; isViewerMode = false; show("view-dashboard");
   document.getElementById("dashboard-title").textContent = user === "ADMIN" ? "Área de Trabalho (Gestão)" : `Área de Trabalho — ${user}`;
   document.getElementById("admin-btn").classList.toggle("hidden", user !== "ADMIN");
   document.getElementById("delete-profile-btn").classList.toggle("hidden", user === "ADMIN");
   populateUserFilter(); switchDraftsmanTab("fila");
 }
 
-function proceedAsViewer() {
-  currentUser = null; isViewerMode = true;
-  show("view-manager"); switchManagerTab("andamento");
-}
-
-function logout() {
-  currentUser = null; isViewerMode = false;
-  show("view-profiles"); renderProfiles();
-}
-
+function proceedAsViewer() { currentUser = null; isViewerMode = true; show("view-manager"); switchManagerTab("andamento"); }
+function logout() { currentUser = null; isViewerMode = false; show("view-profiles"); renderProfiles(); }
 async function changeMyPassword() {
   const pass = await openPasswordModal("Alterar Senha", "Digite sua nova senha:");
-  if (pass !== null && pass.trim()) {
-    appData.passwords[currentUser] = await hashPassword(pass);
-    saveData(); toast("Senha atualizada com sucesso!", "success");
-  }
+  if (pass !== null && pass.trim()) { appData.passwords[currentUser] = await hashPassword(pass); saveData(); toast("Senha atualizada!", "success"); }
 }
 
 function openAdminModal() {
-  const list = document.getElementById("admin-users-list");
-  list.innerHTML = "";
+  const list = document.getElementById("admin-users-list"); list.innerHTML = "";
   (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
-    const row = document.createElement("div");
-    row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);";
+    const row = document.createElement("div"); row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);";
     row.innerHTML = `<strong>👤 ${u}</strong><button class="warning" style="padding:6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar Senha</button>`;
     list.appendChild(row);
   });
   document.getElementById("admin-modal").classList.remove("hidden");
 }
-
 async function changeUserPassword(u) {
   const pass = await openCustomModal("Alterar Senha", `Nova senha para ${u}:`, "Nova senha...");
-  if (pass !== null && pass.trim()) {
-    appData.passwords[u] = await hashPassword(pass);
-    saveData(); toast(`Senha de ${u} atualizada!`, "success");
-  }
+  if (pass !== null && pass.trim()) { appData.passwords[u] = await hashPassword(pass); saveData(); toast(`Senha de ${u} atualizada!`, "success"); }
 }
 
 /* ==================================================
-   RENDER GLOBAL (GERÊNCIA)
+   SISTEMA DE RENDERIZAÇÃO E FILTRAGEM DE TABELAS/CARDS
 ================================================== */
 function updateViews() { isViewerMode ? renderGlobalFeed() : renderProjects(); updateBadges(); }
 
 function switchManagerTab(tab) {
-  managerTab = tab;
-  ["fila","andamento","concluidos","graficos"].forEach(t =>
-    document.getElementById(`tab-${t}`)?.classList.toggle("active", tab === t)
-  );
+  managerTab = tab; ["fila","andamento","concluidos","graficos"].forEach(t => document.getElementById(`tab-${t}`)?.classList.toggle("active", tab === t));
   const isGraph = tab === "graficos";
   document.getElementById("global-feed-container").classList.toggle("hidden", isGraph);
   document.getElementById("view-graphics").classList.toggle("hidden", !isGraph);
-  if (isGraph) { populateGraphSelect(); renderPareto("manager"); }
-  else renderGlobalFeed();
+  if (isGraph) { populateGraphSelect(); renderPareto("manager"); } else renderGlobalFeed();
 }
 
 function renderGlobalFeed() {
-  const container = document.getElementById("global-feed-container");
-  if (!container) return;
-  const src    = (document.getElementById("manager-search")?.value || "").toLowerCase();
-  const sort   = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
-  const list   = filterAndSort(appData.projects || [], src, sort, managerTab);
-  buildCards(list, container, false);
+  const container = document.getElementById("global-feed-container"); if (!container) return;
+  const src = (document.getElementById("manager-search")?.value || "").toLowerCase();
+  const sort = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
+  const list = filterAndSort(appData.projects || [], src, sort, managerTab);
+  viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
   updateBadges();
 }
 
-/* ==================================================
-   RENDER DESENHISTA
-================================================== */
 function switchDraftsmanTab(tab) {
-  draftsmanTab = tab;
-  ["fila","andamento","concluidos","graficos"].forEach(t =>
-    document.getElementById(`tab-d-${t}`)?.classList.toggle("active", tab === t)
-  );
+  draftsmanTab = tab; ["fila","andamento","concluidos","graficos"].forEach(t => document.getElementById(`tab-d-${t}`)?.classList.toggle("active", tab === t));
   const isGraph = tab === "graficos";
   document.getElementById("projects-container").classList.toggle("hidden", isGraph);
   document.getElementById("view-draftsman-graphics").classList.toggle("hidden", !isGraph);
-  if (isGraph) { populateDraftsmanGraphSelect(); renderPareto("draftsman"); }
-  else renderProjects();
+  if (isGraph) { populateDraftsmanGraphSelect(); renderPareto("draftsman"); } else renderProjects();
 }
 
 function renderProjects() {
-  const container = document.getElementById("projects-container");
-  if (!container || draftsmanTab === "graficos") return;
+  const container = document.getElementById("projects-container"); if (!container || draftsmanTab === "graficos") return;
   container.innerHTML = "";
-  const src        = (document.getElementById("search-input")?.value || "").toLowerCase();
+  const src = (document.getElementById("search-input")?.value || "").toLowerCase();
   const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
-  const sort       = document.getElementById("sort-filter-select")?.value  || "DATE_DESC";
-
+  const sort = document.getElementById("sort-filter-select")?.value  || "DATE_DESC";
   let list = filterAndSort(appData.projects || [], src, sort, draftsmanTab);
 
-  // Filtro por usuário
   list = list.filter(p => {
     const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
     if (isFila) return true;
     if (filterUser === "ALL") return true;
-    if (filterUser === "MEUS") return p.owner === currentUser;
-    return p.owner === filterUser;
+    return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
   });
 
-  buildCards(list, container, true);
+  viewMode === "table" ? buildTable(list, container, true) : buildCards(list, container, true);
   updateBadges();
 }
 
 function filterAndSort(projects, search, sort, tab) {
   return projects
     .filter(p => {
-      if (!p) return false;
-      const stage = Number(p.stageIndex) || 0; 
-      const inTab = tab === "fila"      ? stage === 0
-                  : tab === "andamento" ? stage > 0 && stage < 8
-                  : tab === "concluidos"? stage >= 8
-                  : false;
+      if (!p) return false; const stage = Number(p.stageIndex) || 0; 
+      const inTab = tab === "fila" ? stage === 0 : tab === "andamento" ? stage > 0 && stage < 8 : tab === "concluidos" ? stage >= 8 : false;
       if (!inTab) return false;
-      if (sort === "TIPO_NOVO"    && p.tipo !== "NOVO")    return false;
+      if (sort === "TIPO_NOVO" && p.tipo !== "NOVO") return false;
       if (sort === "TIPO_REVISAO" && p.tipo !== "REVISÃO") return false;
-      const hay = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")).toLowerCase();
-      return hay.includes(search);
+      return ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")).toLowerCase().includes(search);
     })
     .sort((a, b) => {
-      if (sort === "VENDEDOR") {
-        const cmp = (a.vendedor||"").localeCompare(b.vendedor||"");
-        return cmp !== 0 ? cmp : b.id - a.id;
-      }
+      if (sort === "VENDEDOR") { const cmp = (a.vendedor||"").localeCompare(b.vendedor||""); return cmp !== 0 ? cmp : b.id - a.id; }
       return sort === "DATE_ASC" ? a.id - b.id : b.id - a.id;
     });
 }
 
 /* ==================================================
-   BUILD CARDS
+   MONTAGEM DA VIEW: TABELA EXCEL (READ ONLY)
+================================================== */
+function buildTable(list, container, isDash) {
+  container.style.display = "block"; container.innerHTML = "";
+  if (!list.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado nesta visualização.</p></div>`; return; }
+
+  let html = `
+    <p style="text-align:right; font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">⚠️ Modo de visualização somente leitura. Alterne para "Ver em Cards" para editar.</p>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vendedor</th><th>Tipo</th><th>Probabilidade</th><th>Situação (Etapa)</th><th>Cliente / Obra</th><th>CÓD</th><th>Cidade</th><th>Entrada (Fila)</th><th>Desenhista</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  list.forEach(p => {
+    if (!p) return; const stageVal = Number(p.stageIndex) || 0;
+    let stageName = p.isImpeded ? "PAUSADO" : (p.reworkType ? `REVISÃO (${p.reworkType})`.toUpperCase() : STAGES[stageVal]);
+    if (stageVal >= 8) stageName = "ENTREGUE";
+    let typeBadge = p.tipo === "REVISÃO" ? "badge-revisao" : "badge-novo";
+    let probBadge = p.probabilidade === "ALTA" ? "badge-alta" : (p.probabilidade === "MÉDIA" ? "badge-media" : "badge-baixa");
+    let entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "-";
+
+    html += `
+      <tr>
+        <td style="font-weight:700; color:#374151;">${p.vendedor || "-"}</td>
+        <td><span class="badge-table ${typeBadge}">${p.tipo || "NOVO"}</span></td>
+        <td><span class="badge-table ${probBadge}">${p.probabilidade || "-"}</span></td>
+        <td><span class="badge-stage">${stageName}</span></td>
+        <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis;" title="${p.name || ''}">${p.name || "-"}</td>
+        <td style="font-weight:600;">${p.cod || "-"}</td>
+        <td>${p.cidade || "-"}</td>
+        <td style="color:var(--text-light); font-size:0.8rem;">${entryDate}</td>
+        <td style="font-weight:600; color:var(--primary);">${p.owner}</td>
+      </tr>
+    `;
+  });
+  html += `</tbody></table></div>`; container.innerHTML = html;
+}
+
+/* ==================================================
+   MONTAGEM DA VIEW: CARDS DINÂMICOS COM INTERAÇÃO
 ================================================== */
 function buildCards(list, container, isDash) {
-  container.innerHTML = "";
-  if (!list.length) {
-    container.style.display = "block";
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado nesta visualização.</p></div>`;
-    return;
-  }
+  container.innerHTML = ""; if (!list.length) { container.style.display = "block"; container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado.</p></div>`; return; }
   container.style.display = "grid";
 
   list.forEach(p => {
-    if (!p) return;
-    const stageVal = Number(p.stageIndex) || 0;
-    const isC    = stageVal >= 8;
-    const isMine = p.owner === currentUser;
-    const isAdmin= currentUser === "ADMIN";
-    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
-    const canEdit= !isViewerMode && isDash && (isMine || isAdmin || isFila);
+    if (!p) return; const stageVal = Number(p.stageIndex) || 0;
+    const isC = stageVal >= 8; const isMine = p.owner === currentUser; const isAdmin = currentUser === "ADMIN";
+    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista"; const canEdit = !isViewerMode && isDash && (isMine || isAdmin || isFila);
 
     let cardClass = isC ? "completed" : (p.isImpeded ? "impediment" : "");
     if (!isC && p.reworkType === "interno") cardClass += " rework-int";
     if (!isC && p.reworkType === "externo") cardClass += " rework-ext";
 
     const progress = Math.round((stageVal / (STAGES.length - 1)) * 100);
+    const stageOpts = STAGES.map((s, i) => `<option value="${i}" ${i === stageVal ? "selected" : ""}>${i+1}. ${s}</option>`).join("");
 
-    // Seletor de etapas
-    const stageOpts = STAGES.map((s, i) =>
-      `<option value="${i}" ${i === stageVal ? "selected" : ""}>${i+1}. ${s}</option>`
-    ).join("");
-
-    // Histórico
     const histHTML = (p.history || []).map((h, i) => {
       if (!h) return "";
-      const canEditHist = canEdit;
-      const editBtns = canEditHist
-        ? `<div class="timeline-actions">
-             <button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})" title="Editar observação">✏️</button>
-             <button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})" title="Remover item">🗑️</button>
-           </div>` : "";
-      const dateAttr = canEditHist ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})" title="Clique para editar data"` : `class="timeline-date"`;
+      const editBtns = canEdit ? `<div class="timeline-actions"><button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})">🗑️</button></div>` : "";
+      const dateAttr = canEdit ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})"` : `class="timeline-date"`;
+      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") ? "color:var(--success);font-weight:700;" : "");
 
-      let stageStyle = "";
-      if (h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU")) stageStyle = "color:var(--purple);font-weight:700;";
-      if (h.stage?.includes("CORRIGIDO")) stageStyle = "color:var(--success);font-weight:700;";
-      if (h.stage?.includes("RETRABALHO")) stageStyle = "color:var(--orange);";
-
-      return `<div class="timeline-item">
-        <div class="timeline-top">
-          <span class="timeline-stage" style="${stageStyle}">${h.stage||""}</span>${editBtns}
-        </div>
+      return `<div class="timeline-item"><div class="timeline-top"><span class="timeline-stage" style="${sStyle}">${h.stage||""}</span>${editBtns}</div>
         <div class="timeline-obs">↳ ${h.obs||""}</div>
-        <div class="timeline-meta">
-          <span class="timeline-author">👤 ${h.author||p.owner}</span>
-          <span ${dateAttr}>${h.date||""}${canEditHist?" ✏️":""}</span>
-        </div>
-      </div>`;
+        <div class="timeline-meta"><span class="timeline-author">👤 ${h.author||p.owner}</span><span ${dateAttr}>${h.date||""}</span></div></div>`;
     }).join("");
 
-    // Status label
-    let statusLabel = p.isImpeded ? "⚠️ PAUSADO"
-      : isC ? "✅ CONCLUÍDO"
-      : !isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO"
-      : !isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO"
-      : "▶ " + (STAGES[stageVal] || "—");
+    let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
 
-    // Ações
     let actions = "";
-    if (isFila && isDash && !isViewerMode && stageVal === 0) {
-      actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
-    }
-    if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) {
-      actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
-    }
+    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
+    if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
 
-    const commonBtns = (isDash && canEdit || isViewerMode) ? `
-      <button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
-
-    if (isFila && isDash && !isViewerMode && stageVal === 0) {
-      actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
-    } else if (canEdit && !isC) {
-      actions += `<div class="actions-row">${commonBtns}
-        <button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?"▶":"⏸"}</button>
-        <button class="danger" onclick="deleteProject('${p.id}')">🗑️</button>
-      </div>`;
-    } else if (canEdit && isC) {
-      actions += `<div class="actions-row">${commonBtns}
-        <button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button>
-      </div>`;
-    }
+    const commonBtns = (isDash && canEdit || isViewerMode) ? `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
+    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
+    else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
+    else if (canEdit && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
 
-    const tipoBadge = `<span style="color:${p.tipo==="REVISÃO"?"var(--orange)":"var(--success)"}; font-weight:700;">${p.tipo||"-"}</span>`;
-
-    const card = document.createElement("div");
-    card.className = `project-card ${cardClass}`;
+    const card = document.createElement("div"); card.className = `project-card ${cardClass}`;
     card.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
         <span class="badge-owner">👤 ${p.owner}</span>
         ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Fechar Revisão" : "🔄 Retrabalho"}</button>` : ""}
       </div>
-
-      <div class="project-title-row">
-        <h2>${p.name||"Sem Nome"}</h2>
-        ${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')" title="Editar nome">✏️</button>` : ""}
-      </div>
-
+      <div class="project-title-row"><h2>${p.name||"Sem Nome"}</h2>${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ""}</div>
       <div class="info-box">
-        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')" title="Editar informações">⚙️</button>` : ""}
+        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')">⚙️</button>` : ""}
         <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
-        <div class="info-row"><span><strong>Tipo:</strong> ${tipoBadge}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
-        <hr class="info-divider">
-        <span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
+        <div class="info-row"><span><strong>Tipo:</strong> ${p.tipo||"-"}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
+        <hr class="info-divider"><span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
       </div>
-
       ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
-
       <div class="status-label">${statusLabel}</div>
-
       <div class="progress-wrap"><div class="progress-bar" style="width:${progress}%;"></div></div>
-
-      <div class="timeline">
-        <div class="timeline-header">📋 Histórico</div>
-        ${histHTML || '<div style="color:var(--text-light);font-size:0.82rem;">Nenhum registro ainda.</div>'}
-      </div>
-
+      <div class="timeline"><div class="timeline-header">📋 Histórico</div>${histHTML || '<div style="color:var(--text-light);">Nenhum registro.</div>'}</div>
       <div class="card-actions">${actions}</div>
     `;
     container.appendChild(card);
@@ -1313,174 +1213,98 @@ function buildCards(list, container, isDash) {
 }
 
 /* ==================================================
-   MODAIS DE EDIÇÃO DE PROJETO
+   CRUDS, MODIFICAÇÕES DE PROJETO E INTEGRANTE
 ================================================== */
 function openEditProjectModal(id) {
   const p = findProject(id); if (!p) return;
-  document.getElementById("ep-id").value = id;
-  document.getElementById("ep-cod").value  = p.cod || "";
-  document.getElementById("ep-cidade").value = p.cidade || "";
-  document.getElementById("ep-vendedor").value = p.vendedor || "";
-  document.getElementById("ep-tipo").value = p.tipo || "NOVO";
-  document.getElementById("ep-probabilidade").value = p.probabilidade || "";
+  document.getElementById("ep-id").value = id; document.getElementById("ep-cod").value = p.cod || "";
+  document.getElementById("ep-cidade").value = p.cidade || ""; document.getElementById("ep-vendedor").value = p.vendedor || "";
+  document.getElementById("ep-tipo").value = p.tipo || "NOVO"; document.getElementById("ep-probabilidade").value = p.probabilidade || "";
   document.getElementById("edit-project-modal").classList.remove("hidden");
 }
 function closeEditProjectModal(confirm) {
-  document.getElementById("edit-project-modal").classList.add("hidden");
-  if (!confirm) return;
-  const id = document.getElementById("ep-id").value;
-  const p  = findProject(id); if (!p) return;
-  p.cod          = document.getElementById("ep-cod").value.trim();
-  p.cidade       = document.getElementById("ep-cidade").value.trim();
-  p.vendedor     = document.getElementById("ep-vendedor").value;
-  p.tipo         = document.getElementById("ep-tipo").value;
-  p.probabilidade= document.getElementById("ep-probabilidade").value;
-  saveData(); updateViews(); toast("Informações atualizadas!", "success");
+  document.getElementById("edit-project-modal").classList.add("hidden"); if (!confirm) return;
+  const p = findProject(document.getElementById("ep-id").value); if (!p) return;
+  p.cod = document.getElementById("ep-cod").value.trim(); p.cidade = document.getElementById("ep-cidade").value.trim();
+  p.vendedor = document.getElementById("ep-vendedor").value; p.tipo = document.getElementById("ep-tipo").value;
+  p.probabilidade = document.getElementById("ep-probabilidade").value; saveData(); updateViews(); toast("Atualizado!", "success");
 }
 
 function openCreateProjectModal() {
-  ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
-  document.getElementById("cp-vendedor").value = "";
-  document.getElementById("cp-tipo").value = "NOVO";
-  document.getElementById("cp-probabilidade").value = "";
+  ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("cp-vendedor").value = ""; document.getElementById("cp-tipo").value = "NOVO"; document.getElementById("cp-probabilidade").value = "";
   document.getElementById("create-project-modal").classList.remove("hidden");
   requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
 }
 function closeCreateProjectModal(confirm) {
   if (!confirm) { document.getElementById("create-project-modal").classList.add("hidden"); return; }
-  const cli = document.getElementById("cp-cliente").value.trim();
-  if (!cli) { toast("Nome do cliente é obrigatório!", "warning"); return; }
+  const cli = document.getElementById("cp-cliente").value.trim(); if (!cli) { toast("Nome obrigatório!", "warning"); return; }
   if (!appData.projects) appData.projects = [];
-  appData.projects.unshift({
-    id: Date.now().toString(),
-    owner: "Fila",
-    name: cli,
-    stageIndex: 0,
-    isImpeded: false,
-    reworkType: null,
-    cod:          document.getElementById("cp-cod").value.trim(),
-    vendedor:     document.getElementById("cp-vendedor").value,
-    tipo:         document.getElementById("cp-tipo").value,
-    probabilidade:document.getElementById("cp-probabilidade").value,
-    cidade:       document.getElementById("cp-cidade").value.trim(),
-    history: [{
-      stage: STAGES[0],
-      obs: document.getElementById("cp-obs").value.trim() || "Adicionado à fila.",
-      date: nowBR(),
-      author: currentUser || "Visualizador"
-    }]
-  });
+
+  const newProj = {
+    id: Date.now().toString(), owner: "Fila", name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
+    cod: document.getElementById("cp-cod").value.trim(), vendedor: document.getElementById("cp-vendedor").value,
+    tipo: document.getElementById("cp-tipo").value, probabilidade: document.getElementById("cp-probabilidade").value,
+    cidade: document.getElementById("cp-cidade").value.trim(),
+    history: [{ stage: STAGES[0], obs: document.getElementById("cp-obs").value.trim() || "Adicionado à fila.", date: nowBR(), author: currentUser || "Visualizador" }]
+  };
+
+  appData.projects.unshift(newProj);
   document.getElementById("create-project-modal").classList.add("hidden");
   saveData(); updateBadges();
-  if (isViewerMode) switchManagerTab("fila"); else switchDraftsmanTab("fila");
-  toast("Projeto criado e colocado na fila!", "success");
+  isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
+  toast("Criado e inserido na Fila!", "success");
+
+  // Gatilho silencioso de exportação para as colunas A-Q do Google Sheets
+  sendToGoogleSheets(newProj);
 }
 
-/* ==================================================
-   AÇÕES DE PROJETO
-================================================== */
 async function editProjectName(id) {
   const p = findProject(id); if (!p) return;
-  const n = await openCustomModal("Editar Nome da Obra", "Qual o novo nome?", "Nome...", p.name);
+  const n = await openCustomModal("Editar Nome", "Qual o novo nome?", "Nome...", p.name);
   if (n !== null && n.trim()) { p.name = n.trim(); saveData(); updateViews(); }
 }
-
 async function deleteProject(id) {
-  const p = findProject(id);
-  const ok = await openConfirmModal("Excluir Projeto", `Deseja excluir permanentemente "${p?.name||"este projeto"}"? Esta ação não pode ser desfeita.`);
-  if (!ok) return;
-  appData.projects = appData.projects.filter(p => p.id !== id);
-  saveData(); updateViews(); updateBadges(); toast("Projeto excluído.", "info");
+  const p = findProject(id); const ok = await openConfirmModal("Excluir", `Apagar permanentemente "${p?.name}"?`);
+  if (!ok) return; appData.projects = appData.projects.filter(x => x.id !== id); saveData(); updateViews(); toast("Excluído.", "info");
 }
 
 async function updateStage(id, sel) {
-  const p = findProject(id); if (!p) return;
-  const idx = parseInt(sel.value);
-  if (p.stageIndex === idx) return;
-  const stageName = STAGES[idx] || "Desconhecido";
-  const obs = await openCustomModal("Avançar Etapa", `Avançando para: "${stageName}"`, "Observação (opcional)...");
+  const p = findProject(id); if (!p) return; const idx = parseInt(sel.value); if (p.stageIndex === idx) return;
+  const sName = STAGES[idx] || "Desconhecido"; const obs = await openCustomModal("Avançar Etapa", `Mudar para: "${sName}"`, "Obs...");
   if (obs === null) { sel.value = p.stageIndex; return; }
-
-  const wasFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
-  if (wasFila) {
-    p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-    pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido ao avançar a etapa.`);
-  }
-
-  p.stageIndex = idx;
-  const label = stageName === "Desenhista" ? "🔄 Retornou ao Desenhista" : stageName;
-  pushHistory(p, label, obs || "Etapa avançada.");
-  saveData(); renderProjects(); updateBadges();
+  if (p.owner === "Fila" || p.owner === "Sem Desenhista") { p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); }
+  p.stageIndex = idx; pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada.");
+  saveData(); updateViews();
 }
 
 async function markAsCorrected(id) {
-  const p = findProject(id); if (!p) return;
-  const obs = await openCustomModal("Marcar como Corrigido", "Observação (opcional):", "Tudo certo...");
-  if (obs === null) return;
-  p.stageIndex = 7;
-  pushHistory(p, "✅ CORRIGIDO", obs || "Marcado como corrigido.");
-  saveData(); renderProjects(); updateBadges();
+  const p = findProject(id); if (!p) return; const obs = await openCustomModal("Corrigido", "Obs (opcional):", "Tudo certo...");
+  if (obs === null) return; p.stageIndex = 7; pushHistory(p, "✅ CORRIGIDO", obs || "Corrigido."); saveData(); renderProjects();
 }
-
 async function assumirProjeto(id) {
-  const p = findProject(id); if (!p) return;
-  const anterior = p.owner;
-  p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-  p.stageIndex = 1;
-  pushHistory(p, "🚀 ASSUMIU PROJETO", `Puxado da fila. De [${anterior}] → [${p.owner}].`);
-  saveData(); updateBadges();
-  toast(`Você assumiu "${p.name}"!`, "success");
-  switchDraftsmanTab("andamento");
+  const p = findProject(id); if (!p) return; const ant = p.owner; p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
+  p.stageIndex = 1; pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); saveData(); updateBadges(); toast(`Você assumiu este projeto!`, "success"); switchDraftsmanTab("andamento");
 }
-
 async function createRevisaoFromCompleted(id) {
-  const p = findProject(id); if (!p) return;
-  const cod = await openCustomModal("Criar Revisão", "Novo CÓD para a revisão (opcional):", "Ex: 18455A...");
-  if (cod === null) return;
-  const motivo = await openCustomModal("Motivo da Revisão", "Por que está retornando?", "Descreva...");
-  if (motivo === null) return;
-  p.stageIndex = 0;
-  p.tipo = "REVISÃO";
-  if (cod.trim()) p.cod = cod.trim();
-  pushHistory(p, "🔄 RETORNOU PARA REVISÃO", motivo || "Nova revisão criada.");
-  saveData(); switchDraftsmanTab("fila"); updateBadges();
-  toast("Projeto voltou para a fila como REVISÃO.", "info");
+  const p = findProject(id); if (!p) return; const cod = await openCustomModal("Revisão", "Novo CÓD (opcional):", ""); if (cod === null) return;
+  const mot = await openCustomModal("Motivo", "Por que retornou?", "Descreva..."); if (mot === null) return;
+  p.stageIndex = 0; p.tipo = "REVISÃO"; if (cod.trim()) p.cod = cod.trim(); pushHistory(p, "🔄 RETORNOU PARA REVISÃO", mot || "Nova revisão.");
+  saveData(); switchDraftsmanTab("fila"); toast("Voltou como REVISÃO.", "info");
 }
 
-async function registerEvent(id) {
-  const p = findProject(id); if (!p) return;
-  const obs = await openCustomModal("Registrar Recado", "Insira o recado para o histórico:", "...");
-  if (obs) {
-    pushHistory(p, "📢 RECADO", obs);
-    saveData(); updateViews();
-  }
-}
-
-async function editHistoryItem(id, i) {
-  const p = findProject(id); if (!p || !p.history[i]) return;
-  const n = await openCustomModal("Editar Histórico", `Editando: ${p.history[i].stage}`, "Texto...", p.history[i].obs);
-  if (n !== null) { p.history[i].obs = n || "Sem obs."; saveData(); updateViews(); }
-}
-
-async function deleteHistoryItem(id, i) {
-  const ok = await openConfirmModal("Remover Item", "Remover este item do histórico?");
-  if (!ok) return;
-  const p = findProject(id);
-  if (p?.history) { p.history.splice(i, 1); saveData(); updateViews(); }
-}
+async function registerEvent(id) { const p = findProject(id); if (p) { const obs = await openCustomModal("Recado", "Insira o recado:", ""); if (obs) { pushHistory(p, "📢 RECADO", obs); saveData(); updateViews(); } } }
+async function editHistoryItem(id, i) { const p = findProject(id); if (p && p.history[i]) { const n = await openCustomModal("Editar Histórico", `Ajustar obs de: ${p.history[i].stage}`, "", p.history[i].obs); if (n !== null) { p.history[i].obs = n || "Sem obs."; saveData(); updateViews(); } } }
+async function deleteHistoryItem(id, i) { const ok = await openConfirmModal("Remover", "Remover este item?"); if (ok) { const p = findProject(id); if (p?.history) { p.history.splice(i, 1); saveData(); updateViews(); } } }
 
 async function toggleImpediment(id) {
   const p = findProject(id); if (!p) return;
   if (p.isImpeded) {
-    const obs = await openCustomModal("Retomar Projeto", "Como foi resolvido?", "Obs...");
-    if (obs === null) return;
-    p.isImpeded = false;
-    pushHistory(p, "🟢 RETOMADO", obs || "Liberado.");
+    const obs = await openCustomModal("Retomar", "Como foi resolvido?", "Obs..."); if (obs === null) return;
+    p.isImpeded = false; pushHistory(p, "🟢 RETOMADO", obs || "Liberado.");
   } else {
-    const obs = await openCustomModal("Pausar Projeto", "Motivo da pausa (obrigatório):", "Motivo...");
-    if (!obs) { toast("Informe o motivo da pausa.", "warning"); return; }
-    p.isImpeded = true;
-    pushHistory(p, "🔴 PAUSADO", obs);
+    const obs = await openCustomModal("Pausar", "Motivo (obrigatório):", ""); if (!obs) { toast("Informe o motivo.", "warning"); return; }
+    p.isImpeded = true; pushHistory(p, "🔴 PAUSADO", obs);
   }
   saveData(); renderProjects();
 }
@@ -1488,245 +1312,105 @@ async function toggleImpediment(id) {
 async function toggleRework(id) {
   const p = findProject(id); if (!p) return;
   if (p.reworkType) {
-    const obs = await openCustomModal("Fechar Revisão", "O retrabalho foi concluído? Descreva:", "Observações...");
-    if (obs === null) return;
-    p.reworkType = null;
-    pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Revisão finalizada.");
-    saveData(); renderProjects();
-  } else {
-    reworkProjectId = id;
-    document.getElementById("rework-obs-input").value = "";
-    document.getElementById("rework-modal").classList.remove("hidden");
-  }
+    const obs = await openCustomModal("Fechar Revisão", "Retrabalho concluído? Descreva:", ""); if (obs === null) return;
+    p.reworkType = null; pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Concluído."); saveData(); renderProjects();
+  } else { reworkProjectId = id; document.getElementById("rework-obs-input").value = ""; document.getElementById("rework-modal").classList.remove("hidden"); }
 }
 function closeReworkModal(confirm) {
-  document.getElementById("rework-modal").classList.add("hidden");
-  if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
-  const type = document.getElementById("rework-type-select").value;
-  const obs  = document.getElementById("rework-obs-input").value;
-  const p    = findProject(reworkProjectId);
-  if (p) {
-    p.reworkType = type.toLowerCase();
-    pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Motivo não informado.");
-    saveData(); renderProjects();
-  }
-  reworkProjectId = null;
+  document.getElementById("rework-modal").classList.add("hidden"); if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
+  const type = document.getElementById("rework-type-select").value; const obs = document.getElementById("rework-obs-input").value;
+  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado."); saveData(); renderProjects(); } reworkProjectId = null;
 }
 
-function openDateModal(id, i) {
-  if (isViewerMode) return;
-  dateEditCtx = { projectId: id, histIndex: i };
-  const p = findProject(id); if (!p?.history?.[i]) return;
-  document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date);
-  document.getElementById("date-modal").classList.remove("hidden");
-}
+function openDateModal(id, i) { if (isViewerMode) return; dateEditCtx = { projectId: id, histIndex: i }; const p = findProject(id); if (!p?.history?.[i]) return; document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date); document.getElementById("date-modal").classList.remove("hidden"); }
 function closeDateModal(confirm) {
-  document.getElementById("date-modal").classList.add("hidden");
-  if (confirm && dateEditCtx.projectId !== null) {
-    const val = document.getElementById("date-modal-input").value;
-    if (val) {
-      const p = findProject(dateEditCtx.projectId);
-      if (p?.history?.[dateEditCtx.histIndex]) {
-        p.history[dateEditCtx.histIndex].date = localStringToDate(val);
-        saveData(); updateViews();
-      }
-    }
-  }
-  dateEditCtx = { projectId: null, histIndex: null };
+  document.getElementById("date-modal").classList.add("hidden"); if (confirm && dateEditCtx.projectId !== null) {
+    const val = document.getElementById("date-modal-input").value; if (val) { const p = findProject(dateEditCtx.projectId); if (p?.history?.[dateEditCtx.histIndex]) { p.history[dateEditCtx.histIndex].date = localStringToDate(val); saveData(); updateViews(); } }
+  } dateEditCtx = { projectId: null, histIndex: null };
 }
 
 /* ==================================================
-   GRÁFICOS PARETO — função unificada
+   GERAÇÃO DE GRÁFICOS PARETO (CHART.JS)
 ================================================== */
-function populateGraphSelect() {
-  const s = document.getElementById("graph-filter-select"); if (!s) return;
-  s.innerHTML = '<option value="ALL">Geral — Todos os Projetos</option>';
-  (appData.projects || []).forEach(p => { s.innerHTML += `<option value="${p.id}">${p.name} (${p.owner})</option>`; });
-}
-
-function populateDraftsmanGraphSelect() {
-  const s = document.getElementById("draftsman-graph-select"); if (!s) return;
-  s.innerHTML = `<option value="MEUS">Meus Projetos (${currentUser})</option><option value="ALL">Geral da Empresa</option>`;
-  (appData.projects || []).filter(p => p.owner === currentUser || currentUser === "ADMIN").forEach(p => {
-    s.innerHTML += `<option value="${p.id}">Só: ${p.name}</option>`;
-  });
-}
+function populateGraphSelect() { const s = document.getElementById("graph-filter-select"); if (s) { s.innerHTML = '<option value="ALL">Geral — Todos os Projetos</option>'; (appData.projects || []).forEach(p => { s.innerHTML += `<option value="${p.id}">${p.name} (${p.owner})</option>`; }); } }
+function populateDraftsmanGraphSelect() { const s = document.getElementById("draftsman-graph-select"); if (s) { s.innerHTML = `<option value="MEUS">Meus Projetos (${currentUser})</option><option value="ALL">Geral da Empresa</option>`; (appData.projects || []).filter(p => p.owner === currentUser || currentUser === "ADMIN").forEach(p => { s.innerHTML += `<option value="${p.id}">Só: ${p.name}</option>`; }); } }
 
 function renderPareto(context) {
-  const isManager = context === "manager";
-  const canvasId  = isManager ? "paretoChart" : "draftsmanParetoChart";
-  const selectId  = isManager ? "graph-filter-select" : "draftsman-graph-select";
-  const chartKey  = canvasId;
+  const isManager = context === "manager"; const canvasId = isManager ? "paretoChart" : "draftsmanParetoChart";
+  const selVal = document.getElementById(isManager ? "graph-filter-select" : "draftsman-graph-select")?.value; if (!selVal) return;
+  let target = selVal === "ALL" ? (appData.projects || []) : (selVal === "MEUS" ? (appData.projects || []).filter(p => p.owner === currentUser) : (appData.projects || []).filter(p => p.id === selVal));
 
-  const selEl  = document.getElementById(selectId); if (!selEl) return;
-  const selVal = selEl.value;
-
-  let target;
-  if (selVal === "ALL")  target = appData.projects || [];
-  else if (selVal === "MEUS") target = (appData.projects || []).filter(p => p.owner === currentUser);
-  else target = (appData.projects || []).filter(p => p.id === selVal);
-
-  const hours = {};
-  STAGES.forEach(s => hours[s] = 0);
-  hours["Pausado / Impedido"] = 0;
-
+  const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
   let total = target.length, sumCompleted = 0, countCompleted = 0;
 
   target.forEach(p => {
-    if (!p.history) return;
-    const rev = [...p.history].reverse();
-    let startMs = null, endMs = null;
-    rev.forEach(ev => {
-      if (!ev) return;
-      if (!startMs && (ev.stage === STAGES[1] || ev.stage?.includes("ASSUMIU"))) startMs = parseDateBR(ev.date);
-      if (ev.stage === STAGES[8]) endMs = parseDateBR(ev.date);
-    });
-    if (startMs && endMs && endMs > startMs) {
-      sumCompleted += getBusinessHours(startMs, endMs); countCompleted++;
-    }
-
+    if (!p.history) return; const rev = [...p.history].reverse(); let startMs = null, endMs = null;
+    rev.forEach(ev => { if (!ev) return; if (!startMs && (ev.stage === STAGES[1] || ev.stage?.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); if (ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); });
+    if (startMs && endMs && endMs > startMs) { sumCompleted += getBusinessHours(startMs, endMs); countCompleted++; }
     let curStage = null, lastTime = null;
-    rev.forEach(ev => {
-      if (!ev) return;
-      const t = parseDateBR(ev.date);
-      if (curStage && lastTime) hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, t);
-      if (STAGES.includes(ev.stage))       curStage = ev.stage;
-      else if (ev.stage === "🔴 PAUSADO")  curStage = "Pausado / Impedido";
-      else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0];
-      lastTime = t;
-    });
-    if (p.stageIndex !== 8 && lastTime && curStage)
-      hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, Date.now());
+    rev.forEach(ev => { if (!ev) return; const t = parseDateBR(ev.date); if (curStage && lastTime) hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, t); if (STAGES.includes(ev.stage)) curStage = ev.stage; else if (ev.stage === "🔴 PAUSADO") curStage = "Pausado / Impedido"; else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0]; lastTime = t; });
+    if (p.stageIndex !== 8 && lastTime && curStage) hours[curStage] = (hours[curStage] || 0) + getBusinessHours(lastTime, Date.now());
   });
 
   if (isManager) {
-    if (document.getElementById("kpi-total"))     document.getElementById("kpi-total").textContent = total;
-    if (document.getElementById("kpi-avg-time"))  document.getElementById("kpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
+    if (document.getElementById("kpi-total")) document.getElementById("kpi-total").textContent = total;
+    if (document.getElementById("kpi-avg-time")) document.getElementById("kpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
     if (document.getElementById("kpi-completed")) document.getElementById("kpi-completed").textContent = countCompleted;
   } else {
-    if (document.getElementById("dkpi-total"))    document.getElementById("dkpi-total").textContent = total;
+    if (document.getElementById("dkpi-total")) document.getElementById("dkpi-total").textContent = total;
     if (document.getElementById("dkpi-avg-time")) document.getElementById("dkpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
   }
 
   const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
-  const totalH = items.reduce((s,[,h]) => s+h, 0);
-  let cumulative = 0;
+  const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
   const labels = [], bars = [], line = [];
-  items.forEach(([s, h]) => {
-    labels.push(s); bars.push(h.toFixed(1));
-    cumulative += h;
-    line.push(((cumulative/totalH)*100).toFixed(1));
-  });
+  items.forEach(([s, h]) => { labels.push(s); bars.push(h.toFixed(1)); cumulative += h; line.push(((cumulative/totalH)*100).toFixed(1)); });
   if (!labels.length) { labels.push("Sem dados"); bars.push(0); line.push(0); }
 
-  if (activeCharts[chartKey]) activeCharts[chartKey].destroy();
+  if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
   const canvas = document.getElementById(canvasId); if (!canvas) return;
-  activeCharts[chartKey] = new Chart(canvas.getContext("2d"), {
+  activeCharts[canvasId] = new Chart(canvas.getContext("2d"), {
     type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "% Acumulada", data: line, type: "line", borderColor: "#dc2626", yAxisID: "y1", tension: 0.3, pointRadius: 4 },
-        { label: "Horas", data: bars, backgroundColor: isManager ? "#2563eb" : "#4f46e5", yAxisID: "y" }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        y:  { position: "left", title: { display: true, text: "Horas úteis" } },
-        y1: { position: "right", max: 105, title: { display: true, text: "% Acumulado" }, grid: { drawOnChartArea: false } }
-      },
-      plugins: { legend: { position: "top" } }
-    }
+    data: { labels, datasets: [{ label: "% Acumulada", data: line, type: "line", borderColor: "#dc2626", yAxisID: "y1", tension: 0.3, pointRadius: 4 }, { label: "Horas", data: bars, backgroundColor: isManager ? "#2563eb" : "#4f46e5", yAxisID: "y" }] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: "left", title: { display: true, text: "Horas úteis" } }, y1: { position: "right", max: 105, title: { display: true, text: "% Acumulado" }, grid: { drawOnChartArea: false } } } }
   });
 }
 
 /* ==================================================
-   PDF EXPORT
+   RELATÓRIOS E COMPILADOR EM JSPDF
 ================================================== */
-function sanitizePDF(t) {
-  return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,"");
-}
+function sanitizePDF(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,""); }
 function exportReportPDF(id) {
-  if (!window.jspdf?.jsPDF) { toast("Gerador de PDF não disponível.", "warning"); return; }
-  const p = findProject(id); if (!p) return;
-  const doc = new window.jspdf.jsPDF();
-  doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235);
-  doc.text("DOSSIER DO PROJETO", 14, 22);
-  doc.setFontSize(14); doc.setTextColor(0,0,0);
-  doc.text(`Obra: ${sanitizePDF(p.name)}`, 14, 32);
-  doc.autoTable({ startY:38, theme:"plain",
-    body:[
-      ["COD:",sanitizePDF(p.cod),"Vendedor:",sanitizePDF(p.vendedor)],
-      ["Tipo:",sanitizePDF(p.tipo),"Probabilidade:",sanitizePDF(p.probabilidade)],
-      ["Cidade:",sanitizePDF(p.cidade),"Responsavel:",sanitizePDF(p.owner)]
-    ], styles:{cellPadding:2,fontSize:11}
-  });
-  let y = doc.lastAutoTable.finalY + 10;
-  doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235);
-  doc.text("HISTORICO DE ATIVIDADES", 14, y);
-  const rows = (p.history||[]).map(h => [
-    sanitizePDF(h.date||""), sanitizePDF(h.stage||""),
-    sanitizePDF(h.author||""), sanitizePDF(h.obs||"")
-  ]);
-  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows,
-    theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3},
-    columnStyles:{3:{cellWidth:80}}
-  });
+  if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } const p = findProject(id); if (!p) return;
+  const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIER DO PROJETO", 14, 22);
+  doc.setFontSize(14); doc.setTextColor(0,0,0); doc.text(`Obra: ${sanitizePDF(p.name)}`, 14, 32);
+  doc.autoTable({ startY:38, theme:"plain", body:[["COD:",sanitizePDF(p.cod),"Vendedor:",sanitizePDF(p.vendedor)],["Tipo:",sanitizePDF(p.tipo),"Probabilidade:",sanitizePDF(p.probabilidade)],["Cidade:",sanitizePDF(p.cidade),"Responsavel:",sanitizePDF(p.owner)]], styles:{cellPadding:2,fontSize:11} });
+  let y = doc.lastAutoTable.finalY + 10; doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235); doc.text("HISTORICO DE ATIVIDADES", 14, y);
+  const rows = (p.history||[]).map(h => [sanitizePDF(h.date||""), sanitizePDF(h.stage||""), sanitizePDF(h.author||""), sanitizePDF(h.obs||"")]);
+  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows, theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3}, columnStyles:{3:{cellWidth:80}} });
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-function exportDraftsmanReport() {
-  if (!window.jspdf) return;
-  const list = (appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8);
-  generateListPDF(list, `Relatorio de ${currentUser}`);
-}
-function exportManagerReport() {
-  if (!window.jspdf) return;
-  let tab = managerTab === "fila"      ? (appData.projects||[]).filter(p => p.stageIndex === 0)
-          : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8)
-          : (appData.projects||[]).filter(p => p.stageIndex >= 8);
-  generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`);
-}
-
+function exportDraftsmanReport() { if (window.jspdf) generateListPDF((appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8), `Relatorio de ${currentUser}`); }
+function exportManagerReport() { if (!window.jspdf) return; let tab = managerTab === "fila" ? (appData.projects||[]).filter(p => p.stageIndex === 0) : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8) : (appData.projects||[]).filter(p => p.stageIndex >= 8); generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`); }
 function generateListPDF(list, title) {
-  if (!window.jspdf?.jsPDF) return;
-  const doc = new window.jspdf.jsPDF();
-  doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(37,99,235);
-  doc.text(sanitizePDF(title), 14, 22);
-  doc.setFontSize(10); doc.setTextColor(100,100,100); doc.setFont("helvetica","normal");
-  doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
-  const rows = list.map(p => [
-    sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"),
-    sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")
-  ]);
-  doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows,
-    theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9}
-  });
+  if (!window.jspdf?.jsPDF) return; const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(37,99,235); doc.text(sanitizePDF(title), 14, 22);
+  doc.setFontSize(10); doc.setTextColor(100,100,100); doc.setFont("helvetica","normal"); doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
+  const rows = list.map(p => [sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"), sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")]);
+  doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows, theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9} });
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
 /* ==================================================
-   BACKUP
+   BACKUP INTERNO JSON
 ================================================== */
 function exportBackup() {
-  const d = new Date();
-  const name = `backup_projetos_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
-  const a = document.createElement("a");
-  a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
-  a.download = name; a.click();
-  toast("Backup gerado!", "success");
+  const d = new Date(); const name = `backup_projetos_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+  const a = document.createElement("a"); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); a.download = name; a.click(); toast("Backup gerado!", "success");
 }
 function importBackup(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      appData = JSON.parse(ev.target.result);
-      saveData(); renderProfiles();
-      toast("Backup restaurado com sucesso!", "success");
-    } catch { toast("Arquivo de backup inválido.", "danger"); }
-  };
+  const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+  reader.onload = ev => { try { appData = JSON.parse(ev.target.result); saveData(); renderProfiles(); toast("Restaurado com sucesso!", "success"); } catch { toast("Arquivo inválido.", "danger"); } };
   reader.readAsText(file);
 }
 </script>
