@@ -1051,8 +1051,11 @@ async function changeUserPassword(u) {
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
-  if (!panel || currentUser !== "ADMIN") {
-    if (panel) panel.classList.add("hidden");
+  if (!panel) return;
+
+  // Trava de segurança total: Só aparece se for o ADMIN de fato
+  if (currentUser !== "ADMIN" || isViewerMode) {
+    panel.classList.add("hidden");
     return;
   }
 
@@ -1070,7 +1073,6 @@ function updateAdminSuggestion() {
   let suggestions = [];
   let currIndex = lastIndex;
 
-  // Calcula de forma independente para cada desenhista sem bloquear o projeto nas outras linhas
   desenhistas.forEach((desenhista) => {
     let oldestProj = null;
     
@@ -1082,11 +1084,11 @@ function updateAdminSuggestion() {
         let v = (p.vendedor || "").toUpperCase();
         if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
         return v === checkName;
-      }).sort((a, b) => Number(a.id) - Number(b.id)); // O mais velho primeiro geral daquele vendedor
+      }).sort((a, b) => Number(a.id) - Number(b.id)); 
 
       if (projsVendedor.length > 0) {
         oldestProj = projsVendedor[0]; 
-        currIndex = checkIndex; // Avança o simulador para o próximo desenhista partir daqui
+        currIndex = checkIndex; 
         break;
       }
     }
@@ -1163,7 +1165,6 @@ function updateViews() {
   else renderProjects(); 
   
   updateBadges(); 
-  updateAdminSuggestion(); 
 }
 
 function switchManagerTab(tab) {
@@ -1206,6 +1207,9 @@ function renderProjects() {
   });
 
   viewMode === "table" ? buildTable(list, container, true) : buildCards(list, container, true);
+  
+  // Agora amarramos a Sugestão do Admin para atualizar sempre que a lista de projetos for redesenhada
+  updateAdminSuggestion();
 }
 
 function filterAndSort(projects, search, sort, tab) {
