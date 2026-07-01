@@ -606,26 +606,12 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
 
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: #faf5ff; padding: 16px;">
-        <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Sugestão Inteligente (Rodízio)</h3>
+        <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: #4b5563; margin-bottom: 12px;">
-            Com base no último projeto puxado da fila, a vez agora é da <strong><span id="sugg-vendedor" style="text-transform:uppercase;"></span></strong>. Este é o projeto mais antigo na espera:
+            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro) para cada desenhista ativo.
         </p>
-        <div class="table-responsive" style="margin-bottom: 12px; box-shadow:none; border:1px solid var(--border);">
-            <table class="data-table" style="background: white;">
-                <thead>
-                    <tr><th style="background:var(--purple);">CÓD</th><th style="background:var(--purple);">Cliente / Obra</th><th style="background:var(--purple);">Probabilidade</th><th style="background:var(--purple);">Entrada (Fila)</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td id="sugg-cod" style="font-weight:600;"></td>
-                        <td id="sugg-obra" style="white-space:normal;"></td>
-                        <td><span id="sugg-prob" class="badge-table" style="background:var(--warning); color:#000;"></span></td>
-                        <td id="sugg-date"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <button id="sugg-btn" class="success">🚀 Assumir Este Projeto Agora</button>
+        <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
+            </div>
     </div>
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -685,7 +671,7 @@ const FIREBASE_CFG = {
 const MASTER_KEY = "070522";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
 
-// A ordem padrão do rodízio
+// A ordem padrão do rodízio global
 const ROTACAO_VENDEDORES = ["CARLA", "JONES", "SHANA", "OUTRO"];
 
 let db, docRef;
@@ -1061,7 +1047,7 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO)
+   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO MÚLTIPLO)
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
@@ -1070,59 +1056,103 @@ function updateAdminSuggestion() {
     return;
   }
 
-  // Projetos na fila
   const filaProjs = (appData.projects || []).filter(p => Number(p.stageIndex) === 0);
-  if (filaProjs.length === 0) {
+  const desenhistas = (appData.users || []).filter(u => u !== "ADMIN");
+
+  // Se a fila estiver vazia ou não tiver desenhistas, esconde
+  if (filaProjs.length === 0 || desenhistas.length === 0) {
     panel.classList.add("hidden");
     return;
   }
 
-  // Determinar o próximo da lista de rodízio
   let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
-  if (lastIndex === -1) lastIndex = -1; // Se não tiver ninguém salvo, começa pelo primeiro
+  if (lastIndex === -1) lastIndex = -1;
 
-  let nextVendedor = null;
-  let oldestProj = null;
+  let suggestions = [];
+  let usedProjIds = new Set();
+  let currIndex = lastIndex;
+  let loopCount = 0;
 
-  // Busca quem é o próximo que tem projeto aguardando
-  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-    const checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
-    const checkName = ROTACAO_VENDEDORES[checkIndex];
-    
-    // Procura todos projetos na fila desse vendedor
-    const projsVendedor = filaProjs.filter(p => {
-        let v = (p.vendedor || "").toUpperCase();
-        if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
-        return v === checkName;
-    });
+  // Tenta encontrar um projeto sequencial para cada desenhista
+  while (suggestions.length < Math.min(desenhistas.length, filaProjs.length) && loopCount < filaProjs.length * 4) {
+     currIndex = (currIndex + 1) % ROTACAO_VENDEDORES.length;
+     const checkName = ROTACAO_VENDEDORES[currIndex];
+     
+     const projsVendedor = filaProjs.filter(p => {
+         let v = (p.vendedor || "").toUpperCase();
+         if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
+         return v === checkName && !usedProjIds.has(p.id);
+     }).sort((a, b) => Number(a.id) - Number(b.id)); // O mais velho primeiro
 
-    if (projsVendedor.length > 0) {
-      nextVendedor = checkName;
-      // O mais velho tem o menor ID (pois o ID é criado com Date.now)
-      oldestProj = projsVendedor.sort((a, b) => Number(a.id) - Number(b.id))[0];
-      break;
-    }
+     if (projsVendedor.length > 0) {
+         suggestions.push(projsVendedor[0]);
+         usedProjIds.add(projsVendedor[0].id);
+     }
+     loopCount++;
   }
 
-  // Fallback: se por acaso bugar o filtro, ele só pega o mais velho geral
-  if (!oldestProj) {
-     oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-     nextVendedor = (oldestProj.vendedor || "Não Informado").toUpperCase();
+  // Se o rodízio não achar projetos suficientes (ex: todos da fila são do mesmo vendedor), preenche com os que sobraram
+  if (suggestions.length < Math.min(desenhistas.length, filaProjs.length)) {
+      const remaining = filaProjs.filter(p => !usedProjIds.has(p.id)).sort((a, b) => Number(a.id) - Number(b.id));
+      for(let r of remaining) {
+          if (suggestions.length < desenhistas.length) {
+              suggestions.push(r);
+              usedProjIds.add(r.id);
+          } else break;
+      }
   }
 
-  // Atualiza a tela
+  if (suggestions.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
   panel.classList.remove("hidden");
-  document.getElementById("sugg-vendedor").textContent = nextVendedor;
-  document.getElementById("sugg-cod").textContent = oldestProj.cod || "-";
-  document.getElementById("sugg-obra").textContent = oldestProj.name;
-  document.getElementById("sugg-prob").textContent = oldestProj.probabilidade || "-";
   
-  let entryDate = oldestProj.history && oldestProj.history.length > 0 ? oldestProj.history[oldestProj.history.length - 1].date : "-";
-  document.getElementById("sugg-date").textContent = entryDate;
+  // Monta a Tabela com cada Desenhista pareado com um Projeto
+  let html = `<table class="data-table" style="background: white; width:100%;">
+                <thead>
+                    <tr>
+                      <th style="background:var(--purple); width:20%;">Sugerido Para</th>
+                      <th style="background:var(--purple); width:15%;">Vendedor</th>
+                      <th style="background:var(--purple); width:10%;">CÓD</th>
+                      <th style="background:var(--purple); width:40%;">Obra</th>
+                      <th style="background:var(--purple); width:15%; text-align:center;">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+                
+  suggestions.forEach((proj, idx) => {
+      const dName = desenhistas[idx] || "Próximo Livre"; 
+      html += `<tr>
+          <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
+          <td style="font-weight:700; color:#374151;">${proj.vendedor || "-"}</td>
+          <td>${proj.cod || "-"}</td>
+          <td style="white-space:normal;">${proj.name}</td>
+          <td style="text-align:center;">
+             <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
+          </td>
+      </tr>`;
+  });
+  html += `</tbody></table>`;
+  
+  document.getElementById("sugg-table-container").innerHTML = html;
+}
 
-  // Refaz a ação do botão
-  const btn = document.getElementById("sugg-btn");
-  btn.onclick = () => assumirProjeto(oldestProj.id);
+async function adminAssignProject(id, desenhista) {
+  const p = findProject(id); if (!p) return;
+  const ok = await openConfirmModal("Atribuir Projeto", `Deseja transferir o projeto "${p.name}" para o desenhista ${desenhista}?`);
+  if (!ok) return;
+  
+  const ant = p.owner; 
+  p.owner = desenhista;
+  p.stageIndex = 1; 
+  appData.lastVendedor = p.vendedor; // Marca esse vendedor no histórico de rodízio global
+  
+  pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`); 
+  saveData(); 
+  updateViews(); 
+  toast(`Projeto transferido com sucesso para ${desenhista}!`, "success"); 
 }
 
 
@@ -1134,7 +1164,7 @@ function updateViews() {
   else renderProjects(); 
   
   updateBadges(); 
-  updateAdminSuggestion(); // Atualiza a sugestão toda vez que a tela for redesenhada
+  updateAdminSuggestion(); // Atualiza a tabela de rodízio toda vez que a tela for redesenhada
 }
 
 function switchManagerTab(tab) {
@@ -1343,7 +1373,7 @@ function closeCreateProjectModal(confirm) {
 
   appData.projects.unshift(newProj);
   document.getElementById("create-project-modal").classList.add("hidden");
-  saveData(); updateViews(); // <- Isso já salva, atualiza as views, badges e a Sugestão do Admin
+  saveData(); updateViews(); 
   
   isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
   toast("Criado e inserido na Fila!", "success");
@@ -1369,7 +1399,7 @@ async function updateStage(id, sel) {
   if (p.owner === "Fila" || p.owner === "Sem Desenhista") { 
       p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
       pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); 
-      appData.lastVendedor = p.vendedor; // Marca vendedor para o Rodízio
+      appData.lastVendedor = p.vendedor;
   }
   p.stageIndex = idx; pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada.");
   saveData(); updateViews();
@@ -1384,10 +1414,7 @@ async function assumirProjeto(id) {
   const p = findProject(id); if (!p) return; const ant = p.owner; 
   p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
   p.stageIndex = 1; 
-  
-  // Atualiza o rodízio
   appData.lastVendedor = p.vendedor;
-
   pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); 
   saveData(); updateViews(); 
   toast(`Você assumiu este projeto!`, "success"); 
