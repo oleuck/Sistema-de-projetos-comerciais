@@ -389,6 +389,14 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div><label for="cp-obs">Observação inicial</label>
       <textarea id="cp-obs" rows="2" placeholder="Recados, detalhes, pendências..."></textarea>
     </div>
+    
+    <div style="margin-top:10px; background:var(--bg); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal; color:var(--text); margin-bottom:0;">
+        <input type="checkbox" id="cp-skip-sheets" style="width:auto; margin:0; cursor:pointer;">
+        <span>Não enviar para o Google Planilhas (projeto antigo)</span>
+      </label>
+    </div>
+
     <div class="modal-buttons">
       <button class="secondary" onclick="closeCreateProjectModal(false)">Cancelar</button>
       <button class="success" onclick="closeCreateProjectModal(true)">✅ Colocar na Fila</button>
@@ -1233,6 +1241,11 @@ function closeEditProjectModal(confirm) {
 function openCreateProjectModal() {
   ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("cp-vendedor").value = ""; document.getElementById("cp-tipo").value = "NOVO"; document.getElementById("cp-probabilidade").value = "";
+  
+  // Limpa o novo checkbox
+  const skipCheckbox = document.getElementById("cp-skip-sheets");
+  if (skipCheckbox) skipCheckbox.checked = false;
+
   document.getElementById("create-project-modal").classList.remove("hidden");
   requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
 }
@@ -1255,8 +1268,14 @@ function closeCreateProjectModal(confirm) {
   isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
   toast("Criado e inserido na Fila!", "success");
 
-  // Gatilho silencioso de exportação para as colunas A-Q do Google Sheets
-  sendToGoogleSheets(newProj);
+  // Verifica se o checkbox de pular a planilha foi marcado
+  const skipSheets = document.getElementById("cp-skip-sheets").checked;
+  if (!skipSheets) {
+    // Gatilho silencioso de exportação para as colunas A-Q do Google Sheets
+    sendToGoogleSheets(newProj);
+  } else {
+    console.log("Exportação bloqueada pelo usuário (projeto antigo).");
+  }
 }
 
 async function editProjectName(id) {
