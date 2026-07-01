@@ -211,8 +211,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   white-space: nowrap; font-family: 'Segoe UI', sans-serif;
 }
 .data-table th {
-  background: #581c87; /* Roxo escuro */
-  color: white; padding: 10px 12px; font-weight: 600; 
+  background: #581c87; color: white; padding: 10px 12px; font-weight: 600; 
   text-transform: uppercase; border-right: 1px solid #7e22ce;
 }
 .data-table th:last-child { border-right: none; }
@@ -224,10 +223,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 .data-table tr:last-child td { border-bottom: none; }
 .data-table td:last-child { border-right: none; }
 
-.badge-table {
-  padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; 
-  font-weight: 700; display: inline-block; text-align: center; min-width: 80px;
-}
+.badge-table { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; display: inline-block; text-align: center; min-width: 80px; }
 .badge-novo { background: #1d4ed8; color: white; }
 .badge-revisao { background: #b91c1c; color: white; }
 .badge-alta { background: #16a34a; color: white; }
@@ -249,9 +245,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 /* ===== PROJECTS GRID ===== */
 .projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
-.empty-state {
-  grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-light);
-}
+.empty-state { grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-light); }
 .empty-state .empty-icon { font-size: 3rem; margin-bottom: 10px; }
 
 /* ===== PROJECT CARD ===== */
@@ -278,18 +272,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 .info-box {
   background: #f9fafb; border: 1px solid var(--border);
-  padding: 10px 34px 10px 12px; 
-  border-radius: var(--radius-sm);
+  padding: 10px 34px 10px 12px; border-radius: var(--radius-sm);
   font-size: 0.84rem; color: #4b5563; position: relative;
 }
-.info-box .edit-info-btn { 
-  position: absolute; 
-  top: 8px; 
-  right: 6px; 
-  background: transparent; 
-  border: none; 
-  padding: 4px; 
-}
+.info-box .edit-info-btn { position: absolute; top: 8px; right: 6px; background: transparent; border: none; padding: 4px; }
 .info-row { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; }
 .info-row:last-child { margin-bottom: 0; }
 .info-divider { border: none; border-top: 1px dashed var(--border); margin: 6px 0; }
@@ -619,6 +605,29 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       </div>
     </div>
 
+    <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: #faf5ff; padding: 16px;">
+        <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Sugestão Inteligente (Rodízio)</h3>
+        <p style="font-size: 0.88rem; color: #4b5563; margin-bottom: 12px;">
+            Com base no último projeto puxado da fila, a vez agora é da <strong><span id="sugg-vendedor" style="text-transform:uppercase;"></span></strong>. Este é o projeto mais antigo na espera:
+        </p>
+        <div class="table-responsive" style="margin-bottom: 12px; box-shadow:none; border:1px solid var(--border);">
+            <table class="data-table" style="background: white;">
+                <thead>
+                    <tr><th style="background:var(--purple);">CÓD</th><th style="background:var(--purple);">Cliente / Obra</th><th style="background:var(--purple);">Probabilidade</th><th style="background:var(--purple);">Entrada (Fila)</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="sugg-cod" style="font-weight:600;"></td>
+                        <td id="sugg-obra" style="white-space:normal;"></td>
+                        <td><span id="sugg-prob" class="badge-table" style="background:var(--warning); color:#000;"></span></td>
+                        <td id="sugg-date"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button id="sugg-btn" class="success">🚀 Assumir Este Projeto Agora</button>
+    </div>
+
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()">🗑️ Excluir Meu Perfil</button>
       <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Projeto na Fila</button>
@@ -676,13 +685,16 @@ const FIREBASE_CFG = {
 const MASTER_KEY = "070522";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
 
+// A ordem padrão do rodízio
+const ROTACAO_VENDEDORES = ["CARLA", "JONES", "SHANA", "OUTRO"];
+
 let db, docRef;
-let appData = { users: [], passwords: {}, projects: [] };
+let appData = { users: [], passwords: {}, projects: [], lastVendedor: null };
 let currentUser   = null;
 let isViewerMode  = false;
 let managerTab    = "andamento";
 let draftsmanTab  = "fila";
-let viewMode      = "cards"; // 'cards' ou 'table'
+let viewMode      = "cards"; 
 let fbSynced      = false;
 let activeCharts  = {};
 
@@ -859,6 +871,7 @@ function ensureDefaults(data) {
   if (!data.users) data.users = [];
   if (!data.projects) data.projects = [];
   if (!data.passwords) data.passwords = {};
+  if (!data.lastVendedor) data.lastVendedor = null;
   return data;
 }
 
@@ -1048,9 +1061,81 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
+   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO)
+================================================== */
+function updateAdminSuggestion() {
+  const panel = document.getElementById("admin-suggestion-panel");
+  if (!panel || currentUser !== "ADMIN") {
+    if (panel) panel.classList.add("hidden");
+    return;
+  }
+
+  // Projetos na fila
+  const filaProjs = (appData.projects || []).filter(p => Number(p.stageIndex) === 0);
+  if (filaProjs.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  // Determinar o próximo da lista de rodízio
+  let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
+  if (lastIndex === -1) lastIndex = -1; // Se não tiver ninguém salvo, começa pelo primeiro
+
+  let nextVendedor = null;
+  let oldestProj = null;
+
+  // Busca quem é o próximo que tem projeto aguardando
+  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+    const checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
+    const checkName = ROTACAO_VENDEDORES[checkIndex];
+    
+    // Procura todos projetos na fila desse vendedor
+    const projsVendedor = filaProjs.filter(p => {
+        let v = (p.vendedor || "").toUpperCase();
+        if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
+        return v === checkName;
+    });
+
+    if (projsVendedor.length > 0) {
+      nextVendedor = checkName;
+      // O mais velho tem o menor ID (pois o ID é criado com Date.now)
+      oldestProj = projsVendedor.sort((a, b) => Number(a.id) - Number(b.id))[0];
+      break;
+    }
+  }
+
+  // Fallback: se por acaso bugar o filtro, ele só pega o mais velho geral
+  if (!oldestProj) {
+     oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+     nextVendedor = (oldestProj.vendedor || "Não Informado").toUpperCase();
+  }
+
+  // Atualiza a tela
+  panel.classList.remove("hidden");
+  document.getElementById("sugg-vendedor").textContent = nextVendedor;
+  document.getElementById("sugg-cod").textContent = oldestProj.cod || "-";
+  document.getElementById("sugg-obra").textContent = oldestProj.name;
+  document.getElementById("sugg-prob").textContent = oldestProj.probabilidade || "-";
+  
+  let entryDate = oldestProj.history && oldestProj.history.length > 0 ? oldestProj.history[oldestProj.history.length - 1].date : "-";
+  document.getElementById("sugg-date").textContent = entryDate;
+
+  // Refaz a ação do botão
+  const btn = document.getElementById("sugg-btn");
+  btn.onclick = () => assumirProjeto(oldestProj.id);
+}
+
+
+/* ==================================================
    SISTEMA DE RENDERIZAÇÃO E FILTRAGEM DE TABELAS/CARDS
 ================================================== */
-function updateViews() { isViewerMode ? renderGlobalFeed() : renderProjects(); updateBadges(); }
+function updateViews() { 
+  if (isViewerMode) renderGlobalFeed(); 
+  else renderProjects(); 
+  
+  updateBadges(); 
+  updateAdminSuggestion(); // Atualiza a sugestão toda vez que a tela for redesenhada
+}
 
 function switchManagerTab(tab) {
   managerTab = tab; ["fila","andamento","concluidos","graficos"].forEach(t => document.getElementById(`tab-${t}`)?.classList.toggle("active", tab === t));
@@ -1066,7 +1151,6 @@ function renderGlobalFeed() {
   const sort = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
   const list = filterAndSort(appData.projects || [], src, sort, managerTab);
   viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
-  updateBadges();
 }
 
 function switchDraftsmanTab(tab) {
@@ -1093,7 +1177,6 @@ function renderProjects() {
   });
 
   viewMode === "table" ? buildTable(list, container, true) : buildCards(list, container, true);
-  updateBadges();
 }
 
 function filterAndSort(projects, search, sort, tab) {
@@ -1241,11 +1324,7 @@ function closeEditProjectModal(confirm) {
 function openCreateProjectModal() {
   ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("cp-vendedor").value = ""; document.getElementById("cp-tipo").value = "NOVO"; document.getElementById("cp-probabilidade").value = "";
-  
-  // Limpa o novo checkbox
-  const skipCheckbox = document.getElementById("cp-skip-sheets");
-  if (skipCheckbox) skipCheckbox.checked = false;
-
+  const skipCheckbox = document.getElementById("cp-skip-sheets"); if (skipCheckbox) skipCheckbox.checked = false;
   document.getElementById("create-project-modal").classList.remove("hidden");
   requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
 }
@@ -1264,18 +1343,13 @@ function closeCreateProjectModal(confirm) {
 
   appData.projects.unshift(newProj);
   document.getElementById("create-project-modal").classList.add("hidden");
-  saveData(); updateBadges();
+  saveData(); updateViews(); // <- Isso já salva, atualiza as views, badges e a Sugestão do Admin
+  
   isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
   toast("Criado e inserido na Fila!", "success");
 
-  // Verifica se o checkbox de pular a planilha foi marcado
   const skipSheets = document.getElementById("cp-skip-sheets").checked;
-  if (!skipSheets) {
-    // Gatilho silencioso de exportação para as colunas A-Q do Google Sheets
-    sendToGoogleSheets(newProj);
-  } else {
-    console.log("Exportação bloqueada pelo usuário (projeto antigo).");
-  }
+  if (!skipSheets) sendToGoogleSheets(newProj);
 }
 
 async function editProjectName(id) {
@@ -1292,7 +1366,11 @@ async function updateStage(id, sel) {
   const p = findProject(id); if (!p) return; const idx = parseInt(sel.value); if (p.stageIndex === idx) return;
   const sName = STAGES[idx] || "Desconhecido"; const obs = await openCustomModal("Avançar Etapa", `Mudar para: "${sName}"`, "Obs...");
   if (obs === null) { sel.value = p.stageIndex; return; }
-  if (p.owner === "Fila" || p.owner === "Sem Desenhista") { p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); }
+  if (p.owner === "Fila" || p.owner === "Sem Desenhista") { 
+      p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
+      pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); 
+      appData.lastVendedor = p.vendedor; // Marca vendedor para o Rodízio
+  }
   p.stageIndex = idx; pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada.");
   saveData(); updateViews();
 }
@@ -1301,15 +1379,26 @@ async function markAsCorrected(id) {
   const p = findProject(id); if (!p) return; const obs = await openCustomModal("Corrigido", "Obs (opcional):", "Tudo certo...");
   if (obs === null) return; p.stageIndex = 7; pushHistory(p, "✅ CORRIGIDO", obs || "Corrigido."); saveData(); renderProjects();
 }
+
 async function assumirProjeto(id) {
-  const p = findProject(id); if (!p) return; const ant = p.owner; p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-  p.stageIndex = 1; pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); saveData(); updateBadges(); toast(`Você assumiu este projeto!`, "success"); switchDraftsmanTab("andamento");
+  const p = findProject(id); if (!p) return; const ant = p.owner; 
+  p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
+  p.stageIndex = 1; 
+  
+  // Atualiza o rodízio
+  appData.lastVendedor = p.vendedor;
+
+  pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); 
+  saveData(); updateViews(); 
+  toast(`Você assumiu este projeto!`, "success"); 
+  switchDraftsmanTab("andamento");
 }
+
 async function createRevisaoFromCompleted(id) {
   const p = findProject(id); if (!p) return; const cod = await openCustomModal("Revisão", "Novo CÓD (opcional):", ""); if (cod === null) return;
   const mot = await openCustomModal("Motivo", "Por que retornou?", "Descreva..."); if (mot === null) return;
   p.stageIndex = 0; p.tipo = "REVISÃO"; if (cod.trim()) p.cod = cod.trim(); pushHistory(p, "🔄 RETORNOU PARA REVISÃO", mot || "Nova revisão.");
-  saveData(); switchDraftsmanTab("fila"); toast("Voltou como REVISÃO.", "info");
+  saveData(); updateViews(); switchDraftsmanTab("fila"); toast("Voltou como REVISÃO.", "info");
 }
 
 async function registerEvent(id) { const p = findProject(id); if (p) { const obs = await openCustomModal("Recado", "Insira o recado:", ""); if (obs) { pushHistory(p, "📢 RECADO", obs); saveData(); updateViews(); } } }
@@ -1325,20 +1414,20 @@ async function toggleImpediment(id) {
     const obs = await openCustomModal("Pausar", "Motivo (obrigatório):", ""); if (!obs) { toast("Informe o motivo.", "warning"); return; }
     p.isImpeded = true; pushHistory(p, "🔴 PAUSADO", obs);
   }
-  saveData(); renderProjects();
+  saveData(); updateViews();
 }
 
 async function toggleRework(id) {
   const p = findProject(id); if (!p) return;
   if (p.reworkType) {
     const obs = await openCustomModal("Fechar Revisão", "Retrabalho concluído? Descreva:", ""); if (obs === null) return;
-    p.reworkType = null; pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Concluído."); saveData(); renderProjects();
+    p.reworkType = null; pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Concluído."); saveData(); updateViews();
   } else { reworkProjectId = id; document.getElementById("rework-obs-input").value = ""; document.getElementById("rework-modal").classList.remove("hidden"); }
 }
 function closeReworkModal(confirm) {
   document.getElementById("rework-modal").classList.add("hidden"); if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
   const type = document.getElementById("rework-type-select").value; const obs = document.getElementById("rework-obs-input").value;
-  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado."); saveData(); renderProjects(); } reworkProjectId = null;
+  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado."); saveData(); updateViews(); } reworkProjectId = null;
 }
 
 function openDateModal(id, i) { if (isViewerMode) return; dateEditCtx = { projectId: id, histIndex: i }; const p = findProject(id); if (!p?.history?.[i]) return; document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date); document.getElementById("date-modal").classList.remove("hidden"); }
