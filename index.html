@@ -512,10 +512,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: #faf5ff; padding: 16px;">
         <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: #4b5563; margin-bottom: 12px;">
-            Este painel oferece <strong>o projeto da vez</strong> baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro). O mesmo projeto é oferecido a todos. Assim que um desenhista assumir, a fila anda.
+            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro) para cada desenhista ativo.
         </p>
         <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
-        </div>
+            </div>
     </div>
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -834,19 +834,17 @@ function saveData() {
 async function sendToGoogleSheets(p) {
   if (!GOOGLE_SCRIPT_URL) return;
   try {
-    // Pega a data e remove qualquer vírgula perdida
     const entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0].replace(",", "") : "";
-    
     const payload = {
       vendedor: p.vendedor,
       tipo: p.tipo,
       probabilidade: p.probabilidade,
-      situacao: "PROJETO", // Coluna D fixa
+      situacao: "PROJETO", // Coluna fixa
       name: p.name,
       cod: p.cod,
       cidade: p.cidade,
       date: entryDate,
-      owner: "" // Coluna Q sempre em branco no cadastro
+      owner: "" // Em branco no cadastro
     };
     
     await fetch(GOOGLE_SCRIPT_URL, {
@@ -977,7 +975,7 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN (O PROJETO DA VEZ PARA TODOS)
+   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO MÚLTIPLO 100% BLINDADO)
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
@@ -996,36 +994,53 @@ function updateAdminSuggestion() {
     return;
   }
 
+  // Lógica principal: Limpamos o último vendedor para garantir que a memória nunca bugue
   let lastIndex = ROTACAO_VENDEDORES.indexOf(normalizeVendedor(appData.lastVendedor));
   if (lastIndex === -1) lastIndex = -1;
 
-  let oldestProj = null;
-  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
-    let checkName = ROTACAO_VENDEDORES[checkIndex];
+  let suggestions = [];
+  let currIndex = lastIndex;
 
-    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
-                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
-    if (projsVendedor.length > 0) {
-      oldestProj = projsVendedor[0]; 
-      break; 
-    }
-  }
-
-  if (!oldestProj && filaProjs.length > 0) {
-    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-  }
-
-  if (!oldestProj) {
-    panel.classList.add("hidden");
-    return;
-  }
-
+  // Ordenamos para quem tem MENOS projetos aparecer primeiro na tela e receber a primeira sugestão
   let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
      let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
      let countB = (appData.projects || []).filter(p => p.owner === b && p.stageIndex > 0 && p.stageIndex < 8).length;
      return countA - countB;
   });
+
+  desenhistasOrdenados.forEach((desenhista) => {
+    let oldestProj = null;
+    
+    // Gira a roleta procurando pelo próximo vendedor
+    for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+      let checkIndex = (currIndex + i) % ROTACAO_VENDEDORES.length;
+      let checkName = ROTACAO_VENDEDORES[checkIndex];
+
+      // Busca sem remover do array (permite repetição do mesmo projeto pra desenhistas diferentes)
+      let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
+                                   .sort((a, b) => Number(a.id) - Number(b.id)); 
+
+      if (projsVendedor.length > 0) {
+        oldestProj = projsVendedor[0]; 
+        currIndex = checkIndex; // Trava a roleta neste vendedor para o próximo desenhista do loop começar daqui
+        break;
+      }
+    }
+    
+    if (!oldestProj && filaProjs.length > 0) {
+      oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+    }
+
+    if (oldestProj) {
+      suggestions.push({ desenhista: desenhista, proj: oldestProj });
+    }
+  });
+
+  const temSugestao = suggestions.length > 0;
+  if (!temSugestao) {
+    panel.classList.add("hidden");
+    return;
+  }
 
   panel.classList.remove("hidden");
   let html = `<table class="data-table" style="background: white; width:100%;">
@@ -1040,14 +1055,16 @@ function updateAdminSuggestion() {
                 </thead>
                 <tbody>`;
 
-  desenhistasOrdenados.forEach((dName) => {
+  suggestions.forEach((item) => {
+      const dName = item.desenhista;
+      const proj = item.proj;
       html += `<tr>
           <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:#374151;">${normalizeVendedor(oldestProj.vendedor)}</td>
-          <td>${oldestProj.cod || "-"}</td>
-          <td style="white-space:normal;">${oldestProj.name}</td>
+          <td style="font-weight:700; color:#374151;">${normalizeVendedor(proj.vendedor)}</td>
+          <td>${proj.cod || "-"}</td>
+          <td style="white-space:normal;">${proj.name}</td>
           <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
+              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
           </td>
       </tr>`;
   });
@@ -1063,6 +1080,7 @@ async function adminAssignProject(id, desenhista) {
   const ant = p.owner; 
   p.owner = desenhista;
   p.stageIndex = 1; 
+  // Limpando a memória do rodízio ao salvar!
   appData.lastVendedor = normalizeVendedor(p.vendedor);
   
   pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
@@ -1323,11 +1341,11 @@ async function updateStage(id, sel) {
   } else if (p.owner === "Fila" || p.owner === "Sem Desenhista") { 
       p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
       pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); 
-      appData.lastVendedor = normalizeVendedor(p.vendedor);
+      appData.lastVendedor = normalizeVendedor(p.vendedor); // Normalizado
   }
   
   p.stageIndex = idx;
-  pushHistory(p, sName, obs || "Etapa alterada."); // FIXED: Now strictly uses "Desenhista" in history to match chart
+  pushHistory(p, sName, obs || "Etapa alterada."); 
   saveData(); updateViews();
 }
 
@@ -1343,7 +1361,7 @@ async function assumirProjeto(id) {
   const p = findProject(id); if (!p) return; const ant = p.owner;
   p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
   p.stageIndex = 1; 
-  appData.lastVendedor = normalizeVendedor(p.vendedor);
+  appData.lastVendedor = normalizeVendedor(p.vendedor); // Normalizado
   pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); 
   saveData(); updateViews(); 
   toast(`Você assumiu este projeto!`, "success"); 
@@ -1425,7 +1443,6 @@ function renderPareto(context) {
   const selVal = document.getElementById(isManager ? "graph-filter-select" : "draftsman-graph-select")?.value; 
   if (!selVal) return;
 
-  // Lógica de Período (Data Inicial e Final)
   const startDateStr = document.getElementById(isManager ? "pareto-start-manager" : "pareto-start-draftsman")?.value;
   const endDateStr = document.getElementById(isManager ? "pareto-end-manager" : "pareto-end-draftsman")?.value;
   
@@ -1444,7 +1461,6 @@ function renderPareto(context) {
     let startMs = null, endMs = null;
     let pInFila = false;
 
-    // Acha inicio e fim do projeto pra KPI de tempo médio completo
     rev.forEach(ev => { 
         if (!ev) return; 
         if (!startMs && (ev.stage === STAGES[1] || ev.stage?.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
@@ -1466,7 +1482,6 @@ function renderPareto(context) {
             }
         } 
         
-        // Identificação segura de estágio (Resolve bug do 'Desenhista')
         if (STAGES.includes(ev.stage)) curStage = ev.stage; 
         else if (ev.stage === "🔴 PAUSADO") curStage = "Pausado / Impedido"; 
         else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0]; 
@@ -1475,7 +1490,6 @@ function renderPareto(context) {
         lastTime = t; 
     });
     
-    // Contabiliza tempo do estágio atual até o MOMENTO AGORA (se não foi entregue e tiver na janela de tempo)
     if (p.stageIndex !== 8 && lastTime && curStage) {
         let startOverlap = Math.max(lastTime, minBound);
         let endOverlap = Math.min(Date.now(), maxBound);
@@ -1488,11 +1502,9 @@ function renderPareto(context) {
     if (pInFila) countFila++;
   });
 
-  // KPI da Fila Médio
   const totalFilaHours = hours[STAGES[0]] || 0;
   const avgFila = countFila > 0 ? Math.round(totalFilaHours / countFila) : 0;
 
-  // REMOVE A FILA DO GRÁFICO (Mas mantém no KPI)
   delete hours[STAGES[0]];
 
   if (isManager) {
@@ -1506,7 +1518,6 @@ function renderPareto(context) {
     if (document.getElementById("dkpi-avg-fila")) document.getElementById("dkpi-avg-fila").textContent = avgFila + "h";
   }
 
-  // Prepara dados para o Chart.js
   const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
   const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
   const labels = [], bars = [], line = [];
