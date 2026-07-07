@@ -506,10 +506,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: #faf5ff; padding: 16px;">
         <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: #4b5563; margin-bottom: 12px;">
-            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro). O sistema prioriza sugerir projetos para quem possui menos projetos em andamento.
+            Este painel oferece <strong>o projeto da vez</strong> baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro). O mesmo projeto é oferecido a todos. Assim que um desenhista assumir, a fila anda.
         </p>
         <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
-            </div>
+        </div>
     </div>
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -954,13 +954,12 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO COM INTELIGÊNCIA)
+   SISTEMA DE SUGESTÃO ADMIN (O PROJETO DA VEZ PARA TODOS)
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
   if (!panel) return;
 
-  // Trava de segurança total: Só aparece se for o ADMIN de fato
   if (currentUser !== "ADMIN" || isViewerMode) {
     panel.classList.add("hidden");
     return;
@@ -977,57 +976,39 @@ function updateAdminSuggestion() {
   let lastIndex = ROTACAO_VENDEDORES.indexOf(normalizeVendedor(appData.lastVendedor));
   if (lastIndex === -1) lastIndex = -1;
 
-  let suggestions = [];
-  let currIndex = lastIndex;
-  
-  // Clonamos a fila para ir removendo os projetos sugeridos e evitar sugerir o mesmo 2x
-  let filaDisponivel = [...filaProjs];
+  // PASSO 1: Encontrar O ÚNICO projeto da vez (A bola da vez)
+  let oldestProj = null;
+  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
+    let checkName = ROTACAO_VENDEDORES[checkIndex];
 
-  // INTELIGÊNCIA DE DISTRIBUIÇÃO:
-  // Ordena os desenhistas para que os que possuem MENOS projetos em andamento 
-  // recebam as sugestões priorizadas primeiro.
+    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
+                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
+    if (projsVendedor.length > 0) {
+      oldestProj = projsVendedor[0]; 
+      break; // Achou o projeto da vez, para de procurar.
+    }
+  }
+
+  // Fallback: Se não encontrou projeto do rodízio, pega o mais antigo da fila livre
+  if (!oldestProj && filaProjs.length > 0) {
+    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+  }
+
+  // Se mesmo assim não houver projeto, esconde e sai
+  if (!oldestProj) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  // PASSO 2: Ordena os desenhistas (só pra priorizar visualmente quem tem menos projetos no momento)
   let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
      let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
      let countB = (appData.projects || []).filter(p => p.owner === b && p.stageIndex > 0 && p.stageIndex < 8).length;
      return countA - countB;
   });
 
-  desenhistasOrdenados.forEach((desenhista) => {
-    let oldestProj = null;
-    
-    // Procura o próximo vendedor disponível na fila seguindo a regra
-    for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-      let checkIndex = (currIndex + i) % ROTACAO_VENDEDORES.length;
-      let checkName = ROTACAO_VENDEDORES[checkIndex];
-
-      let projsVendedor = filaDisponivel.filter(p => normalizeVendedor(p.vendedor) === checkName)
-                                        .sort((a, b) => Number(a.id) - Number(b.id)); 
-
-      if (projsVendedor.length > 0) {
-        oldestProj = projsVendedor[0]; 
-        currIndex = checkIndex; 
-        break;
-      }
-    }
-    
-    // Fallback: Se não encontrou do rodízio por algum motivo bizarro, pega o mais antigo da fila
-    if (!oldestProj && filaDisponivel.length > 0) {
-      oldestProj = filaDisponivel.sort((a, b) => Number(a.id) - Number(b.id))[0];
-    }
-
-    if (oldestProj) {
-      suggestions.push({ desenhista: desenhista, proj: oldestProj });
-      // Remove da fila de disponibilidade para o próximo desenhista do loop não ganhar o mesmo!
-      filaDisponivel = filaDisponivel.filter(p => p.id !== oldestProj.id);
-    }
-  });
-
-  const temSugestao = suggestions.length > 0;
-  if (!temSugestao) {
-    panel.classList.add("hidden");
-    return;
-  }
-
+  // PASSO 3: Mostra O MESMO PROJETO para todos os desenhistas na tabela!
   panel.classList.remove("hidden");
   let html = `<table class="data-table" style="background: white; width:100%;">
                 <thead>
@@ -1041,16 +1022,14 @@ function updateAdminSuggestion() {
                 </thead>
                 <tbody>`;
 
-  suggestions.forEach((item) => {
-      const dName = item.desenhista;
-      const proj = item.proj;
+  desenhistasOrdenados.forEach((dName) => {
       html += `<tr>
           <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:#374151;">${normalizeVendedor(proj.vendedor)}</td>
-          <td>${proj.cod || "-"}</td>
-          <td style="white-space:normal;">${proj.name}</td>
+          <td style="font-weight:700; color:#374151;">${normalizeVendedor(oldestProj.vendedor)}</td>
+          <td>${oldestProj.cod || "-"}</td>
+          <td style="white-space:normal;">${oldestProj.name}</td>
           <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
+              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
           </td>
       </tr>`;
   });
@@ -1066,7 +1045,7 @@ async function adminAssignProject(id, desenhista) {
   const ant = p.owner; 
   p.owner = desenhista;
   p.stageIndex = 1; 
-  appData.lastVendedor = normalizeVendedor(p.vendedor); // Usando a normalização central
+  appData.lastVendedor = normalizeVendedor(p.vendedor);
   
   pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
   saveData(); 
