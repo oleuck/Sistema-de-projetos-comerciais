@@ -834,17 +834,21 @@ function saveData() {
 async function sendToGoogleSheets(p) {
   if (!GOOGLE_SCRIPT_URL) return;
   try {
-    const entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "";
+    // Pega a data e remove qualquer vírgula perdida
+    const entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0].replace(",", "") : "";
+    
     const payload = {
       vendedor: p.vendedor,
       tipo: p.tipo,
       probabilidade: p.probabilidade,
+      situacao: "PROJETO", // Coluna D fixa
       name: p.name,
       cod: p.cod,
       cidade: p.cidade,
       date: entryDate,
-      owner: p.owner
+      owner: "" // Coluna Q sempre em branco no cadastro
     };
+    
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
