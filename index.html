@@ -517,10 +517,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: #faf5ff; padding: 16px;">
         <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: #4b5563; margin-bottom: 12px;">
-            Este painel oferece <strong>o projeto da vez</strong> baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro). O mesmo projeto é oferecido a todos. Assim que um desenhista assumir, a fila anda.
+            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro) para cada desenhista ativo.
         </p>
         <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
-        </div>
+            </div>
     </div>
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -540,7 +540,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="view-draftsman-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
         <strong>Analisar:</strong>
-        <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
+        <select id="draftsman-graph-select" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:200px;"></select>
         
@@ -1260,7 +1260,6 @@ function buildCards(list, container, isDash) {
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     
-    // QUALQUER PESSOA LOGADA PODE CRIAR REVISÃO PARA UM PROJETO CONCLUÍDO
     else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     
     actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
@@ -1638,7 +1637,6 @@ function renderPareto(context) {
                             return [
                                 `Tempo Total: ${bars[idx]}h`,
                                 `Média: ${avgHover[idx]}h / proj`,
-                                `Histórico: ${countHover[idx]} projs passaram aqui`,
                                 `AGORA: ${currentHover[idx]} projs parados aqui`
                             ];
                         }
