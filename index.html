@@ -293,7 +293,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 <div id="create-revisao-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cr-modal-title">
   <div class="modal-content">
     <h3 id="cr-modal-title" class="modal-title" style="color:var(--orange);">🔄 Criar Revisão</h3>
-    <p class="modal-desc">O projeto voltará para a Fila como "REVISÃO".</p>
+    <p class="modal-desc">O projeto voltará para a Fila como "REVISÃO". O CÓD antigo ficará salvo no histórico.</p>
     <input type="hidden" id="cr-id">
     <label for="cr-cod">Novo CÓD (opcional)</label>
     <input type="text" id="cr-cod" placeholder="Ex: 18455-REV">
@@ -686,7 +686,7 @@ const debounceRenderProjects = debounce(() => renderProjects());
 const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
 
 /* ==================================================
-   MANIPULAÇÃO DE MODAIS GENÉRICOS
+   MANIPULAÇÃO DE MODAIS GENÉRICOS 
 ================================================== */
 function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
@@ -1014,7 +1014,7 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO MÚLTIPLO CORRIGIDO)
+   SISTEMA DE SUGESTÃO ADMIN
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
@@ -1036,49 +1036,33 @@ function updateAdminSuggestion() {
   let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
   if (lastIndex === -1) lastIndex = -1;
 
-  let suggestions = [];
-  let currIndex = lastIndex;
+  let oldestProj = null;
+  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
+    let checkName = ROTACAO_VENDEDORES[checkIndex];
+
+    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
+                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
+    if (projsVendedor.length > 0) {
+      oldestProj = projsVendedor[0]; 
+      break; 
+    }
+  }
+
+  if (!oldestProj && filaProjs.length > 0) {
+    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+  }
+
+  if (!oldestProj) {
+    panel.classList.add("hidden");
+    return;
+  }
 
   let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
      let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
      let countB = (appData.projects || []).filter(p => p.owner === b && p.stageIndex > 0 && p.stageIndex < 8).length;
      return countA - countB;
   });
-
-  desenhistasOrdenados.forEach((desenhista) => {
-    let oldestProj = null;
-    
-    for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-      let checkIndex = (currIndex + i) % ROTACAO_VENDEDORES.length;
-      let checkName = ROTACAO_VENDEDORES[checkIndex];
-
-      let projsVendedor = filaProjs.filter(p => {
-        let v = (p.vendedor || "").toUpperCase();
-        if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
-        return v === checkName;
-      }).sort((a, b) => Number(a.id) - Number(b.id)); 
-
-      if (projsVendedor.length > 0) {
-        oldestProj = projsVendedor[0]; 
-        currIndex = checkIndex; 
-        break;
-      }
-    }
-    
-    if (!oldestProj && filaProjs.length > 0) {
-      oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-    }
-
-    if (oldestProj) {
-      suggestions.push({ desenhista: desenhista, proj: oldestProj });
-    }
-  });
-
-  const temSugestao = suggestions.length > 0;
-  if (!temSugestao) {
-    panel.classList.add("hidden");
-    return;
-  }
 
   panel.classList.remove("hidden");
   let html = `<table class="data-table" style="background: white; width:100%;">
@@ -1093,16 +1077,14 @@ function updateAdminSuggestion() {
                 </thead>
                 <tbody>`;
 
-  suggestions.forEach((item) => {
-      const dName = item.desenhista;
-      const proj = item.proj;
+  desenhistasOrdenados.forEach((dName) => {
       html += `<tr>
           <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:#374151;">${proj.vendedor || "-"}</td>
-          <td>${proj.cod || "-"}</td>
-          <td style="white-space:normal;">${proj.name}</td>
+          <td style="font-weight:700; color:#374151;">${normalizeVendedor(oldestProj.vendedor)}</td>
+          <td>${oldestProj.cod || "-"}</td>
+          <td style="white-space:normal;">${oldestProj.name}</td>
           <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
+              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
           </td>
       </tr>`;
   });
@@ -1118,14 +1100,13 @@ async function adminAssignProject(id, desenhista) {
   const ant = p.owner; 
   p.owner = desenhista;
   p.stageIndex = 1; 
-  appData.lastVendedor = p.vendedor;
+  appData.lastVendedor = normalizeVendedor(p.vendedor);
   
   pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
   saveData(); 
   if (isViewerMode) renderGlobalFeed(); else renderProjects();
   toast(`Projeto transferido com sucesso para ${desenhista}!`, "success");
 }
-
 
 /* ==================================================
    SISTEMA DE RENDERIZAÇÃO E FILTRAGEM DE TABELAS/CARDS
@@ -1150,7 +1131,6 @@ function renderGlobalFeed() {
   const list = filterAndSort(appData.projects || [], src, sort, managerTab);
   
   viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
-  
   updateBadges(); 
 }
 
@@ -1192,7 +1172,10 @@ function filterAndSort(projects, search, sort, tab) {
       if (!inTab) return false;
       if (sort === "TIPO_NOVO" && p.tipo !== "NOVO") return false;
       if (sort === "TIPO_REVISAO" && p.tipo !== "REVISÃO") return false;
-      return ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")).toLowerCase().includes(search);
+      
+      // INCLUI OS CÓDIGOS ANTIGOS NA PESQUISA
+      const searchSpace = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")+" "+((p.previousCods||[]).join(" "))).toLowerCase();
+      return searchSpace.includes(search);
     })
     .sort((a, b) => {
       if (sort === "VENDEDOR") { const cmp = (a.vendedor||"").localeCompare(b.vendedor||""); return cmp !== 0 ? cmp : b.id - a.id; }
@@ -1226,6 +1209,12 @@ function buildTable(list, container, isDash) {
     let typeBadge = p.tipo === "REVISÃO" ? "badge-revisao" : "badge-novo";
     let probBadge = p.probabilidade === "ALTA" ? "badge-alta" : (p.probabilidade === "MÉDIA" ? "badge-media" : "badge-baixa");
     let entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "-";
+    
+    // Mostra os códs antigos sutilmente na tabela
+    let codDisplay = p.cod || "-";
+    if (p.previousCods && p.previousCods.length > 0) {
+        codDisplay += ` <span style="font-size:0.7rem; background:#fef3c7; color:#92400e; padding:2px 4px; border-radius:4px; margin-left:4px;" title="Versões anteriores: ${p.previousCods.join(', ')}">⚠️ ex: ${p.previousCods[p.previousCods.length-1]}</span>`;
+    }
 
     html += `
       <tr>
@@ -1234,7 +1223,7 @@ function buildTable(list, container, isDash) {
         <td><span class="badge-table ${probBadge}">${p.probabilidade || "-"}</span></td>
         <td><span class="badge-stage">${stageName}</span></td>
         <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis;" title="${p.name || ''}">${p.name || "-"}</td>
-        <td style="font-weight:600;">${p.cod || "-"}</td>
+        <td style="font-weight:600;">${codDisplay}</td>
         <td>${p.cidade || "-"}</td>
         <td style="color:var(--text-light); font-size:0.8rem;">${entryDate}</td>
         <td style="font-weight:600; color:var(--primary);">${p.owner}</td>
@@ -1283,10 +1272,17 @@ function buildCards(list, container, isDash) {
     
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
-    
     else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     
     actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
+
+    // ABINHA DE CÓDIGOS ANTIGOS
+    let prevCodsHTML = "";
+    if (p.previousCods && p.previousCods.length > 0) {
+        prevCodsHTML = `<div class="info-row" style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-h);">
+            <span style="font-size:0.8rem; color:var(--text-light);"><strong>CÓDs Antigos:</strong> ${p.previousCods.join(", ")}</span>
+        </div>`;
+    }
 
     const card = document.createElement("div"); card.className = `project-card ${cardClass}`;
     card.innerHTML = `
@@ -1300,6 +1296,7 @@ function buildCards(list, container, isDash) {
         <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
         <div class="info-row"><span><strong>Tipo:</strong> ${p.tipo||"-"}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
         <hr class="info-divider"><span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
+        ${prevCodsHTML}
       </div>
       ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
       <div class="status-label">${statusLabel}</div>
@@ -1348,6 +1345,7 @@ function closeCreateProjectModal(confirm) {
     cod: document.getElementById("cp-cod").value.trim(), vendedor: document.getElementById("cp-vendedor").value,
     tipo: document.getElementById("cp-tipo").value, probabilidade: document.getElementById("cp-probabilidade").value,
     cidade: document.getElementById("cp-cidade").value.trim(),
+    previousCods: [],
     history: [{ stage: STAGES[0], obs: document.getElementById("cp-obs").value.trim() || "Adicionado à fila.", date: nowBR(), author: currentUser || "Visualizador" }]
   };
 
@@ -1412,7 +1410,6 @@ async function assumirProjeto(id) {
   switchDraftsmanTab("andamento");
 }
 
-// NOVA FUNÇÃO: Abre o modal exclusivo de criar revisão
 function createRevisaoFromCompleted(id) {
   const p = findProject(id); if (!p) return;
   document.getElementById("cr-id").value = id;
@@ -1423,7 +1420,6 @@ function createRevisaoFromCompleted(id) {
   requestAnimationFrame(() => document.getElementById("cr-cod").focus());
 }
 
-// NOVA FUNÇÃO: Processa os dados do modal de revisão e envia pra planilha
 function closeCreateRevisaoModal(confirm) {
   document.getElementById("create-revisao-modal").classList.add("hidden");
   if (!confirm) return;
@@ -1431,26 +1427,36 @@ function closeCreateRevisaoModal(confirm) {
   const id = document.getElementById("cr-id").value;
   const p = findProject(id); if (!p) return;
   
-  const cod = document.getElementById("cr-cod").value.trim();
+  const oldCod = p.cod;
+  const newCod = document.getElementById("cr-cod").value.trim();
   const mot = document.getElementById("cr-motivo").value.trim();
   const skipSheets = document.getElementById("cr-skip-sheets").checked;
   
   if (!mot) { toast("O motivo é obrigatório!", "warning"); return; }
 
+  let msgHistorico = mot;
+
+  // LÓGICA DE MEMÓRIA DO CÓDIGO
+  if (newCod && newCod !== oldCod) {
+      if (!p.previousCods) p.previousCods = [];
+      if (oldCod && !p.previousCods.includes(oldCod)) {
+          p.previousCods.push(oldCod);
+      }
+      msgHistorico = `[CÓD alterado de ${oldCod||'Sem Cód'} ➔ ${newCod}] ` + mot;
+      p.cod = newCod;
+  }
+
   p.stageIndex = 0; 
   p.tipo = "REVISÃO";
   p.owner = "Fila"; 
-  if (cod) p.cod = cod; 
   
-  pushHistory(p, "🔄 RETORNOU PARA REVISÃO", mot);
+  pushHistory(p, "🔄 RETORNOU PARA REVISÃO", msgHistorico);
   saveData(); 
   updateViews(); 
   switchDraftsmanTab("fila");
   toast("Voltou como REVISÃO e está livre na fila.", "info");
   
-  if (!skipSheets) {
-     sendToGoogleSheets(p);
-  }
+  if (!skipSheets) sendToGoogleSheets(p);
 }
 
 async function registerEvent(id) { const p = findProject(id);
@@ -1502,7 +1508,7 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   GERAÇÃO DE GRÁFICOS PARETO COM ATUALIZAÇÕES
+   GERAÇÃO DE GRÁFICOS PARETO
 ================================================== */
 function refreshGraphFilters(context) {
     const isManager = context === "manager";
@@ -1537,12 +1543,10 @@ function renderPareto(context) {
   const minBound = startDateStr ? new Date(startDateStr + "T00:00:00").getTime() : 0;
   const maxBound = endDateStr ? new Date(endDateStr + "T23:59:59").getTime() : Infinity;
 
-  // FILTRO: DESENHISTA
   let baseList = appData.projects || [];
   if (userSelVal === "MEUS") baseList = baseList.filter(p => p.owner === currentUser);
   else if (userSelVal !== "ALL") baseList = baseList.filter(p => p.owner === userSelVal);
 
-  // ALIMENTAR DROPDOWN DE PROJETOS DO DESENHISTA
   if (projSel) {
       projSel.innerHTML = '<option value="ALL">Todos os Projetos</option>';
       baseList.forEach(p => {
@@ -1553,7 +1557,6 @@ function renderPareto(context) {
       }
   }
 
-  // FILTRO: PROJETO ESPECÍFICO
   let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
   
   const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
@@ -1613,7 +1616,6 @@ function renderPareto(context) {
     if (pInFila) countFila++;
     stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
 
-    // Calcula onde esse projeto esta estacionado neste momento
     if (p.stageIndex !== 8) {
         let currentS = STAGES[p.stageIndex];
         if (p.isImpeded) currentS = "Pausado / Impedido";
@@ -1659,7 +1661,7 @@ function renderPareto(context) {
       let projCount = countByStage[s] || 0;
       countHover.push(projCount);
       avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
-      currentHover.push(currentActive[s] || 0); // Presos neste momento
+      currentHover.push(currentActive[s] || 0); 
   });
   
   if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); countHover.push(0); avgHover.push(0); currentHover.push(0); }
