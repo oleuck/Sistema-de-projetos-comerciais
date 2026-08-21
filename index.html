@@ -268,35 +268,35 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 <body>
 
 <div id="toast-container" role="status" aria-live="polite"></div>
-<div id="offline-banner">⚠️ Modo Local (Offline) ativo.</div>
+<div id="offline-banner">⚠️ Firebase offline — usando dados locais.</div>
 
 <div id="global-loader" aria-label="Carregando sistema">
   <div class="spinner"></div>
-  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Carregando sistema...</p>
+  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Sincronizando com a nuvem...</p>
   <p id="loader-status" style="margin:0;">Aguardando banco de dados...</p>
 </div>
 
 <!-- MODAL CADASTRAR PROJETO -->
 <div id="create-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cp-modal-title">
   <div class="modal-content">
-    <h3 id="cp-modal-title" class="modal-title">📋 Cadastrar Novo Item</h3>
-    <p class="modal-desc">Preencha as informações para colocar na fila.</p>
+    <h3 id="cp-modal-title" class="modal-title">📋 Cadastrar Novo Projeto</h3>
+    <p class="modal-desc">Preencha as informações para colocar na fila de orçamento.</p>
     <div class="form-grid full">
-      <label for="cp-cliente">Nome do Cliente / Obra / Contrato *</label>
-      <input type="text" id="cp-cliente" placeholder="Ex: Contrato nº 1042 — Empresa X">
+      <label for="cp-cliente">Nome do Cliente / Obra *</label>
+      <input type="text" id="cp-cliente" placeholder="Ex: Condomínio Ibirapuera — Bloco A">
     </div>
     <div class="form-grid">
-      <div><label for="cp-cod">CÓD / Identificador</label><input type="text" id="cp-cod" placeholder="Ex: 18455"></div>
-      <div><label for="cp-cidade">Cidade / Local</label><input type="text" id="cp-cidade" placeholder="Ex: São Paulo"></div>
+      <div><label for="cp-cod">CÓD / Ordem</label><input type="text" id="cp-cod" placeholder="Ex: 18455"></div>
+      <div><label for="cp-cidade">Cidade</label><input type="text" id="cp-cidade" placeholder="Ex: São Paulo"></div>
     </div>
     <div class="form-grid">
       <div>
-        <label for="cp-vendedor">Responsável</label>
+        <label for="cp-vendedor">Vendedor</label>
         <select id="cp-vendedor">
           <option value="">Selecione...</option>
-          <option>RESPONSAVEL_1</option>
-          <option>RESPONSAVEL_2</option>
-          <option>RESPONSAVEL_3</option>
+          <option>CARLA</option>
+          <option>JONES</option>
+          <option>SHANA</option>
           <option value="OUTRO">Outro / Terceiros</option>
         </select>
       </div>
@@ -305,17 +305,17 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
         <select id="cp-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
       </div>
     </div>
-    <div><label for="cp-probabilidade">Probabilidade / Prioridade</label>
+    <div><label for="cp-probabilidade">Probabilidade de Venda</label>
       <select id="cp-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
     </div>
     <div><label for="cp-obs">Observação inicial</label>
-      <textarea id="cp-obs" rows="2" placeholder="Detalhes, pendências, recados..."></textarea>
+      <textarea id="cp-obs" rows="2" placeholder="Recados, detalhes, pendências..."></textarea>
     </div>
     
     <div style="margin-top:10px; background:var(--bg-alt); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal; color:var(--text); margin-bottom:0;">
         <input type="checkbox" id="cp-skip-sheets" style="width:auto; margin:0; cursor:pointer;">
-        <span>Não enviar para o Google Planilhas</span>
+        <span>Não enviar para o Google Planilhas (projeto antigo)</span>
       </label>
     </div>
 
@@ -330,9 +330,9 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 <div id="create-revisao-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cr-modal-title">
   <div class="modal-content">
     <h3 id="cr-modal-title" class="modal-title" style="color:var(--orange);">🔄 Criar Revisão</h3>
-    <p class="modal-desc">O item voltará para a Fila como "REVISÃO". O identificador antigo ficará salvo no histórico.</p>
+    <p class="modal-desc">O projeto voltará para a Fila como "REVISÃO". O CÓD antigo ficará salvo no histórico.</p>
     <input type="hidden" id="cr-id">
-    <label for="cr-cod">Novo CÓD / Versão (opcional)</label>
+    <label for="cr-cod">Novo CÓD (opcional)</label>
     <input type="text" id="cr-cod" placeholder="Ex: 18455-REV">
     <label for="cr-motivo">Motivo do Retorno *</label>
     <textarea id="cr-motivo" rows="2" placeholder="Descreva o motivo da revisão..."></textarea>
@@ -353,19 +353,19 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 <div id="edit-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ep-modal-title">
   <div class="modal-content">
-    <h3 id="ep-modal-title" class="modal-title">✏️ Editar Informações</h3>
+    <h3 id="ep-modal-title" class="modal-title">✏️ Editar Informações do Projeto</h3>
     <input type="hidden" id="ep-id">
     <div class="form-grid">
-      <div><label for="ep-cod">CÓD / Identificador</label><input type="text" id="ep-cod"></div>
-      <div><label for="ep-cidade">Cidade / Local</label><input type="text" id="ep-cidade"></div>
+      <div><label for="ep-cod">CÓD / Ordem</label><input type="text" id="ep-cod"></div>
+      <div><label for="ep-cidade">Cidade</label><input type="text" id="ep-cidade"></div>
     </div>
     <div class="form-grid">
-      <div><label for="ep-vendedor">Responsável</label>
+      <div><label for="ep-vendedor">Vendedor</label>
         <select id="ep-vendedor">
           <option value="">Selecione...</option>
-          <option>RESPONSAVEL_1</option>
-          <option>RESPONSAVEL_2</option>
-          <option>RESPONSAVEL_3</option>
+          <option>CARLA</option>
+          <option>JONES</option>
+          <option>SHANA</option>
           <option value="OUTRO">Outro / Terceiros</option>
         </select>
       </div>
@@ -373,7 +373,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
         <select id="ep-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
       </div>
     </div>
-    <div><label for="ep-probabilidade">Probabilidade / Prioridade</label>
+    <div><label for="ep-probabilidade">Probabilidade</label>
       <select id="ep-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
     </div>
     <div class="modal-buttons">
@@ -465,7 +465,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   <div id="view-profiles" class="hidden">
     <div class="header-card" style="text-align:center; padding:30px 20px;">
       <span onclick="handleMasterLogin()" style="cursor:pointer; font-size:2rem;" title="Acesso administrativo">🏢</span>
-      <h1 style="margin:8px 0 4px;">Sistema de Controle e Gestão</h1>
+      <h1 style="margin:8px 0 4px;">Sistema de Controle de Projetos</h1>
       <p style="color:var(--text-light); margin:0 0 20px;">Selecione seu perfil para acessar o sistema.</p>
 
       <div style="display:flex; justify-content:center; gap:8px; margin-bottom:28px;">
@@ -475,7 +475,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
         <button class="secondary" style="padding:14px; font-size:1.05rem; border-radius:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
       </div>
 
-      <h3 style="margin-bottom:12px;">Membros da Equipe — Acesso com Senha</h3>
+      <h3 style="margin-bottom:12px;">Desenhistas — Acesso com Senha</h3>
       <div class="profiles-grid" id="profiles-container"></div>
 
       <div style="max-width:380px; margin:24px auto 0;" class="card padded">
@@ -510,12 +510,12 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           <select id="manager-sort-select" onchange="renderGlobalFeed()">
             <option value="DATE_DESC">Mais Recentes</option>
             <option value="DATE_ASC">Mais Antigos</option>
-            <option value="VENDEDOR">Por Responsável A-Z</option>
+            <option value="VENDEDOR">Por Vendedor A-Z</option>
             <option value="TIPO_NOVO">Apenas NOVOS</option>
             <option value="TIPO_REVISAO">Apenas REVISÕES</option>
           </select>
           <div class="search-wrap">
-            <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Buscar...">
+            <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Obra ou CÓD...">
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
           <button onclick="exportManagerReport()" style="background:#111827;">📊 PDF da Aba</button>
@@ -535,9 +535,9 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong style="white-space:nowrap;">Membro:</strong>
+        <strong style="white-space:nowrap;">Desenhista:</strong>
         <select id="graph-user-manager" onchange="refreshGraphFilters('manager')" style="margin-bottom:0; max-width:180px;"></select>
-        <strong style="white-space:nowrap; margin-left:8px;">Item:</strong>
+        <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-manager" onchange="renderPareto('manager')" style="margin-bottom:0; max-width:200px;"></select>
         
         <strong style="white-space:nowrap; margin-left:8px;">Período:</strong>
@@ -547,7 +547,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       </div>
       <div class="chart-container"><canvas id="paretoChart"></canvas></div>
       <div class="kpi-container">
-        <div class="kpi-card"><h4>Total de Itens</h4><p class="kpi-value" id="kpi-total">0</p></div>
+        <div class="kpi-card"><h4>Total de Projetos</h4><p class="kpi-value" id="kpi-total">0</p></div>
         <div class="kpi-card purple"><h4>Tempo Médio (Concluídos)</h4><p class="kpi-value" id="kpi-avg-time">0h</p></div>
         <div class="kpi-card success"><h4>Concluídos</h4><p class="kpi-value" id="kpi-completed">0</p></div>
         <div class="kpi-card warning"><h4>Tempo Médio (Fila)</h4><p class="kpi-value" id="kpi-avg-fila">0h</p></div>
@@ -573,12 +573,12 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           <select id="sort-filter-select" onchange="renderProjects()" style="margin-bottom:0;">
             <option value="DATE_DESC">Mais Recentes</option>
             <option value="DATE_ASC">Mais Antigos</option>
-            <option value="VENDEDOR">Por Responsável</option>
+            <option value="VENDEDOR">Por Vendedor</option>
             <option value="TIPO_NOVO">Apenas NOVOS</option>
             <option value="TIPO_REVISAO">Apenas REVISÕES</option>
           </select>
           <div class="search-wrap">
-            <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Buscar...">
+            <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Obra ou CÓD...">
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
           <button id="pdf-dashboard-btn" onclick="exportDraftsmanReport()" style="background:#1f2937;">📊 PDF</button>
@@ -589,7 +589,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: var(--bg-purple-light); padding: 16px;">
         <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: var(--text-light); margin-bottom: 12px;">
-            Este painel mapeia os próximos itens prioritários baseado na regra do rodízio configurada.
+            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro).
         </p>
         <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
         </div>
@@ -597,7 +597,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()">🗑️ Excluir Meu Perfil</button>
-      <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Item na Fila</button>
+      <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Projeto na Fila</button>
     </div>
 
     <div class="tabs">
@@ -611,9 +611,9 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-draftsman-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong>Membro:</strong>
+        <strong>Desenhista:</strong>
         <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
-        <strong style="white-space:nowrap; margin-left:8px;">Item:</strong>
+        <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:200px;"></select>
         
         <strong style="white-space:nowrap; margin-left:8px;">Período:</strong>
@@ -623,7 +623,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       </div>
       <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
       <div class="kpi-container">
-        <div class="kpi-card"><h4>Meus Itens</h4><p class="kpi-value" id="dkpi-total">0</p></div>
+        <div class="kpi-card"><h4>Meus Projetos</h4><p class="kpi-value" id="dkpi-total">0</p></div>
         <div class="kpi-card purple"><h4>Meu Tempo Médio</h4><p class="kpi-value" id="dkpi-avg-time">0h</p></div>
         <div class="kpi-card warning"><h4>Meu T. Médio (Fila)</h4><p class="kpi-value" id="dkpi-avg-fila">0h</p></div>
       </div>
@@ -634,35 +634,33 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 <script>
 /* ==================================================
-   CONFIGURAÇÕES GERAIS (MODIFIQUE CONFORME SEU USO)
+   CONSTANTES, LINKS EXTERNOS E ESTADO GLOBAL
 ================================================== */
 const STAGES = [
   "Aguardando Início (Fila)", // 0
-  "Em Andamento",             // 1
-  "Análise / Orçamento",      // 2
-  "Revisão 1",                // 3
-  "Revisão 2",                // 4
-  "Aprovação 1",              // 5
-  "Aprovação 2",              // 6
-  "Execução",                 // 7
-  "Entregue / Concluído"      // 8
+  "Em Desenho",               // 1
+  "Orçamento",                // 2
+  "Correção 1",               // 3
+  "Correção 2",               // 4
+  "Luis",                     // 5
+  "Cristian",                 // 6
+  "Desenhista",               // 7
+  "Entregue"                  // 8
 ];
 
-// Credenciais do Firebase (Cole as suas aqui se for usar sincronização em nuvem)
 const FIREBASE_CFG = {
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:000000000000"
+  apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
+  authDomain: "controle-projetos-comerciais.firebaseapp.com",
+  projectId: "controle-projetos-comerciais",
+  storageBucket: "controle-projetos-comerciais.firebasestorage.app",
+  messagingSenderId: "154256368322",
+  appId: "1:154256368322:web:9c580e7886abfc9779515b"
 };
+const MASTER_KEY = "070522";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
 
-const MASTER_KEY = "123456"; // Senha Master de Administração
-const GOOGLE_SCRIPT_URL = ""; // Link do Webhook do Google Apps Script (opcional)
-
-// Lista de vendedores / responsáveis para o ciclo do rodízio
-const ROTACAO_VENDEDORES = ["RESPONSAVEL_1", "RESPONSAVEL_2", "RESPONSAVEL_3", "OUTRO"];
+// A ordem padrão do rodízio global
+const ROTACAO_VENDEDORES = ["CARLA", "JONES", "SHANA", "OUTRO"];
 
 let db, docRef;
 let appData = { users: [], passwords: {}, projects: [], lastVendedor: null };
@@ -692,14 +690,12 @@ function toggleTheme() {
   const isDark = html.classList.toggle('dark');
   localStorage.setItem('tema_projetos', isDark ? 'dark' : 'light');
   
-  // Atualiza as cores do Chart.js para contrastar com o fundo
   Chart.defaults.color = isDark ? '#94a3b8' : '#6b7280';
   
   if (activeCharts["paretoChart"]) renderPareto("manager");
   if (activeCharts["draftsmanParetoChart"]) renderPareto("draftsman");
 }
 
-// Inicializa o tema ao carregar
 const savedTheme = localStorage.getItem('tema_projetos');
 if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark');
@@ -714,7 +710,7 @@ function normalizeVendedor(v) {
 }
 
 /* ==================================================
-   ALTERAR MODO DE VISUALIZAÇÃO
+   ALTERAR MODO DE VISUALIZAÇÃO (CARDS / TABELA EXCEL)
 ================================================== */
 function toggleViewMode() {
   viewMode = viewMode === "cards" ? "table" : "cards";
@@ -726,7 +722,7 @@ function toggleViewMode() {
 }
 
 /* ==================================================
-   TOAST E SEGURANÇA
+   TOAST E SEGURANÇA (HAHSING)
 ================================================== */
 function toast(msg, type = "info", duration = 3500) {
   const c = document.getElementById("toast-container");
@@ -758,7 +754,7 @@ const debounceRenderProjects = debounce(() => renderProjects());
 const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
 
 /* ==================================================
-   MANIPULAÇÃO DE MODAIS
+   MANIPULAÇÃO DE MODAIS 
 ================================================== */
 function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
@@ -879,7 +875,7 @@ function setFirebaseStatus(state) {
   const text = document.getElementById("firebase-status-text");
   if (!dot || !text) return;
   dot.className  = `firebase-dot ${state}`;
-  text.textContent = { connected:"Conectado à nuvem", error:"Modo Local (Offline)", "":"Verificando..." }[state] || "Modo Local";
+  text.textContent = { connected:"Conectado ao Firebase", error:"Erro de conexão", "":"Verificando..." }[state] || "Verificando...";
 }
 function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
 
@@ -894,12 +890,6 @@ function ensureDefaults(data) {
 
 function bootUI() {
   hideLoader();
-  if (!fbSynced) {
-    const local = localStorage.getItem("appData_local");
-    if (local) {
-        try { appData = JSON.parse(local); } catch(e) {}
-    }
-  }
   appData = ensureDefaults(appData);
   if (!currentUser && !isViewerMode) { show("view-profiles"); renderProfiles(); }
   else if (isViewerMode) { show("view-manager"); renderGlobalFeed(); }
@@ -911,49 +901,39 @@ function show(id) {
   document.getElementById(id).classList.remove("hidden");
 }
 
-const isConfigured = FIREBASE_CFG.apiKey && !FIREBASE_CFG.apiKey.includes("SUA_API_KEY");
-const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 2500);
+const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 4000);
 
-if (isConfigured) {
-  try {
-    firebase.initializeApp(FIREBASE_CFG);
-    db = firebase.firestore();
-    docRef = db.collection("sistema").doc("bancoDeDados");
-    docRef.onSnapshot(doc => {
-      clearTimeout(fbTimeout);
-      if (doc.exists) {
-        appData = ensureDefaults(doc.data());
-        fbSynced = true;
-        document.getElementById("offline-banner").style.display = "none";
-        setFirebaseStatus("connected");
-        maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-      } else if (!fbSynced) {
-        docRef.set(ensureDefaults(appData)).catch(() => {});
-        fbSynced = true;
-      }
-      bootUI();
-    }, () => { setFirebaseStatus("error"); bootUI(); });
-  } catch { bootUI(); }
-} else {
-  clearTimeout(fbTimeout);
-  setFirebaseStatus("error");
-  bootUI();
-}
+try {
+  firebase.initializeApp(FIREBASE_CFG);
+  db = firebase.firestore();
+  docRef = db.collection("sistema").doc("bancoDeDados");
+  docRef.onSnapshot(doc => {
+    clearTimeout(fbTimeout);
+    if (doc.exists) {
+      appData = ensureDefaults(doc.data());
+      fbSynced = true;
+      document.getElementById("offline-banner").style.display = "none";
+      setFirebaseStatus("connected");
+      maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
+    } else if (!fbSynced) {
+      docRef.set(ensureDefaults(appData)).catch(() => {});
+      fbSynced = true;
+    }
+    bootUI();
+  }, () => { setFirebaseStatus("error"); bootUI(); });
+} catch { bootUI(); }
 
 function saveData() {
-  if (!fbSynced) { 
-    localStorage.setItem("appData_local", JSON.stringify(appData)); 
-    return; 
-  }
+  if (!fbSynced) { localStorage.setItem("appData_offline_bkp", JSON.stringify(appData)); return; }
   if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
   if (!docRef) return;
   docRef.set(appData).then(() => {
     maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-  }).catch(() => toast("Erro ao salvar no banco.", "danger"));
+  }).catch(() => toast("Erro ao salvar no Firebase.", "danger"));
 }
 
 /* ==================================================
-   EXPORTAÇÃO OPCIONAL PARA GOOGLE PLANILHAS
+   EXPORTAÇÃO EM SEGUNDO PLANO PARA GOOGLE PLANILHAS
 ================================================== */
 async function sendToGoogleSheets(p) {
   if (!GOOGLE_SCRIPT_URL) return;
@@ -964,9 +944,9 @@ async function sendToGoogleSheets(p) {
       vendedor: p.vendedor,
       tipo: p.tipo,
       probabilidade: p.probabilidade,
-      situacao: "REGISTRO", 
-      stage: "REGISTRO",    
-      status: "REGISTRO",   
+      situacao: "PROJETO", 
+      stage: "PROJETO",    
+      status: "PROJETO",   
       name: p.name,
       cod: p.cod,
       cidade: p.cidade,
@@ -1005,7 +985,7 @@ function updateBadges() {
   if (currentUser) {
     const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
     const filtered = projs.filter(p => {
-       const isFila = p.owner === "Fila" || p.owner === "Sem Responsável";
+       const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
        if (isFila) return true;
        if (filterUser === "ALL") return true;
        return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
@@ -1046,7 +1026,7 @@ async function deleteCurrentUser() {
 function populateUserFilter() {
   const sel = document.getElementById("user-filter-select"); if (!sel) return;
   sel.innerHTML = '<option value="ALL">Todos</option><option value="MEUS">Só os Meus</option>';
-  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => { sel.innerHTML += `<option value="${u}">Itens de: ${u}</option>`; });
+  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => { sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; });
   sel.value = currentUser === "ADMIN" ? "ALL" : "MEUS";
 }
 
@@ -1100,7 +1080,7 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO (RODÍZIO)
+   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO MÚLTIPLO CORRIGIDO)
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
@@ -1122,27 +1102,8 @@ function updateAdminSuggestion() {
   let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
   if (lastIndex === -1) lastIndex = -1;
 
-  let oldestProj = null;
-  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
-    let checkName = ROTACAO_VENDEDORES[checkIndex];
-
-    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
-                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
-    if (projsVendedor.length > 0) {
-      oldestProj = projsVendedor[0]; 
-      break; 
-    }
-  }
-
-  if (!oldestProj && filaProjs.length > 0) {
-    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-  }
-
-  if (!oldestProj) {
-    panel.classList.add("hidden");
-    return;
-  }
+  let suggestions = [];
+  let currIndex = lastIndex;
 
   let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
      let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
@@ -1150,27 +1111,64 @@ function updateAdminSuggestion() {
      return countA - countB;
   });
 
+  desenhistasOrdenados.forEach((desenhista) => {
+    let oldestProj = null;
+    
+    for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+      let checkIndex = (currIndex + i) % ROTACAO_VENDEDORES.length;
+      let checkName = ROTACAO_VENDEDORES[checkIndex];
+
+      let projsVendedor = filaProjs.filter(p => {
+        let v = (p.vendedor || "").toUpperCase();
+        if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
+        return v === checkName;
+      }).sort((a, b) => Number(a.id) - Number(b.id)); 
+
+      if (projsVendedor.length > 0) {
+        oldestProj = projsVendedor[0]; 
+        currIndex = checkIndex; 
+        break;
+      }
+    }
+    
+    if (!oldestProj && filaProjs.length > 0) {
+      oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+    }
+
+    if (oldestProj) {
+      suggestions.push({ desenhista: desenhista, proj: oldestProj });
+    }
+  });
+
+  const temSugestao = suggestions.length > 0;
+  if (!temSugestao) {
+    panel.classList.add("hidden");
+    return;
+  }
+
   panel.classList.remove("hidden");
   let html = `<table class="data-table" style="background: var(--card); width:100%;">
                 <thead>
                     <tr>
                       <th style="background:var(--purple); width:20%;">Sugerido Para</th>
-                      <th style="background:var(--purple); width:15%;">Responsável</th>
+                      <th style="background:var(--purple); width:15%;">Vendedor</th>
                       <th style="background:var(--purple); width:10%;">CÓD</th>
-                      <th style="background:var(--purple); width:40%;">Item / Obra</th>
+                      <th style="background:var(--purple); width:40%;">Obra</th>
                       <th style="background:var(--purple); width:15%; text-align:center;">Ação</th>
                     </tr>
                 </thead>
                 <tbody>`;
 
-  desenhistasOrdenados.forEach((dName) => {
+  suggestions.forEach((item) => {
+      const dName = item.desenhista;
+      const proj = item.proj;
       html += `<tr>
           <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:var(--text);">${normalizeVendedor(oldestProj.vendedor)}</td>
-          <td style="color:var(--text);">${oldestProj.cod || "-"}</td>
-          <td style="white-space:normal; color:var(--text);">${oldestProj.name}</td>
+          <td style="font-weight:700; color:var(--text);">${proj.vendedor || "-"}</td>
+          <td style="color:var(--text);">${proj.cod || "-"}</td>
+          <td style="white-space:normal; color:var(--text);">${proj.name}</td>
           <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
+              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
           </td>
       </tr>`;
   });
@@ -1181,24 +1179,25 @@ function updateAdminSuggestion() {
 
 async function adminAssignProject(id, desenhista) {
   const p = findProject(id); if (!p) return;
-  const ok = await openConfirmModal("Atribuir Item", `Deseja transferir "${p.name}" para ${desenhista}?`);
+  const ok = await openConfirmModal("Atribuir Projeto", `Deseja transferir o projeto "${p.name}" para o desenhista ${desenhista}?`);
   if (!ok) return;
   const ant = p.owner; 
   p.owner = desenhista;
   p.stageIndex = 1; 
   appData.lastVendedor = p.vendedor;
   
-  pushHistory(p, "🚀 ATRIBUÍDO", `Transferido da Fila -> [${p.owner}].`);
+  pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
   saveData(); 
   if (isViewerMode) renderGlobalFeed(); else renderProjects();
-  toast(`Transferido com sucesso para ${desenhista}!`, "success");
+  toast(`Projeto transferido com sucesso para ${desenhista}!`, "success");
 }
 
+
 /* ==================================================
-   RENDERIZAÇÃO DE TABELAS / CARDS
+   SISTEMA DE RENDERIZAÇÃO E FILTRAGEM DE TABELAS/CARDS
 ================================================== */
 function updateViews() { 
-  if (isViewerMode) renderGlobalFeed(); 
+  if (isViewerMode) renderGlobalFeed();
   else renderProjects(); 
 }
 
@@ -1217,6 +1216,7 @@ function renderGlobalFeed() {
   const list = filterAndSort(appData.projects || [], src, sort, managerTab);
   
   viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
+  
   updateBadges(); 
 }
 
@@ -1238,13 +1238,14 @@ function renderProjects() {
   let list = filterAndSort(appData.projects || [], src, sort, draftsmanTab);
   
   list = list.filter(p => {
-    const isFila = p.owner === "Fila" || p.owner === "Sem Responsável";
+    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
     if (isFila) return true;
     if (filterUser === "ALL") return true;
     return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
   });
 
   viewMode === "table" ? buildTable(list, container, true) : buildCards(list, container, true);
+  
   updateBadges(); 
   updateAdminSuggestion();
 }
@@ -1268,12 +1269,12 @@ function filterAndSort(projects, search, sort, tab) {
 }
 
 /* ==================================================
-   TABELA EXCEL (READ ONLY)
+   MONTAGEM DA VIEW: TABELA EXCEL (READ ONLY)
 ================================================== */
 function buildTable(list, container, isDash) {
   container.style.display = "block";
   container.innerHTML = "";
-  if (!list.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum item encontrado nesta visualização.</p></div>`; return; }
+  if (!list.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado nesta visualização.</p></div>`; return; }
 
   let html = `
     <p style="text-align:right; font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">⚠️ Modo de visualização somente leitura. Alterne para "Ver em Cards" para editar.</p>
@@ -1281,15 +1282,15 @@ function buildTable(list, container, isDash) {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Responsável</th><th>Tipo</th><th>Prioridade</th><th>Situação</th><th>Cliente / Descrição</th><th>CÓD</th><th>Local</th><th>Entrada</th><th>Atribuído</th>
+            <th>Vendedor</th><th>Tipo</th><th>Probabilidade</th><th>Situação (Etapa)</th><th>Cliente / Obra</th><th>CÓD</th><th>Cidade</th><th>Entrada (Fila)</th><th>Desenhista</th>
           </tr>
         </thead>
         <tbody>
   `;
   list.forEach(p => {
     if (!p) return; const stageVal = Number(p.stageIndex) || 0;
-    let stageName = p.isImpeded ? "PAUSADO" : (p.reworkType ? `RETRABALHO (${p.reworkType})`.toUpperCase() : STAGES[stageVal]);
-    if (stageVal >= 8) stageName = "CONCLUÍDO";
+    let stageName = p.isImpeded ? "PAUSADO" : (p.reworkType ? `REVISÃO (${p.reworkType})`.toUpperCase() : STAGES[stageVal]);
+    if (stageVal >= 8) stageName = "ENTREGUE";
     let typeBadge = p.tipo === "REVISÃO" ? "badge-revisao" : "badge-novo";
     let probBadge = p.probabilidade === "ALTA" ? "badge-alta" : (p.probabilidade === "MÉDIA" ? "badge-media" : "badge-baixa");
     let entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "-";
@@ -1317,16 +1318,16 @@ function buildTable(list, container, isDash) {
 }
 
 /* ==================================================
-   CARDS DINÂMICOS
+   MONTAGEM DA VIEW: CARDS DINÂMICOS COM INTERAÇÃO
 ================================================== */
 function buildCards(list, container, isDash) {
-  container.innerHTML = ""; if (!list.length) { container.style.display = "block"; container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum item encontrado.</p></div>`; return; }
+  container.innerHTML = ""; if (!list.length) { container.style.display = "block"; container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado.</p></div>`; return; }
   container.style.display = "grid";
 
   list.forEach(p => {
     if (!p) return; const stageVal = Number(p.stageIndex) || 0;
     const isC = stageVal >= 8; const isMine = p.owner === currentUser; const isAdmin = currentUser === "ADMIN";
-    const isFila = p.owner === "Fila" || p.owner === "Sem Responsável"; const canEdit = !isViewerMode && isDash && (isMine || isAdmin || isFila);
+    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista"; const canEdit = !isViewerMode && isDash && (isMine || isAdmin || isFila);
 
     let cardClass = isC ? "completed" : (p.isImpeded ? "impediment" : "");
     if (!isC && p.reworkType === "interno") cardClass += " rework-int";
@@ -1338,18 +1339,18 @@ function buildCards(list, container, isDash) {
       if (!h) return "";
       const editBtns = canEdit ? `<div class="timeline-actions"><button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})">🗑️</button></div>` : "";
       const dateAttr = canEdit ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})"` : `class="timeline-date"`;
-      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") || h.stage?.includes("REVISADO") ? "color:var(--success);font-weight:700;" : "");
+      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") ? "color:var(--success);font-weight:700;" : "");
 
       return `<div class="timeline-item"><div class="timeline-top"><span class="timeline-stage" style="${sStyle}">${h.stage||""}</span>${editBtns}</div>
         <div class="timeline-obs">↳ ${h.obs||""}</div>
         <div class="timeline-meta"><span class="timeline-author">👤 ${h.author||p.owner}</span><span ${dateAttr}>${h.date||""}</span></div></div>`;
     }).join("");
 
-    let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 RETRABALHO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
+    let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
     let actions = "";
     
-    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Iniciar</button>`;
-    if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Revisado</button>`;
+    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
+    if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
     
     const commonBtns = (isDash && canEdit || isViewerMode) ? `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
     
@@ -1357,7 +1358,7 @@ function buildCards(list, container, isDash) {
     else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     
-    actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossiê PDF</button>`;
+    actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
 
     let prevCodsHTML = "";
     if (p.previousCods && p.previousCods.length > 0) {
@@ -1370,14 +1371,14 @@ function buildCards(list, container, isDash) {
     card.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
         <span class="badge-owner">👤 ${p.owner}</span>
-        ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Finalizar Retrabalho" : "🔄 Retrabalho"}</button>` : ""}
+        ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Fechar Revisão" : "🔄 Retrabalho"}</button>` : ""}
       </div>
       <div class="project-title-row"><h2>${p.name||"Sem Nome"}</h2>${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ""}</div>
       <div class="info-box">
         ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')">⚙️</button>` : ""}
-        <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Resp:</strong> ${p.vendedor||"-"}</span></div>
-        <div class="info-row"><span><strong>Tipo:</strong> ${p.tipo||"-"}</span><span><strong>Prioridade:</strong> ${p.probabilidade||"-"}</span></div>
-        <hr class="info-divider"><span><strong>Local:</strong> ${p.cidade||"-"}</span>
+        <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
+        <div class="info-row"><span><strong>Tipo:</strong> ${p.tipo||"-"}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
+        <hr class="info-divider"><span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
         ${prevCodsHTML}
       </div>
       ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
@@ -1391,7 +1392,7 @@ function buildCards(list, container, isDash) {
 }
 
 /* ==================================================
-   CRUDS & MODIFICAÇÕES
+   CRUDS, MODIFICAÇÕES DE PROJETO E INTEGRANTE
 ================================================== */
 function openEditProjectModal(id) {
   const p = findProject(id); if (!p) return;
@@ -1462,9 +1463,9 @@ async function updateStage(id, sel) {
   
   if (idx === 0) {
       p.owner = "Fila"; 
-  } else if (p.owner === "Fila" || p.owner === "Sem Responsável") { 
+  } else if (p.owner === "Fila" || p.owner === "Sem Desenhista") { 
       p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
-      pushHistory(p, "🚀 ASSUMIU", `Auto-assumido.`); 
+      pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); 
       appData.lastVendedor = normalizeVendedor(p.vendedor); 
   }
   
@@ -1475,9 +1476,9 @@ async function updateStage(id, sel) {
 
 async function markAsCorrected(id) {
   const p = findProject(id); if (!p) return;
-  const obs = await openCustomModal("Revisado", "Obs (opcional):", "Tudo certo...");
+  const obs = await openCustomModal("Corrigido", "Obs (opcional):", "Tudo certo...");
   if (obs === null) return; p.stageIndex = 7;
-  pushHistory(p, "✅ REVISADO", obs || "Revisado."); saveData(); 
+  pushHistory(p, "✅ CORRIGIDO", obs || "Corrigido."); saveData(); 
   if (isViewerMode) renderGlobalFeed(); else renderProjects();
 }
 
@@ -1486,9 +1487,9 @@ async function assumirProjeto(id) {
   p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
   p.stageIndex = 1; 
   appData.lastVendedor = normalizeVendedor(p.vendedor); 
-  pushHistory(p, "🚀 ASSUMIU", `De [${ant}] -> [${p.owner}].`); 
+  pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); 
   saveData(); updateViews(); 
-  toast(`Você assumiu este item!`, "success"); 
+  toast(`Você assumiu este projeto!`, "success"); 
   switchDraftsmanTab("andamento");
 }
 
@@ -1564,7 +1565,7 @@ async function toggleImpediment(id) {
 async function toggleRework(id) {
   const p = findProject(id); if (!p) return;
   if (p.reworkType) {
-    const obs = await openCustomModal("Finalizar", "Retrabalho concluído? Descreva:", "");
+    const obs = await openCustomModal("Fechar Revisão", "Retrabalho concluído? Descreva:", "");
     if (obs === null) return;
     p.reworkType = null; pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Concluído."); saveData(); updateViews();
   } else { reworkProjectId = id; document.getElementById("rework-obs-input").value = ""; document.getElementById("rework-modal").classList.remove("hidden"); }
@@ -1587,17 +1588,17 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   PARETO & GRÁFICOS
+   GERAÇÃO DE GRÁFICOS PARETO COM ATUALIZAÇÕES
 ================================================== */
 function refreshGraphFilters(context) {
     const isManager = context === "manager";
     const userSel = document.getElementById(isManager ? "graph-user-manager" : "graph-user-draftsman");
     const oldUser = userSel.value;
     
-    let html = isManager ? '<option value="ALL">Geral da Empresa</option>' : `<option value="MEUS">Meus Itens (${currentUser})</option><option value="ALL">Geral da Empresa</option>`;
+    let html = isManager ? '<option value="ALL">Geral da Empresa</option>' : `<option value="MEUS">Meus Projetos (${currentUser})</option><option value="ALL">Geral da Empresa</option>`;
     (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
         if(!isManager && u === currentUser) return;
-        html += `<option value="${u}">${isManager ? u : 'Itens de: '+u}</option>`;
+        html += `<option value="${u}">${isManager ? u : 'Projetos de: '+u}</option>`;
     });
     
     userSel.innerHTML = html;
@@ -1622,12 +1623,14 @@ function renderPareto(context) {
   const minBound = startDateStr ? new Date(startDateStr + "T00:00:00").getTime() : 0;
   const maxBound = endDateStr ? new Date(endDateStr + "T23:59:59").getTime() : Infinity;
 
+  // FILTRO: DESENHISTA
   let baseList = appData.projects || [];
   if (userSelVal === "MEUS") baseList = baseList.filter(p => p.owner === currentUser);
   else if (userSelVal !== "ALL") baseList = baseList.filter(p => p.owner === userSelVal);
 
+  // ALIMENTAR DROPDOWN DE PROJETOS DO DESENHISTA
   if (projSel) {
-      projSel.innerHTML = '<option value="ALL">Todos os Itens</option>';
+      projSel.innerHTML = '<option value="ALL">Todos os Projetos</option>';
       baseList.forEach(p => {
           projSel.innerHTML += `<option value="${p.id}">${p.name} (${p.cod||'-'})</option>`;
       });
@@ -1636,6 +1639,7 @@ function renderPareto(context) {
       }
   }
 
+  // FILTRO: PROJETO ESPECÍFICO
   let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
   
   const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
@@ -1677,6 +1681,7 @@ function renderPareto(context) {
         if (STAGES.includes(ev.stage)) curStage = ev.stage; 
         else if (ev.stage === "🔴 PAUSADO") curStage = "Pausado / Impedido"; 
         else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0]; 
+        else if (ev.stage && ev.stage.includes("Desenhista")) curStage = "Desenhista";
 
         lastTime = t; 
     });
@@ -1694,6 +1699,7 @@ function renderPareto(context) {
     if (pInFila) countFila++;
     stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
 
+    // Calcula onde esse projeto esta estacionado neste momento
     if (p.stageIndex !== 8) {
         let currentS = STAGES[p.stageIndex];
         if (p.isImpeded) currentS = "Pausado / Impedido";
@@ -1701,6 +1707,7 @@ function renderPareto(context) {
         if (histStage) {
             if (histStage === "🔴 PAUSADO") currentS = "Pausado / Impedido";
             else if (histStage === "🟢 RETOMADO") currentS = STAGES[0];
+            else if (histStage.includes("Desenhista")) currentS = "Desenhista";
             else if (STAGES.includes(histStage)) currentS = histStage;
         }
         currentActive[currentS] = (currentActive[currentS] || 0) + 1;
@@ -1711,7 +1718,7 @@ function renderPareto(context) {
   const avgFila = countFila > 0 ? Math.round(totalFilaHours / countFila) : 0;
 
   delete hours[STAGES[0]];
-  delete hours[STAGES[8]];
+  delete hours["Entregue"];
 
   if (isManager) {
     if (document.getElementById("kpi-total")) document.getElementById("kpi-total").textContent = total;
@@ -1738,7 +1745,7 @@ function renderPareto(context) {
       let projCount = countByStage[s] || 0;
       countHover.push(projCount);
       avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
-      currentHover.push(currentActive[s] || 0);
+      currentHover.push(currentActive[s] || 0); 
   });
   
   if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); countHover.push(0); avgHover.push(0); currentHover.push(0); }
@@ -1770,8 +1777,8 @@ function renderPareto(context) {
                         if (context.datasetIndex === 1) { 
                             return [
                                 `Tempo Total: ${bars[idx]}h`,
-                                `Média: ${avgHover[idx]}h / item`,
-                                `AGORA: ${currentHover[idx]} itens aqui`
+                                `Média: ${avgHover[idx]}h / proj`,
+                                `AGORA: ${currentHover[idx]} projs parados aqui`
                             ];
                         }
                         return context.raw + '%'; 
@@ -1797,35 +1804,35 @@ function renderPareto(context) {
 }
 
 /* ==================================================
-   RELATÓRIOS EM PDF
+   RELATÓRIOS E COMPILADOR EM JSPDF
 ================================================== */
 function sanitizePDF(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,""); }
 function exportReportPDF(id) {
   if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } const p = findProject(id); if (!p) return;
-  const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIÊ DO REGISTRO", 14, 22);
-  doc.setFontSize(14); doc.setTextColor(0,0,0); doc.text(`Item: ${sanitizePDF(p.name)}`, 14, 32);
-  doc.autoTable({ startY:38, theme:"plain", body:[["COD:",sanitizePDF(p.cod),"Responsável:",sanitizePDF(p.vendedor)],["Tipo:",sanitizePDF(p.tipo),"Prioridade:",sanitizePDF(p.probabilidade)],["Local:",sanitizePDF(p.cidade),"Atribuído:",sanitizePDF(p.owner)]], styles:{cellPadding:2,fontSize:11} });
-  let y = doc.lastAutoTable.finalY + 10; doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235); doc.text("HISTÓRICO DE ATIVIDADES", 14, y);
+  const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIER DO PROJETO", 14, 22);
+  doc.setFontSize(14); doc.setTextColor(0,0,0); doc.text(`Obra: ${sanitizePDF(p.name)}`, 14, 32);
+  doc.autoTable({ startY:38, theme:"plain", body:[["COD:",sanitizePDF(p.cod),"Vendedor:",sanitizePDF(p.vendedor)],["Tipo:",sanitizePDF(p.tipo),"Probabilidade:",sanitizePDF(p.probabilidade)],["Cidade:",sanitizePDF(p.cidade),"Responsavel:",sanitizePDF(p.owner)]], styles:{cellPadding:2,fontSize:11} });
+  let y = doc.lastAutoTable.finalY + 10; doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235); doc.text("HISTORICO DE ATIVIDADES", 14, y);
   const rows = (p.history||[]).map(h => [sanitizePDF(h.date||""), sanitizePDF(h.stage||""), sanitizePDF(h.author||""), sanitizePDF(h.obs||"")]);
-  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observação"]], body:rows, theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3}, columnStyles:{3:{cellWidth:80}} });
+  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows, theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3}, columnStyles:{3:{cellWidth:80}} });
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-function exportDraftsmanReport() { if (window.jspdf) generateListPDF((appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8), `Relatório de ${currentUser}`); }
-function exportManagerReport() { if (!window.jspdf) return; let tab = managerTab === "fila" ? (appData.projects||[]).filter(p => p.stageIndex === 0) : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8) : (appData.projects||[]).filter(p => p.stageIndex >= 8); generateListPDF(tab, `Relatório Geral — ${managerTab.toUpperCase()}`); }
+function exportDraftsmanReport() { if (window.jspdf) generateListPDF((appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8), `Relatorio de ${currentUser}`); }
+function exportManagerReport() { if (!window.jspdf) return; let tab = managerTab === "fila" ? (appData.projects||[]).filter(p => p.stageIndex === 0) : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8) : (appData.projects||[]).filter(p => p.stageIndex >= 8); generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`); }
 function generateListPDF(list, title) {
   if (!window.jspdf?.jsPDF) return; const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(37,99,235); doc.text(sanitizePDF(title), 14, 22);
   doc.setFontSize(10); doc.setTextColor(100,100,100); doc.setFont("helvetica","normal"); doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
   const rows = list.map(p => [sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"), sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")]);
-  doc.autoTable({ startY:36, head:[["COD","Cliente/Item","Responsável","Atribuído","Etapa Atual"]], body:rows, theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9} });
+  doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows, theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9} });
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
 /* ==================================================
-   BACKUP LOCAL JSON
+   BACKUP INTERNO JSON
 ================================================== */
 function exportBackup() {
-  const d = new Date(); const name = `backup_sistema_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+  const d = new Date(); const name = `backup_projetos_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
   const a = document.createElement("a"); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); a.download = name; a.click(); toast("Backup gerado!", "success");
 }
 function importBackup(e) {
