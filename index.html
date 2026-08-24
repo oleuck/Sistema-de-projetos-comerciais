@@ -268,11 +268,11 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 <body>
 
 <div id="toast-container" role="status" aria-live="polite"></div>
-<div id="offline-banner">⚠️ Firebase offline — usando dados locais.</div>
+<div id="offline-banner">⚠️ Modo Local (Offline) ativo.</div>
 
 <div id="global-loader" aria-label="Carregando sistema">
   <div class="spinner"></div>
-  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Sincronizando com a nuvem...</p>
+  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Carregando sistema...</p>
   <p id="loader-status" style="margin:0;">Aguardando banco de dados...</p>
 </div>
 
@@ -535,7 +535,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong style="white-space:nowrap;">Desenhista:</strong>
+        <strong style="white-space:nowrap;">Membro:</strong>
         <select id="graph-user-manager" onchange="refreshGraphFilters('manager')" style="margin-bottom:0; max-width:180px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-manager" onchange="renderPareto('manager')" style="margin-bottom:0; max-width:200px;"></select>
@@ -589,7 +589,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: var(--bg-purple-light); padding: 16px;">
         <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
         <p style="font-size: 0.88rem; color: var(--text-light); margin-bottom: 12px;">
-            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio (Carla ➔ Jones ➔ Shana ➔ Outro).
+            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio configurada.
         </p>
         <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
         </div>
@@ -611,7 +611,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-draftsman-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong>Desenhista:</strong>
+        <strong>Membro:</strong>
         <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:200px;"></select>
@@ -634,7 +634,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 <script>
 /* ==================================================
-   CONSTANTES, LINKS EXTERNOS E ESTADO GLOBAL
+   CONFIGURAÇÕES GERAIS E ETAPAS (CORRIGIDO)
 ================================================== */
 const STAGES = [
   "Aguardando Início (Fila)", // 0
@@ -754,7 +754,7 @@ const debounceRenderProjects = debounce(() => renderProjects());
 const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
 
 /* ==================================================
-   MANIPULAÇÃO DE MODAIS 
+   MANIPULAÇÃO DE MODAIS
 ================================================== */
 function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
@@ -875,7 +875,7 @@ function setFirebaseStatus(state) {
   const text = document.getElementById("firebase-status-text");
   if (!dot || !text) return;
   dot.className  = `firebase-dot ${state}`;
-  text.textContent = { connected:"Conectado ao Firebase", error:"Erro de conexão", "":"Verificando..." }[state] || "Verificando...";
+  text.textContent = { connected:"Conectado à nuvem", error:"Modo Local (Offline)", "":"Verificando..." }[state] || "Modo Local";
 }
 function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
 
@@ -890,6 +890,12 @@ function ensureDefaults(data) {
 
 function bootUI() {
   hideLoader();
+  if (!fbSynced) {
+    const local = localStorage.getItem("appData_local");
+    if (local) {
+        try { appData = JSON.parse(local); } catch(e) {}
+    }
+  }
   appData = ensureDefaults(appData);
   if (!currentUser && !isViewerMode) { show("view-profiles"); renderProfiles(); }
   else if (isViewerMode) { show("view-manager"); renderGlobalFeed(); }
@@ -901,39 +907,49 @@ function show(id) {
   document.getElementById(id).classList.remove("hidden");
 }
 
-const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 4000);
+const isConfigured = FIREBASE_CFG.apiKey && !FIREBASE_CFG.apiKey.includes("SUA_API_KEY");
+const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 2500);
 
-try {
-  firebase.initializeApp(FIREBASE_CFG);
-  db = firebase.firestore();
-  docRef = db.collection("sistema").doc("bancoDeDados");
-  docRef.onSnapshot(doc => {
-    clearTimeout(fbTimeout);
-    if (doc.exists) {
-      appData = ensureDefaults(doc.data());
-      fbSynced = true;
-      document.getElementById("offline-banner").style.display = "none";
-      setFirebaseStatus("connected");
-      maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-    } else if (!fbSynced) {
-      docRef.set(ensureDefaults(appData)).catch(() => {});
-      fbSynced = true;
-    }
-    bootUI();
-  }, () => { setFirebaseStatus("error"); bootUI(); });
-} catch { bootUI(); }
+if (isConfigured) {
+  try {
+    firebase.initializeApp(FIREBASE_CFG);
+    db = firebase.firestore();
+    docRef = db.collection("sistema").doc("bancoDeDados");
+    docRef.onSnapshot(doc => {
+      clearTimeout(fbTimeout);
+      if (doc.exists) {
+        appData = ensureDefaults(doc.data());
+        fbSynced = true;
+        document.getElementById("offline-banner").style.display = "none";
+        setFirebaseStatus("connected");
+        maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
+      } else if (!fbSynced) {
+        docRef.set(ensureDefaults(appData)).catch(() => {});
+        fbSynced = true;
+      }
+      bootUI();
+    }, () => { setFirebaseStatus("error"); bootUI(); });
+  } catch { bootUI(); }
+} else {
+  clearTimeout(fbTimeout);
+  setFirebaseStatus("error");
+  bootUI();
+}
 
 function saveData() {
-  if (!fbSynced) { localStorage.setItem("appData_offline_bkp", JSON.stringify(appData)); return; }
+  if (!fbSynced) { 
+    localStorage.setItem("appData_local", JSON.stringify(appData)); 
+    return; 
+  }
   if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
   if (!docRef) return;
   docRef.set(appData).then(() => {
     maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-  }).catch(() => toast("Erro ao salvar no Firebase.", "danger"));
+  }).catch(() => toast("Erro ao salvar no banco.", "danger"));
 }
 
 /* ==================================================
-   EXPORTAÇÃO EM SEGUNDO PLANO PARA GOOGLE PLANILHAS
+   EXPORTAÇÃO OPCIONAL PARA GOOGLE PLANILHAS
 ================================================== */
 async function sendToGoogleSheets(p) {
   if (!GOOGLE_SCRIPT_URL) return;
@@ -1080,7 +1096,7 @@ async function changeUserPassword(u) {
 }
 
 /* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN (RODÍZIO MÚLTIPLO CORRIGIDO)
+   SISTEMA DE SUGESTÃO ADMIN 
 ================================================== */
 function updateAdminSuggestion() {
   const panel = document.getElementById("admin-suggestion-panel");
@@ -1102,49 +1118,33 @@ function updateAdminSuggestion() {
   let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
   if (lastIndex === -1) lastIndex = -1;
 
-  let suggestions = [];
-  let currIndex = lastIndex;
+  let oldestProj = null;
+  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
+    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
+    let checkName = ROTACAO_VENDEDORES[checkIndex];
+
+    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
+                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
+    if (projsVendedor.length > 0) {
+      oldestProj = projsVendedor[0]; 
+      break; 
+    }
+  }
+
+  if (!oldestProj && filaProjs.length > 0) {
+    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
+  }
+
+  if (!oldestProj) {
+    panel.classList.add("hidden");
+    return;
+  }
 
   let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
      let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
      let countB = (appData.projects || []).filter(p => p.owner === b && p.stageIndex > 0 && p.stageIndex < 8).length;
      return countA - countB;
   });
-
-  desenhistasOrdenados.forEach((desenhista) => {
-    let oldestProj = null;
-    
-    for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-      let checkIndex = (currIndex + i) % ROTACAO_VENDEDORES.length;
-      let checkName = ROTACAO_VENDEDORES[checkIndex];
-
-      let projsVendedor = filaProjs.filter(p => {
-        let v = (p.vendedor || "").toUpperCase();
-        if (!ROTACAO_VENDEDORES.includes(v)) v = "OUTRO";
-        return v === checkName;
-      }).sort((a, b) => Number(a.id) - Number(b.id)); 
-
-      if (projsVendedor.length > 0) {
-        oldestProj = projsVendedor[0]; 
-        currIndex = checkIndex; 
-        break;
-      }
-    }
-    
-    if (!oldestProj && filaProjs.length > 0) {
-      oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-    }
-
-    if (oldestProj) {
-      suggestions.push({ desenhista: desenhista, proj: oldestProj });
-    }
-  });
-
-  const temSugestao = suggestions.length > 0;
-  if (!temSugestao) {
-    panel.classList.add("hidden");
-    return;
-  }
 
   panel.classList.remove("hidden");
   let html = `<table class="data-table" style="background: var(--card); width:100%;">
@@ -1159,16 +1159,14 @@ function updateAdminSuggestion() {
                 </thead>
                 <tbody>`;
 
-  suggestions.forEach((item) => {
-      const dName = item.desenhista;
-      const proj = item.proj;
+  desenhistasOrdenados.forEach((dName) => {
       html += `<tr>
           <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:var(--text);">${proj.vendedor || "-"}</td>
-          <td style="color:var(--text);">${proj.cod || "-"}</td>
-          <td style="white-space:normal; color:var(--text);">${proj.name}</td>
+          <td style="font-weight:700; color:var(--text);">${normalizeVendedor(oldestProj.vendedor)}</td>
+          <td style="color:var(--text);">${oldestProj.cod || "-"}</td>
+          <td style="white-space:normal; color:var(--text);">${oldestProj.name}</td>
           <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${proj.id}', '${dName}')">Atribuir Agora</button>
+              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
           </td>
       </tr>`;
   });
@@ -1184,7 +1182,7 @@ async function adminAssignProject(id, desenhista) {
   const ant = p.owner; 
   p.owner = desenhista;
   p.stageIndex = 1; 
-  appData.lastVendedor = p.vendedor;
+  appData.lastVendedor = normalizeVendedor(p.vendedor);
   
   pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
   saveData(); 
@@ -1192,9 +1190,8 @@ async function adminAssignProject(id, desenhista) {
   toast(`Projeto transferido com sucesso para ${desenhista}!`, "success");
 }
 
-
 /* ==================================================
-   SISTEMA DE RENDERIZAÇÃO E FILTRAGEM DE TABELAS/CARDS
+   RENDERIZAÇÃO DE TABELAS / CARDS
 ================================================== */
 function updateViews() { 
   if (isViewerMode) renderGlobalFeed();
@@ -1216,7 +1213,6 @@ function renderGlobalFeed() {
   const list = filterAndSort(appData.projects || [], src, sort, managerTab);
   
   viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
-  
   updateBadges(); 
 }
 
@@ -1339,7 +1335,7 @@ function buildCards(list, container, isDash) {
       if (!h) return "";
       const editBtns = canEdit ? `<div class="timeline-actions"><button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})">🗑️</button></div>` : "";
       const dateAttr = canEdit ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})"` : `class="timeline-date"`;
-      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") ? "color:var(--success);font-weight:700;" : "");
+      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") || h.stage?.includes("REVISÃO") ? "color:var(--success);font-weight:700;" : "");
 
       return `<div class="timeline-item"><div class="timeline-top"><span class="timeline-stage" style="${sStyle}">${h.stage||""}</span>${editBtns}</div>
         <div class="timeline-obs">↳ ${h.obs||""}</div>
@@ -1349,6 +1345,7 @@ function buildCards(list, container, isDash) {
     let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
     let actions = "";
     
+    // RESTAURADO OS NOMES ORIGINAIS DOS BOTÕES
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
     if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
     
@@ -1356,6 +1353,7 @@ function buildCards(list, container, isDash) {
     
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
+    
     else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     
     actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
@@ -1470,7 +1468,8 @@ async function updateStage(id, sel) {
   }
   
   p.stageIndex = idx;
-  pushHistory(p, sName, obs || "Etapa alterada."); 
+  // GARANTINDO QUE VOLTA A CHAMAR "RETORNOU AO DESENHISTA" SE FOR A ETAPA DO DESENHISTA
+  pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada."); 
   saveData(); updateViews();
 }
 
@@ -1542,7 +1541,8 @@ function closeCreateRevisaoModal(confirm) {
 }
 
 async function registerEvent(id) { const p = findProject(id);
-if (p) { const obs = await openCustomModal("Recado", "Insira o recado:", ""); if (obs) { pushHistory(p, "📢 RECADO", obs); saveData(); updateViews(); } } }
+if (p) { const obs = await openCustomModal("Recado", "Insira o recado:", ""); if (obs) { pushHistory(p, "📢 RECADO", obs); saveData();
+updateViews(); } } }
 async function editHistoryItem(id, i) { const p = findProject(id);
 if (p && p.history[i]) { const n = await openCustomModal("Editar Histórico", `Ajustar obs de: ${p.history[i].stage}`, "", p.history[i].obs);
 if (n !== null) { p.history[i].obs = n || "Sem obs."; saveData(); updateViews(); } } }
@@ -1574,7 +1574,8 @@ function closeReworkModal(confirm) {
   document.getElementById("rework-modal").classList.add("hidden");
   if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
   const type = document.getElementById("rework-type-select").value; const obs = document.getElementById("rework-obs-input").value;
-  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado."); saveData(); updateViews(); } reworkProjectId = null;
+  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado.");
+  saveData(); updateViews(); } reworkProjectId = null;
 }
 
 function openDateModal(id, i) { if (isViewerMode) return;
@@ -1588,7 +1589,7 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   GERAÇÃO DE GRÁFICOS PARETO COM ATUALIZAÇÕES
+   GERAÇÃO DE GRÁFICOS PARETO
 ================================================== */
 function refreshGraphFilters(context) {
     const isManager = context === "manager";
@@ -1623,12 +1624,10 @@ function renderPareto(context) {
   const minBound = startDateStr ? new Date(startDateStr + "T00:00:00").getTime() : 0;
   const maxBound = endDateStr ? new Date(endDateStr + "T23:59:59").getTime() : Infinity;
 
-  // FILTRO: DESENHISTA
   let baseList = appData.projects || [];
   if (userSelVal === "MEUS") baseList = baseList.filter(p => p.owner === currentUser);
   else if (userSelVal !== "ALL") baseList = baseList.filter(p => p.owner === userSelVal);
 
-  // ALIMENTAR DROPDOWN DE PROJETOS DO DESENHISTA
   if (projSel) {
       projSel.innerHTML = '<option value="ALL">Todos os Projetos</option>';
       baseList.forEach(p => {
@@ -1639,7 +1638,6 @@ function renderPareto(context) {
       }
   }
 
-  // FILTRO: PROJETO ESPECÍFICO
   let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
   
   const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
@@ -1699,7 +1697,6 @@ function renderPareto(context) {
     if (pInFila) countFila++;
     stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
 
-    // Calcula onde esse projeto esta estacionado neste momento
     if (p.stageIndex !== 8) {
         let currentS = STAGES[p.stageIndex];
         if (p.isImpeded) currentS = "Pausado / Impedido";
@@ -1734,7 +1731,7 @@ function renderPareto(context) {
   const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
   const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
   
-  const labels = [], bars = [], line = [], countHover = [], avgHover = [], currentHover = [];
+  const labels = [], bars = [], line = [], avgHover = [], currentHover = [];
   
   items.forEach(([s, h]) => { 
       labels.push(s); 
@@ -1743,12 +1740,11 @@ function renderPareto(context) {
       line.push(((cumulative/totalH)*100).toFixed(1)); 
       
       let projCount = countByStage[s] || 0;
-      countHover.push(projCount);
       avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
       currentHover.push(currentActive[s] || 0); 
   });
   
-  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); countHover.push(0); avgHover.push(0); currentHover.push(0); }
+  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); avgHover.push(0); currentHover.push(0); }
 
   if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
   const canvas = document.getElementById(canvasId); if (!canvas) return;
