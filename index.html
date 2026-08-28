@@ -268,11 +268,11 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 <body>
 
 <div id="toast-container" role="status" aria-live="polite"></div>
-<div id="offline-banner">⚠️ Modo Local (Offline) ativo.</div>
+<div id="offline-banner">⚠️ Firebase offline — usando dados locais.</div>
 
 <div id="global-loader" aria-label="Carregando sistema">
   <div class="spinner"></div>
-  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Carregando sistema...</p>
+  <p style="font-weight:600; color:var(--primary); margin:0;" id="loader-title">Sincronizando com a nuvem...</p>
   <p id="loader-status" style="margin:0;">Aguardando banco de dados...</p>
 </div>
 
@@ -347,6 +347,34 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div class="modal-buttons">
       <button class="secondary" onclick="closeCreateRevisaoModal(false)">Cancelar</button>
       <button style="background:var(--orange);" onclick="closeCreateRevisaoModal(true)">Confirmar Retorno</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOVO MODAL: RELATÓRIOS PDF -->
+<div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <h3 class="modal-title">📊 Gerar Relatório PDF</h3>
+    <p class="modal-desc">Escolha os filtros e o nível de detalhe do relatório que deseja gerar.</p>
+
+    <label for="pdf-filter">Quais projetos incluir?</label>
+    <select id="pdf-filter" style="margin-bottom:14px;">
+      <option value="MEUS_ANDAMENTO" id="pdf-opt-meus-and">Meus Projetos em Andamento</option>
+      <option value="MEUS_CONCLUIDOS" id="pdf-opt-meus-con">Meus Projetos Concluídos</option>
+      <option value="TODOS_ANDAMENTO">Todos em Andamento</option>
+      <option value="TODOS_CONCLUIDOS">Todos os Concluídos</option>
+      <option value="TODOS">Absolutamente Todos (Geral)</option>
+    </select>
+
+    <label for="pdf-detail">Nível de Detalhe</label>
+    <select id="pdf-detail">
+      <option value="RESUMO">Apenas resumo (Etapa Atual)</option>
+      <option value="HISTORICO">Histórico Completo (Data, Hora, Etapa e Descrição)</option>
+    </select>
+
+    <div class="modal-buttons" style="margin-top: 22px;">
+      <button class="secondary" onclick="closePdfModal(false)">Cancelar</button>
+      <button class="success" onclick="closePdfModal(true)">📄 Gerar PDF</button>
     </div>
   </div>
 </div>
@@ -518,7 +546,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
             <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Obra ou CÓD...">
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
-          <button onclick="exportManagerReport()" style="background:#111827;">📊 PDF da Aba</button>
+          
+          <!-- BOTÃO PDF ATUALIZADO -->
+          <button onclick="openPdfModal()" style="background:#111827;">📊 PDF da Aba</button>
+          
           <button class="secondary" onclick="logout()">← Sair</button>
         </div>
       </div>
@@ -535,7 +566,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong style="white-space:nowrap;">Membro:</strong>
+        <strong style="white-space:nowrap;">Desenhista:</strong>
         <select id="graph-user-manager" onchange="refreshGraphFilters('manager')" style="margin-bottom:0; max-width:180px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-manager" onchange="renderPareto('manager')" style="margin-bottom:0; max-width:200px;"></select>
@@ -581,7 +612,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
             <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Obra ou CÓD...">
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
-          <button id="pdf-dashboard-btn" onclick="exportDraftsmanReport()" style="background:#1f2937;">📊 PDF</button>
+          
+          <!-- BOTÃO PDF ATUALIZADO -->
+          <button id="pdf-dashboard-btn" onclick="openPdfModal()" style="background:#1f2937;">📊 PDF</button>
+          
         </div>
       </div>
     </div>
@@ -611,7 +645,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
     <div id="view-draftsman-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
-        <strong>Membro:</strong>
+        <strong>Desenhista:</strong>
         <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
         <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:200px;"></select>
@@ -806,7 +840,7 @@ function closeConfirmModal(confirm) {
 
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
-  ["custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal","create-revisao-modal"]
+  ["pdf-modal","custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal","create-revisao-modal"]
     .forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
@@ -1468,7 +1502,6 @@ async function updateStage(id, sel) {
   }
   
   p.stageIndex = idx;
-  // GARANTINDO QUE VOLTA A CHAMAR "RETORNOU AO DESENHISTA" SE FOR A ETAPA DO DESENHISTA
   pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada."); 
   saveData(); updateViews();
 }
@@ -1800,9 +1833,11 @@ function renderPareto(context) {
 }
 
 /* ==================================================
-   RELATÓRIOS E COMPILADOR EM JSPDF
+   RELATÓRIOS E COMPILADOR EM JSPDF (ATUALIZADO)
 ================================================== */
 function sanitizePDF(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,""); }
+
+// Relatório individual no Card (mantido igual)
 function exportReportPDF(id) {
   if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } const p = findProject(id); if (!p) return;
   const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIER DO PROJETO", 14, 22);
@@ -1814,14 +1849,111 @@ function exportReportPDF(id) {
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-function exportDraftsmanReport() { if (window.jspdf) generateListPDF((appData.projects||[]).filter(p => p.owner === currentUser && p.stageIndex < 8), `Relatorio de ${currentUser}`); }
-function exportManagerReport() { if (!window.jspdf) return; let tab = managerTab === "fila" ? (appData.projects||[]).filter(p => p.stageIndex === 0) : managerTab === "andamento" ? (appData.projects||[]).filter(p => p.stageIndex > 0 && p.stageIndex < 8) : (appData.projects||[]).filter(p => p.stageIndex >= 8); generateListPDF(tab, `Relatorio Corporativo — ${managerTab.toUpperCase()}`); }
-function generateListPDF(list, title) {
-  if (!window.jspdf?.jsPDF) return; const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(37,99,235); doc.text(sanitizePDF(title), 14, 22);
-  doc.setFontSize(10); doc.setTextColor(100,100,100); doc.setFont("helvetica","normal"); doc.text("Gerado em: "+new Date().toLocaleString("pt-BR"), 14, 29);
-  const rows = list.map(p => [sanitizePDF(p.cod||"-"), sanitizePDF(p.name), sanitizePDF(p.vendedor||"-"), sanitizePDF(p.owner), sanitizePDF(STAGES[p.stageIndex]||"-")]);
-  doc.autoTable({ startY:36, head:[["COD","Cliente/Obra","Vendedor","Desenhista","Etapa Atual"]], body:rows, theme:"grid", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9} });
-  window.open(URL.createObjectURL(doc.output("blob")),"_blank");
+// Abre o Modal de configuração de PDF
+function openPdfModal() {
+  const optMeusAndamento = document.getElementById('pdf-opt-meus-and');
+  const optMeusConcluidos = document.getElementById('pdf-opt-meus-con');
+  
+  if (isViewerMode) {
+    optMeusAndamento.style.display = 'none';
+    optMeusConcluidos.style.display = 'none';
+    document.getElementById('pdf-filter').value = 'TODOS_ANDAMENTO';
+  } else {
+    optMeusAndamento.style.display = 'block';
+    optMeusConcluidos.style.display = 'block';
+    document.getElementById('pdf-filter').value = 'MEUS_ANDAMENTO';
+  }
+  
+  document.getElementById('pdf-modal').classList.remove('hidden');
+}
+
+// Processa a escolha do Modal e gera o PDF
+function closePdfModal(confirm) {
+  document.getElementById('pdf-modal').classList.add('hidden');
+  if (!confirm) return;
+
+  const filter = document.getElementById('pdf-filter').value;
+  const detail = document.getElementById('pdf-detail').value;
+  const showHistory = detail === 'HISTORICO';
+
+  let list = appData.projects || [];
+  let title = "Relatório de Projetos";
+
+  if (filter === 'MEUS_ANDAMENTO') {
+    list = list.filter(p => p.owner === currentUser && p.stageIndex < 8);
+    title = `Projetos em Andamento - ${currentUser}`;
+  } else if (filter === 'MEUS_CONCLUIDOS') {
+    list = list.filter(p => p.owner === currentUser && p.stageIndex >= 8);
+    title = `Projetos Concluídos - ${currentUser}`;
+  } else if (filter === 'TODOS_ANDAMENTO') {
+    list = list.filter(p => p.stageIndex < 8);
+    title = `Todos os Projetos em Andamento`;
+  } else if (filter === 'TODOS_CONCLUIDOS') {
+    list = list.filter(p => p.stageIndex >= 8);
+    title = `Todos os Projetos Concluídos`;
+  } else if (filter === 'TODOS') {
+    title = `Todos os Projetos (Geral)`;
+  }
+
+  generateListPDF(list, title, showHistory);
+}
+
+// Motor de geração unificado para as opções de relatório
+function generateListPDF(list, title, showHistory) {
+  if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } 
+  
+  // Se for mostrar o histórico inteiro de todos, usa folha deitada (landscape) para caber os textos
+  const doc = new window.jspdf.jsPDF(showHistory ? "landscape" : "portrait"); 
+  
+  doc.setFont("helvetica","bold"); 
+  doc.setFontSize(18); 
+  doc.setTextColor(37,99,235); 
+  doc.text(sanitizePDF(title), 14, 22);
+  
+  doc.setFontSize(10); 
+  doc.setTextColor(100,100,100); 
+  doc.setFont("helvetica","normal"); 
+  doc.text("Gerado em: " + new Date().toLocaleString("pt-BR"), 14, 29);
+  
+  let head = [];
+  let rows = [];
+  let columnStyles = {};
+
+  if (showHistory) {
+    head = [["CÓD", "Obra / Cliente", "Desenhista", "Histórico Completo"]];
+    rows = list.map(p => {
+      const histStr = (p.history||[]).map(h => `[${h.date}] ${h.stage} (${h.author})\n-> ${h.obs}`).join("\n\n");
+      return [
+        sanitizePDF(p.cod||"-"), 
+        sanitizePDF(p.name), 
+        sanitizePDF(p.owner), 
+        sanitizePDF(histStr)
+      ];
+    });
+    // Define largura máxima para a coluna de histórico, forçando o texto a quebrar em linhas
+    columnStyles = { 3: { cellWidth: 160 } }; 
+  } else {
+    head = [["CÓD", "Cliente/Obra", "Vendedor", "Desenhista", "Etapa Atual"]];
+    rows = list.map(p => [
+      sanitizePDF(p.cod||"-"), 
+      sanitizePDF(p.name), 
+      sanitizePDF(p.vendedor||"-"), 
+      sanitizePDF(p.owner), 
+      sanitizePDF(STAGES[p.stageIndex]||"-")
+    ]);
+  }
+
+  doc.autoTable({ 
+    startY: 36, 
+    head: head, 
+    body: rows, 
+    theme: "grid", 
+    headStyles: { fillColor: [37,99,235] }, 
+    styles: { fontSize: showHistory ? 8 : 9 },
+    columnStyles: columnStyles
+  });
+  
+  window.open(URL.createObjectURL(doc.output("blob")), "_blank");
 }
 
 /* ==================================================
