@@ -547,7 +547,6 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
           
-          <!-- BOTÃO PDF ATUALIZADO -->
           <button onclick="openPdfModal()" style="background:#111827;">📊 PDF da Aba</button>
           
           <button class="secondary" onclick="logout()">← Sair</button>
@@ -613,7 +612,6 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
           </div>
           <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
           
-          <!-- BOTÃO PDF ATUALIZADO -->
           <button id="pdf-dashboard-btn" onclick="openPdfModal()" style="background:#1f2937;">📊 PDF</button>
           
         </div>
@@ -668,7 +666,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 <script>
 /* ==================================================
-   CONFIGURAÇÕES GERAIS E ETAPAS (CORRIGIDO)
+   CONFIGURAÇÕES GERAIS E ETAPAS
 ================================================== */
 const STAGES = [
   "Aguardando Início (Fila)", // 0
@@ -837,23 +835,6 @@ function closeConfirmModal(confirm) {
   document.getElementById("confirm-modal").classList.add("hidden");
   if (confirmModalResolve) { confirmModalResolve(confirm); confirmModalResolve = null; }
 }
-
-document.addEventListener("keydown", e => {
-  if (e.key !== "Escape") return;
-  ["pdf-modal","custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal","create-revisao-modal"]
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
-    });
-});
-
-document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") { e.preventDefault(); closePasswordModal(true); }
-});
-
-document.getElementById("modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); closeCustomModal(true); }
-});
 
 /* ==================================================
    TRATAMENTO DE DATAS E TRABALHO ÚTIL
@@ -1379,7 +1360,6 @@ function buildCards(list, container, isDash) {
     let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
     let actions = "";
     
-    // RESTAURADO OS NOMES ORIGINAIS DOS BOTÕES
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
     if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
     
@@ -1387,7 +1367,6 @@ function buildCards(list, container, isDash) {
     
     if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
     else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
-    
     else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
     
     actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
@@ -1622,7 +1601,7 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   GERAÇÃO DE GRÁFICOS PARETO
+   GERAÇÃO DE GRÁFICOS PARETO COM ATUALIZAÇÕES
 ================================================== */
 function refreshGraphFilters(context) {
     const isManager = context === "manager";
@@ -1674,7 +1653,6 @@ function renderPareto(context) {
   let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
   
   const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
-  let countByStage = {}; 
   let currentActive = {}; 
   
   let total = target.length, sumCompleted = 0, countCompleted = 0;
@@ -1685,7 +1663,6 @@ function renderPareto(context) {
     const rev = [...p.history].reverse(); 
     let startMs = null, endMs = null;
     let pInFila = false;
-    let stagesInThisProject = new Set(); 
 
     rev.forEach(ev => { 
         if (!ev) return; 
@@ -1704,7 +1681,6 @@ function renderPareto(context) {
             let endOverlap = Math.min(t, maxBound);
             if (startOverlap < endOverlap) {
                 hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap); 
-                stagesInThisProject.add(curStage);
                 if (curStage === STAGES[0]) pInFila = true;
             }
         } 
@@ -1722,13 +1698,11 @@ function renderPareto(context) {
         let endOverlap = Math.min(Date.now(), maxBound);
         if (startOverlap < endOverlap) {
             hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap);
-            stagesInThisProject.add(curStage);
             if (curStage === STAGES[0]) pInFila = true;
         }
     }
     
     if (pInFila) countFila++;
-    stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
 
     if (p.stageIndex !== 8) {
         let currentS = STAGES[p.stageIndex];
@@ -1764,20 +1738,17 @@ function renderPareto(context) {
   const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
   const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
   
-  const labels = [], bars = [], line = [], avgHover = [], currentHover = [];
+  const labels = [], bars = [], line = [], currentHover = [];
   
   items.forEach(([s, h]) => { 
       labels.push(s); 
       bars.push(h.toFixed(1)); 
       cumulative += h; 
       line.push(((cumulative/totalH)*100).toFixed(1)); 
-      
-      let projCount = countByStage[s] || 0;
-      avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
       currentHover.push(currentActive[s] || 0); 
   });
   
-  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); avgHover.push(0); currentHover.push(0); }
+  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); currentHover.push(0); }
 
   if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
   const canvas = document.getElementById(canvasId); if (!canvas) return;
@@ -1806,7 +1777,6 @@ function renderPareto(context) {
                         if (context.datasetIndex === 1) { 
                             return [
                                 `Tempo Total: ${bars[idx]}h`,
-                                `Média: ${avgHover[idx]}h / proj`,
                                 `AGORA: ${currentHover[idx]} projs parados aqui`
                             ];
                         }
@@ -1833,11 +1803,12 @@ function renderPareto(context) {
 }
 
 /* ==================================================
-   RELATÓRIOS E COMPILADOR EM JSPDF (ATUALIZADO)
+   RELATÓRIOS E COMPILADOR EM JSPDF
 ================================================== */
-function sanitizePDF(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g,""); }
+function sanitizePDF(t) { 
+    return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E\n\r]/g,""); 
+}
 
-// Relatório individual no Card (mantido igual)
 function exportReportPDF(id) {
   if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } const p = findProject(id); if (!p) return;
   const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIER DO PROJETO", 14, 22);
@@ -1849,7 +1820,6 @@ function exportReportPDF(id) {
   window.open(URL.createObjectURL(doc.output("blob")),"_blank");
 }
 
-// Abre o Modal de configuração de PDF
 function openPdfModal() {
   const optMeusAndamento = document.getElementById('pdf-opt-meus-and');
   const optMeusConcluidos = document.getElementById('pdf-opt-meus-con');
@@ -1867,7 +1837,6 @@ function openPdfModal() {
   document.getElementById('pdf-modal').classList.remove('hidden');
 }
 
-// Processa a escolha do Modal e gera o PDF
 function closePdfModal(confirm) {
   document.getElementById('pdf-modal').classList.add('hidden');
   if (!confirm) return;
@@ -1898,11 +1867,9 @@ function closePdfModal(confirm) {
   generateListPDF(list, title, showHistory);
 }
 
-// Motor de geração unificado para as opções de relatório
 function generateListPDF(list, title, showHistory) {
   if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } 
   
-  // Se for mostrar o histórico inteiro de todos, usa folha deitada (landscape) para caber os textos
   const doc = new window.jspdf.jsPDF(showHistory ? "landscape" : "portrait"); 
   
   doc.setFont("helvetica","bold"); 
@@ -1920,9 +1887,9 @@ function generateListPDF(list, title, showHistory) {
   let columnStyles = {};
 
   if (showHistory) {
-    head = [["CÓD", "Obra / Cliente", "Desenhista", "Histórico Completo"]];
+    head = [["CÓD", "Obra / Cliente", "Responsável", "Histórico"]];
     rows = list.map(p => {
-      const histStr = (p.history||[]).map(h => `[${h.date}] ${h.stage} (${h.author})\n-> ${h.obs}`).join("\n\n");
+      const histStr = (p.history||[]).map(h => `• ${h.date} | ${h.stage} (${h.author})\n   ↳ Obs: ${h.obs}`).join("\n\n");
       return [
         sanitizePDF(p.cod||"-"), 
         sanitizePDF(p.name), 
@@ -1930,8 +1897,7 @@ function generateListPDF(list, title, showHistory) {
         sanitizePDF(histStr)
       ];
     });
-    // Define largura máxima para a coluna de histórico, forçando o texto a quebrar em linhas
-    columnStyles = { 3: { cellWidth: 160 } }; 
+    columnStyles = { 3: { cellWidth: 170 } }; 
   } else {
     head = [["CÓD", "Cliente/Obra", "Vendedor", "Desenhista", "Etapa Atual"]];
     rows = list.map(p => [
