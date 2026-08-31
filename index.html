@@ -283,11 +283,11 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <p class="modal-desc">Preencha as informações para colocar na fila de orçamento.</p>
     <div class="form-grid full">
       <label for="cp-cliente">Nome do Cliente / Obra *</label>
-      <input type="text" id="cp-cliente" placeholder="Ex: Condomínio Ibirapuera — Bloco A">
+      <input type="text" id="cp-cliente" placeholder="Ex: Condomínio Ibirapuera — Bloco A" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);">
     </div>
     <div class="form-grid">
-      <div><label for="cp-cod">CÓD / Ordem</label><input type="text" id="cp-cod" placeholder="Ex: 18455"></div>
-      <div><label for="cp-cidade">Cidade</label><input type="text" id="cp-cidade" placeholder="Ex: São Paulo"></div>
+      <div><label for="cp-cod">CÓD / Ordem</label><input type="text" id="cp-cod" placeholder="Ex: 18455" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);"></div>
+      <div><label for="cp-cidade">Cidade</label><input type="text" id="cp-cidade" placeholder="Ex: São Paulo" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);"></div>
     </div>
     <div class="form-grid">
       <div>
@@ -309,7 +309,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       <select id="cp-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
     </div>
     <div><label for="cp-obs">Observação inicial</label>
-      <textarea id="cp-obs" rows="2" placeholder="Recados, detalhes, pendências..."></textarea>
+      <textarea id="cp-obs" rows="2" placeholder="Recados, detalhes, pendências..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); closeCreateProjectModal(true); }"></textarea>
     </div>
     
     <div style="margin-top:10px; background:var(--bg-alt); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
@@ -333,9 +333,9 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <p class="modal-desc">O projeto voltará para a Fila como "REVISÃO". O CÓD antigo ficará salvo no histórico.</p>
     <input type="hidden" id="cr-id">
     <label for="cr-cod">Novo CÓD (opcional)</label>
-    <input type="text" id="cr-cod" placeholder="Ex: 18455-REV">
+    <input type="text" id="cr-cod" placeholder="Ex: 18455-REV" onkeydown="if(event.key === 'Enter') closeCreateRevisaoModal(true);">
     <label for="cr-motivo">Motivo do Retorno *</label>
-    <textarea id="cr-motivo" rows="2" placeholder="Descreva o motivo da revisão..."></textarea>
+    <textarea id="cr-motivo" rows="2" placeholder="Descreva o motivo da revisão..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); closeCreateRevisaoModal(true); }"></textarea>
     
     <div style="margin-top:10px; background:var(--bg-alt); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal; color:var(--text); margin-bottom:0;">
@@ -351,7 +351,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
-<!-- NOVO MODAL: RELATÓRIOS PDF -->
+<!-- MODAL: RELATÓRIOS PDF -->
 <div id="pdf-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
   <div class="modal-content">
     <h3 class="modal-title">📊 Gerar Relatório PDF</h3>
@@ -384,8 +384,8 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <h3 id="ep-modal-title" class="modal-title">✏️ Editar Informações do Projeto</h3>
     <input type="hidden" id="ep-id">
     <div class="form-grid">
-      <div><label for="ep-cod">CÓD / Ordem</label><input type="text" id="ep-cod"></div>
-      <div><label for="ep-cidade">Cidade</label><input type="text" id="ep-cidade"></div>
+      <div><label for="ep-cod">CÓD / Ordem</label><input type="text" id="ep-cod" onkeydown="if(event.key === 'Enter') closeEditProjectModal(true);"></div>
+      <div><label for="ep-cidade">Cidade</label><input type="text" id="ep-cidade" onkeydown="if(event.key === 'Enter') closeEditProjectModal(true);"></div>
     </div>
     <div class="form-grid">
       <div><label for="ep-vendedor">Vendedor</label>
@@ -426,7 +426,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   <div class="modal-content">
     <h3 id="date-modal-title" class="modal-title">📅 Editar Data do Evento</h3>
     <label for="date-modal-input">Nova data e hora</label>
-    <input type="datetime-local" id="date-modal-input" style="margin-bottom:0;">
+    <input type="datetime-local" id="date-modal-input" style="margin-bottom:0;" onkeydown="if(event.key === 'Enter') closeDateModal(true);">
     <div class="modal-buttons">
       <button class="secondary" onclick="closeDateModal(false)">Cancelar</button>
       <button onclick="closeDateModal(true)">Salvar</button>
@@ -443,7 +443,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       <option value="EXTERNO">🟠 Pedido Externo — alteração solicitada pelo cliente</option>
     </select>
     <label for="rework-obs-input">O que precisa ser alterado?</label>
-    <textarea id="rework-obs-input" rows="3" placeholder="Descreva a alteração necessária..."></textarea>
+    <textarea id="rework-obs-input" rows="3" placeholder="Descreva a alteração necessária..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); closeReworkModal(true); }"></textarea>
     <div class="modal-buttons">
       <button class="secondary" onclick="closeReworkModal(false)">Cancelar</button>
       <button style="background:#d946ef;" onclick="closeReworkModal(true)">🔄 Iniciar</button>
@@ -509,7 +509,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       <div style="max-width:380px; margin:24px auto 0;" class="card padded">
         <h4 style="margin-bottom:10px;">Cadastrar novo membro</h4>
         <label for="new-user-name">Nome</label>
-        <input type="text" id="new-user-name" placeholder="Nome do membro...">
+        <input type="text" id="new-user-name" placeholder="Nome do membro..." onkeydown="if(event.key === 'Enter') addUser();">
         <button onclick="addUser()" style="width:100%;">+ Adicionar à Equipe</button>
       </div>
 
@@ -691,7 +691,6 @@ const FIREBASE_CFG = {
 const MASTER_KEY = "070522";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
 
-// A ordem padrão do rodízio global
 const ROTACAO_VENDEDORES = ["CARLA", "JONES", "SHANA", "OUTRO"];
 
 let db, docRef;
@@ -742,7 +741,7 @@ function normalizeVendedor(v) {
 }
 
 /* ==================================================
-   ALTERAR MODO DE VISUALIZAÇÃO (CARDS / TABELA EXCEL)
+   ALTERAR MODO DE VISUALIZAÇÃO
 ================================================== */
 function toggleViewMode() {
   viewMode = viewMode === "cards" ? "table" : "cards";
@@ -754,7 +753,7 @@ function toggleViewMode() {
 }
 
 /* ==================================================
-   TOAST E SEGURANÇA (HAHSING)
+   TOAST E SEGURANÇA
 ================================================== */
 function toast(msg, type = "info", duration = 3500) {
   const c = document.getElementById("toast-container");
@@ -835,6 +834,23 @@ function closeConfirmModal(confirm) {
   document.getElementById("confirm-modal").classList.add("hidden");
   if (confirmModalResolve) { confirmModalResolve(confirm); confirmModalResolve = null; }
 }
+
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  ["pdf-modal","custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal","create-revisao-modal"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
+    });
+});
+
+document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); closePasswordModal(true); }
+});
+
+document.getElementById("modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); closeCustomModal(true); }
+});
 
 /* ==================================================
    TRATAMENTO DE DATAS E TRABALHO ÚTIL
@@ -964,12 +980,13 @@ function saveData() {
 }
 
 /* ==================================================
-   EXPORTAÇÃO OPCIONAL PARA GOOGLE PLANILHAS
+   EXPORTAÇÃO PARA GOOGLE PLANILHAS (CORRIGIDO PARA NOVA DATA)
 ================================================== */
 async function sendToGoogleSheets(p) {
   if (!GOOGLE_SCRIPT_URL) return;
   try {
-    const entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0].replace(/,/g, "").trim() : "";
+    // PUXA A DATA DO PRIMEIRO ITEM DO HISTORICO (QUE É O MAIS RECENTE: A CRIAÇÃO OU REVISÃO DE HOJE)
+    const entryDate = p.history && p.history.length > 0 ? p.history[0].date.split(" ")[0].replace(/,/g, "").trim() : "";
     
     const payload = {
       vendedor: p.vendedor,
@@ -1601,7 +1618,7 @@ function closeDateModal(confirm) {
 }
 
 /* ==================================================
-   GERAÇÃO DE GRÁFICOS PARETO COM ATUALIZAÇÕES
+   GERAÇÃO DE GRÁFICOS PARETO (CHART.JS)
 ================================================== */
 function refreshGraphFilters(context) {
     const isManager = context === "manager";
@@ -1653,6 +1670,7 @@ function renderPareto(context) {
   let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
   
   const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
+  let countByStage = {}; 
   let currentActive = {}; 
   
   let total = target.length, sumCompleted = 0, countCompleted = 0;
@@ -1663,6 +1681,7 @@ function renderPareto(context) {
     const rev = [...p.history].reverse(); 
     let startMs = null, endMs = null;
     let pInFila = false;
+    let stagesInThisProject = new Set(); 
 
     rev.forEach(ev => { 
         if (!ev) return; 
@@ -1681,6 +1700,7 @@ function renderPareto(context) {
             let endOverlap = Math.min(t, maxBound);
             if (startOverlap < endOverlap) {
                 hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap); 
+                stagesInThisProject.add(curStage);
                 if (curStage === STAGES[0]) pInFila = true;
             }
         } 
@@ -1698,11 +1718,13 @@ function renderPareto(context) {
         let endOverlap = Math.min(Date.now(), maxBound);
         if (startOverlap < endOverlap) {
             hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap);
+            stagesInThisProject.add(curStage);
             if (curStage === STAGES[0]) pInFila = true;
         }
     }
     
     if (pInFila) countFila++;
+    stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
 
     if (p.stageIndex !== 8) {
         let currentS = STAGES[p.stageIndex];
@@ -1738,17 +1760,20 @@ function renderPareto(context) {
   const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
   const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
   
-  const labels = [], bars = [], line = [], currentHover = [];
+  const labels = [], bars = [], line = [], avgHover = [], currentHover = [];
   
   items.forEach(([s, h]) => { 
       labels.push(s); 
       bars.push(h.toFixed(1)); 
       cumulative += h; 
       line.push(((cumulative/totalH)*100).toFixed(1)); 
+      
+      let projCount = countByStage[s] || 0;
+      avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
       currentHover.push(currentActive[s] || 0); 
   });
   
-  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); currentHover.push(0); }
+  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); avgHover.push(0); currentHover.push(0); }
 
   if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
   const canvas = document.getElementById(canvasId); if (!canvas) return;
@@ -1777,6 +1802,7 @@ function renderPareto(context) {
                         if (context.datasetIndex === 1) { 
                             return [
                                 `Tempo Total: ${bars[idx]}h`,
+                                `Média: ${avgHover[idx]}h / proj`,
                                 `AGORA: ${currentHover[idx]} projs parados aqui`
                             ];
                         }
@@ -1887,7 +1913,7 @@ function generateListPDF(list, title, showHistory) {
   let columnStyles = {};
 
   if (showHistory) {
-    head = [["CÓD", "Obra / Cliente", "Responsável", "Histórico"]];
+    head = [["CÓD", "Obra / Cliente", "Responsável", "Histórico Completo"]];
     rows = list.map(p => {
       const histStr = (p.history||[]).map(h => `• ${h.date} | ${h.stage} (${h.author})\n   ↳ Obs: ${h.obs}`).join("\n\n");
       return [
