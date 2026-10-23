@@ -2,7 +2,7 @@
    CONFIGURAÇÕES GERAIS E ETAPAS
    (FIREBASE_CFG, MASTER_KEY e GOOGLE_SCRIPT_URL vêm do index.html)
 ================================================== */
-const APP_VERSION = "2026-10-23-b";
+const APP_VERSION = "2026-10-23-c";
 console.log("%c[Sistema] script.js versão " + APP_VERSION, "color:#22c55e;font-weight:bold");
 
 const STAGES = [
@@ -402,12 +402,12 @@ function getSheetStageLabel(p) {
     0: "PROJETO",
     1: "DESENHISTA",
     2: "ORÇAMENTO",
-    3: "CORREÇÃO 1",
-    4: "CORREÇÃO 2",
+    3: "CORREÇÃO",
+    4: "CORREÇÃO",
     5: "LUIS",
     6: "CRISTIAN",
     7: "DESENHISTA",
-    8: "ENTREGUE"
+    8: "CONCLUIDO"
   };
   return map[idx] || "PROJETO";
 }
