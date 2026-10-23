@@ -386,7 +386,7 @@ function saveData() {
 
 /* ==================================================
    INTEGRAÇÃO COMPLETA COM GOOGLE PLANILHAS
-   - Coluna D (4): Situação (PROJETO, DESENHISTA, LUIS, CRISTIAN, ENTREGUE, etc.)
+   - Coluna D (4): Situação (PROJETO, DESENHISTA, LUIS, CRISTIAN, ENTREGUE)
    - Coluna J, K, L (10, 11, 12): Largura, Comprimento, Altura
    - Coluna O (15): Data de Entrada
    - Coluna Q (17): Desenhista
@@ -394,7 +394,6 @@ function saveData() {
    - Coluna T (20): Data de Conclusão
 ================================================== */
 function getSheetStageLabel(p) {
-  if (p.isImpeded) return "PAUSADO";
   const idx = Number(p.stageIndex) || 0;
   const map = {
     0: "PROJETO",
@@ -410,7 +409,7 @@ function getSheetStageLabel(p) {
   return map[idx] || "PROJETO";
 }
 
-// 1. Cria nova linha na planilha quando o projeto entra na fila
+// 1. Cria nova linha na planilha SOMENTE quando clica em "+ Novo Projeto na Fila"
 async function sendToGoogleSheets(p) {
   if (typeof GOOGLE_SCRIPT_URL === "undefined" || !GOOGLE_SCRIPT_URL) return;
   try {
@@ -458,6 +457,8 @@ async function syncUpdateToGoogleSheets(p, extra = {}) {
 
     const payload = {
       action: "UPDATE",
+      onlyEditInfo: Boolean(extra.onlyEditInfo),
+      forceStartDate: Boolean(extra.forceStartDate),
       cod: p.cod || "",
       oldCod: extra.oldCod || (p.previousCods && p.previousCods.length ? p.previousCods[p.previousCods.length - 1] : ""),
       name: p.name || "",
@@ -468,7 +469,6 @@ async function syncUpdateToGoogleSheets(p, extra = {}) {
       largura: p.largura || "",
       comprimento: p.comprimento || "",
       altura: p.altura || "",
-      // Campos específicos solicitados:
       situacao: situacaoVal,       // Coluna D
       stage: situacaoVal,
       status: situacaoVal,
@@ -705,7 +705,8 @@ async function adminAssignProject(id, desenhista) {
   // Atualiza Planilha: Coluna D = DESENHISTA, Coluna Q = Desenhista, Coluna R = Data de Início
   syncUpdateToGoogleSheets(p, {
     situacao: "DESENHISTA",
-    dataInicio: todayShortBR()
+    dataInicio: todayShortBR(),
+    forceStartDate: true
   });
 }
 
@@ -1097,8 +1098,8 @@ function closeEditProjectModal(confirm) {
   p.altura = document.getElementById("ep-altura").value.trim();
   saveData(); updateViews(); toast("Atualizado!", "success");
 
-  // Sincroniza edições com a planilha
-  syncUpdateToGoogleSheets(p, { oldCod });
+  // Sincroniza edições com a planilha (sem criar linha nova)
+  syncUpdateToGoogleSheets(p, { oldCod, onlyEditInfo: true });
 }
 
 function openCreateProjectModal() {
@@ -1156,7 +1157,7 @@ async function editProjectName(id) {
     p.name = n.trim();
     saveData();
     updateViews();
-    syncUpdateToGoogleSheets(p);
+    syncUpdateToGoogleSheets(p, { onlyEditInfo: true });
   }
 }
 async function deleteProject(id) {
@@ -1190,6 +1191,7 @@ async function updateStage(id, sel) {
   // Coluna D = Etapa/Situação | Coluna Q = Desenhista | Coluna R = Data de Início | Coluna T = Data de Conclusão (se idx === 8)
   syncUpdateToGoogleSheets(p, {
     dataInicio: justAssumed ? todayShortBR() : getProjectStartDateStr(p),
+    forceStartDate: justAssumed,
     dataConclusao: idx >= 8 ? todayShortBR() : ""
   });
 }
@@ -1222,7 +1224,8 @@ async function assumirProjeto(id) {
   // Atualiza Planilha: Coluna D = DESENHISTA | Coluna Q = Desenhista | Coluna R = Data de Início
   syncUpdateToGoogleSheets(p, {
     situacao: "DESENHISTA",
-    dataInicio: todayShortBR()
+    dataInicio: todayShortBR(),
+    forceStartDate: true
   });
 }
 
@@ -1294,6 +1297,7 @@ async function deleteHistoryItem(id, i) {
   if (ok) { const p = findProject(id); if (p?.history) { p.history.splice(i, 1); saveData(); updateViews(); } }
 }
 
+// Pausar/Retomar move o projeto apenas para a aba "Em Espera" no sistema, sem criar linhas na planilha
 async function toggleImpediment(id) {
   const p = findProject(id); if (!p) return;
   if (p.isImpeded) {
@@ -1311,7 +1315,6 @@ async function toggleImpediment(id) {
   }
   saveData();
   updateViews();
-  syncUpdateToGoogleSheets(p);
 }
 
 async function toggleRework(id) {
