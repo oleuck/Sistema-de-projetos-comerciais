@@ -421,25 +421,19 @@ async function sendToGoogleSheets(p) {
       tipo: p.tipo,
       probabilidade: p.probabilidade,
       situacao: "PROJETO", 
-      stage: "PROJETO",    
-      status: "PROJETO",   
       name: p.name,
       cod: p.cod,
       cidade: p.cidade,
       date: entryDate,
-      owner: "",          
-      desenhista: "",
       largura: p.largura || "",
       comprimento: p.comprimento || "",
-      altura: p.altura || "",
-      dataInicio: "",
-      dataConclusao: ""
+      altura: p.altura || ""
     };
     
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
   } catch (err) {}
@@ -470,10 +464,7 @@ async function syncUpdateToGoogleSheets(p, extra = {}) {
       comprimento: p.comprimento || "",
       altura: p.altura || "",
       situacao: situacaoVal,       // Coluna D
-      stage: situacaoVal,
-      status: situacaoVal,
       desenhista: desenhistaVal,   // Coluna Q
-      owner: desenhistaVal,
       dataInicio: dataInicioVal,   // Coluna R
       dataConclusao: dataConcVal   // Coluna T
     };
@@ -481,7 +472,7 @@ async function syncUpdateToGoogleSheets(p, extra = {}) {
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload)
     });
   } catch (err) {}
