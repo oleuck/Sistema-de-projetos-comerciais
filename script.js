@@ -1178,7 +1178,7 @@ async function updateStage(id, sel) {
   pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada."); 
   saveData(); updateViews();
 
-  // Sincroniza automaticamente com a Planilha:
+  // Sincroniza automaticamente com a Planilha (APENAS ATUALIZA A LINHA EXISTENTE):
   // Coluna D = Etapa/Situação | Coluna Q = Desenhista | Coluna R = Data de Início | Coluna T = Data de Conclusão (se idx === 8)
   syncUpdateToGoogleSheets(p, {
     dataInicio: justAssumed ? todayShortBR() : getProjectStartDateStr(p),
