@@ -2,6 +2,9 @@
    CONFIGURAÇÕES GERAIS E ETAPAS
    (FIREBASE_CFG, MASTER_KEY e GOOGLE_SCRIPT_URL vêm do index.html)
 ================================================== */
+const APP_VERSION = "2026-10-23-b";
+console.log("%c[Sistema] script.js versão " + APP_VERSION, "color:#22c55e;font-weight:bold");
+
 const STAGES = [
   "Aguardando Início (Fila)", // 0
   "Em Desenho",               // 1
@@ -430,6 +433,7 @@ async function sendToGoogleSheets(p) {
       altura: p.altura || ""
     };
     
+    console.log("[Planilha] enviando", APP_VERSION, payload);
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -469,6 +473,7 @@ async function syncUpdateToGoogleSheets(p, extra = {}) {
       dataConclusao: dataConcVal   // Coluna T
     };
 
+    console.log("[Planilha] enviando", APP_VERSION, payload);
     await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
