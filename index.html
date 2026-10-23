@@ -1,269 +1,49 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Controle de Projetos</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Controle de Projetos</title>
 
-<script>
-window.onerror = function(msg, url, line) {
-    var loader = document.getElementById('global-loader');
-    if (loader) loader.style.display = 'none'; 
-    var errorDiv = document.createElement('div');
-    errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
-    errorDiv.innerHTML = '<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>' + msg + ' (Linha: ' + line + ')</p><button onclick="this.parentElement.style.display=\'none\';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>';
-    if(document.body) { document.body.appendChild(errorDiv); }
-    else { window.onload = function() { document.body.appendChild(errorDiv); }; }
-    return false;
-};
-</script>
+  <!-- TRATAMENTO CRÍTICO E CREDENCIAIS DO BANCO DE DADOS -->
+  <script>
+    window.onerror = function(msg, url, line) {
+      var loader = document.getElementById('global-loader');
+      if (loader) loader.style.display = 'none'; 
+      var errorDiv = document.createElement('div');
+      errorDiv.style = "background:#dc2626; color:white; padding:20px; text-align:center; position:fixed; top:0; width:100%; z-index:999999;";
+      errorDiv.innerHTML = '<h3 style="margin-top:0;">Falha Crítica no Sistema</h3><p>' + msg + ' (Linha: ' + line + ')</p><button onclick="this.parentElement.style.display=\'none\';" style="background:white; color:#dc2626; padding:5px 10px; border:none; cursor:pointer;">Fechar Aviso</button>';
+      if (document.body) {
+        document.body.appendChild(errorDiv);
+      } else {
+        window.onload = function() { document.body.appendChild(errorDiv); };
+      }
+      return false;
+    };
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    /* ===== CONFIGURAÇÕES DO BANCO DE DADOS (FIREBASE & PLANILHAS) ===== */
+    const FIREBASE_CFG = {
+      apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
+      authDomain: "controle-projetos-comerciais.firebaseapp.com",
+      projectId: "controle-projetos-comerciais",
+      storageBucket: "controle-projetos-comerciais.firebasestorage.app",
+      messagingSenderId: "154256368322",
+      appId: "1:154256368322:web:9c580e7886abfc9779515b"
+    };
+    const MASTER_KEY = "070522";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
+  </script>
 
-<!-- CHART.JS + DATALABELS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <!-- BIBLIOTECAS EXTERNAS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
-<style>
-/* ===== DESIGN TOKENS (LIGHT DEFAULT) ===== */
-:root {
-  --primary:       #2563eb;
-  --primary-h:     #1d4ed8;
-  --primary-light: #eff6ff;
-  --success:       #16a34a;
-  --success-light: #f0fdf4;
-  --warning:       #f59e0b;
-  --danger:        #dc2626;
-  --danger-light:  #fef2f2;
-  --info:          #0284c7;
-  --purple:        #9333ea;
-  --orange:        #ea580c;
-  
-  --bg:            #f3f4f6;
-  --card:          #ffffff;
-  --text:          #1f2937;
-  --text-light:    #6b7280;
-  --border:        #e5e7eb;
-  --border-h:      #d1d5db;
-  --modal-bg:      rgba(0,0,0,0.55);
-  --hover-bg:      #f8fafc;
-  --bg-alt:        #f9fafb;
-  --bg-warning-light: #fffceb;
-  --bg-purple-light:  #faf5ff;
-  --bg-orange-light:  #fff7ed;
-  --title-color:   #111827;
-
-  --radius:        10px;
-  --radius-sm:     6px;
-  --shadow:        0 2px 8px rgba(0,0,0,0.08);
-  --shadow-lg:     0 8px 24px rgba(0,0,0,0.14);
-  --transition:    0.18s ease;
-}
-
-/* ===== MODO ESCURO ===== */
-.dark {
-  --bg:            #0f172a;
-  --card:          #1e293b;
-  --text:          #f8fafc;
-  --text-light:    #94a3b8;
-  --border:        #334155;
-  --border-h:      #475569;
-  --primary-light: rgba(37, 99, 235, 0.15);
-  --success-light: rgba(22, 163, 74, 0.15);
-  --danger-light:  rgba(220, 38, 38, 0.15);
-  --modal-bg:      rgba(0,0,0,0.75);
-  --hover-bg:      #334155;
-  --bg-alt:        #020617; 
-  --bg-warning-light: rgba(245, 158, 11, 0.1);
-  --bg-purple-light:  rgba(147, 51, 234, 0.1);
-  --bg-orange-light:  rgba(234, 88, 12, 0.1);
-  --title-color:   #f8fafc;
-}
-
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; line-height: 1.5; transition: background 0.3s, color 0.3s; }
-.hidden { display: none !important; }
-.container { max-width: 1320px; margin: 0 auto; }
-
-/* ===== TOAST ===== */
-#toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.toast { background: var(--card); color: var(--text); padding: 12px 18px; border-radius: var(--radius-sm); font-size: 0.9rem; box-shadow: var(--shadow-lg); pointer-events: all; animation: slideIn 0.25s ease; max-width: 320px; border: 1px solid var(--border); }
-.toast.success { border-left: 4px solid var(--success); }
-.toast.danger  { border-left: 4px solid var(--danger); }
-.toast.warning { border-left: 4px solid var(--warning); }
-@keyframes slideIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
-@keyframes fadeOut { to { opacity:0; transform: translateY(8px); } }
-
-/* ===== LOADER ===== */
-#global-loader { position: fixed; inset: 0; background: var(--bg); z-index: 99998; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; }
-.spinner { border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; width: 48px; height: 48px; animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-#loader-status { font-size: 0.85rem; color: var(--text-light); }
-
-/* ===== OFFLINE BANNER ===== */
-#offline-banner { display: none; background: var(--warning); color: #000; padding: 8px 16px; text-align: center; font-weight: 600; font-size: 0.88rem; border-radius: var(--radius-sm); margin-bottom: 12px; }
-
-/* ===== TYPOGRAPHY ===== */
-h1, h2, h3 { margin: 0 0 8px; line-height: 1.25; }
-
-/* ===== BUTTONS ===== */
-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--primary); color: #fff; border: none; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: background var(--transition), opacity var(--transition), transform var(--transition); white-space: nowrap; }
-button:hover:not(:disabled) { background: var(--primary-h); }
-button:active:not(:disabled) { transform: scale(0.97); }
-button:disabled { opacity: 0.55; cursor: not-allowed; }
-button.danger   { background: var(--danger); }   button.danger:hover:not(:disabled)   { background: #b91c1c; }
-button.success  { background: var(--success); }  button.success:hover:not(:disabled)  { background: #15803d; }
-button.warning  { background: var(--warning); color: #000; } button.warning:hover:not(:disabled) { background: #d97706; }
-button.info     { background: var(--info); }     button.info:hover:not(:disabled)     { background: #0369a1; }
-button.secondary{ background: #6b7280; }          button.secondary:hover:not(:disabled){ background: #4b5563; }
-button.ghost    { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
-button.ghost:hover:not(:disabled) { background: var(--border); color: var(--text); }
-button.icon-btn { background: none; border: none; color: var(--text-light); padding: 4px 7px; font-size: 1rem; border-radius: 4px; }
-button.icon-btn:hover { background: var(--border); color: var(--text); }
-
-/* ===== FORM ELEMENTS ===== */
-input, select, textarea { padding: 9px 12px; border: 1px solid var(--border-h); border-radius: var(--radius-sm); width: 100%; font-size: 0.95rem; font-family: inherit; background: var(--card); color: var(--text); transition: border-color var(--transition), box-shadow var(--transition); margin-bottom: 10px; color-scheme: light dark; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-select { font-weight: 600; cursor: pointer; }
-textarea { resize: vertical; min-height: 60px; }
-input[type="datetime-local"] { margin-bottom: 0; }
-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
-
-/* ===== CARDS & GRID ===== */
-.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
-.card.padded { padding: 20px; }
-.header-card { background: var(--card); padding: 16px 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; }
-
-/* ===== PROFILES ===== */
-.profiles-grid { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
-.profile-card { background: var(--card); padding: 14px 22px; border-radius: var(--radius); border: 2px solid transparent; box-shadow: var(--shadow); text-align: center; cursor: pointer; transition: all var(--transition); }
-.profile-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.profile-name { font-size: 1.1rem; font-weight: 700; }
-
-/* ===== TOPBAR ===== */
-.top-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.top-bar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.top-bar-actions select { margin-bottom: 0; }
-.search-wrap { position: relative; }
-.search-wrap input { padding-left: 34px; margin-bottom: 0; min-width: 200px; }
-.search-wrap::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 0.85rem; }
-
-/* ===== TABS ===== */
-.tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); flex-wrap: wrap; }
-.tab-btn { background: transparent; color: var(--text-light); border: none; font-size: 0.97rem; padding: 10px 18px; cursor: pointer; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: all var(--transition); margin-bottom: -2px; border-bottom: 3px solid transparent; }
-.tab-btn.active { color: var(--primary); font-weight: 700; border-bottom-color: var(--primary); }
-.tab-btn:hover:not(.active) { color: var(--text); background: var(--primary-light); }
-.tab-badge { display: inline-block; background: var(--primary); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; margin-left: 5px; vertical-align: middle; }
-
-/* ===== MODO TABELA (EXCEL) ===== */
-.table-responsive { width: 100%; overflow-x: auto; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; white-space: nowrap; font-family: 'Segoe UI', sans-serif; }
-.data-table th { background: #581c87; color: white; padding: 10px 12px; font-weight: 600; text-transform: uppercase; border-right: 1px solid #7e22ce; }
-.data-table th:last-child { border-right: none; }
-.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; }
-.data-table tr:hover { background: var(--hover-bg); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table td:last-child { border-right: none; }
-
-.badge-table { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; display: inline-block; text-align: center; min-width: 80px; }
-.badge-novo { background: #1d4ed8; color: white; }
-.badge-revisao { background: #b91c1c; color: white; }
-.badge-alta { background: #16a34a; color: white; }
-.badge-media { background: #f97316; color: white; }
-.badge-baixa { background: #ef4444; color: white; }
-.badge-stage { background: #e879f9; color: #4a044e; border-radius: 4px; padding: 3px 8px;}
-
-/* ===== KPI ===== */
-.kpi-container { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-.kpi-card { background: var(--card); padding: 16px; border-radius: var(--radius); flex: 1; min-width: 160px; text-align: center; box-shadow: var(--shadow); border-bottom: 4px solid var(--primary); }
-.kpi-card.purple { border-bottom-color: var(--purple); }
-.kpi-card.success { border-bottom-color: var(--success); }
-.kpi-card.warning { border-bottom-color: var(--warning); }
-.kpi-card h4 { margin: 0 0 4px; color: var(--text-light); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--text); margin: 0; }
-
-/* ===== PROJECTS GRID ===== */
-.projects-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
-.empty-state { grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-light); }
-.empty-state .empty-icon { font-size: 3rem; margin-bottom: 10px; }
-
-/* ===== PROJECT CARD ===== */
-.project-card { background: var(--card); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); border-left: 5px solid var(--primary); display: flex; flex-direction: column; gap: 12px; transition: box-shadow var(--transition); }
-.project-card:hover { box-shadow: var(--shadow-lg); }
-.project-card.completed   { border-left-color: var(--success); }
-.project-card.impediment  { border-left-color: var(--warning); background: var(--bg-warning-light); }
-.project-card.rework-int  { border-left-color: var(--purple); background: var(--bg-purple-light); }
-.project-card.rework-ext  { border-left-color: var(--orange); background: var(--bg-orange-light); }
-
-.badge-owner { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; background: var(--border); border-radius: 99px; font-size: 0.82rem; font-weight: 700; color: var(--text); }
-.project-title-row { display: flex; align-items: center; gap: 8px; }
-.project-title-row h2 { margin: 0; font-size: 1.2rem; word-break: break-word; color: var(--title-color); flex: 1; }
-
-.info-box { background: var(--bg-alt); border: 1px solid var(--border); padding: 10px 34px 10px 12px; border-radius: var(--radius-sm); font-size: 0.84rem; color: var(--text-light); position: relative; }
-.info-box .edit-info-btn { position: absolute; top: 8px; right: 6px; background: transparent; border: none; padding: 4px; }
-.info-row { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 4px; }
-.info-row:last-child { margin-bottom: 0; }
-.info-divider { border: none; border-top: 1px dashed var(--border); margin: 6px 0; }
-
-.stage-select { margin: 0; font-weight: 600; color: var(--primary); }
-.status-label { font-weight: 700; font-size: 0.88rem; color: var(--primary); padding: 4px 0; }
-
-/* ===== PROGRESS ===== */
-.progress-wrap { width: 100%; background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; }
-.progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 99px; transition: width 0.4s ease; }
-
-/* ===== TIMELINE ===== */
-.timeline { font-size: 0.84rem; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 210px; overflow-y: auto; padding: 10px; }
-.timeline-header { font-weight: 700; color: var(--text-light); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 8px; }
-.timeline-item { padding: 8px 0; border-bottom: 1px dashed var(--border); display: flex; flex-direction: column; gap: 3px; }
-.timeline-item:last-child { border-bottom: none; }
-.timeline-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
-.timeline-stage { font-weight: 700; flex: 1; color: var(--text); }
-.timeline-actions { display: flex; gap: 2px; flex-shrink: 0; }
-.timeline-obs { color: var(--text-light); font-style: italic; }
-.timeline-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.timeline-author { font-size: 0.78rem; color: var(--primary); font-style: normal; font-weight: 600; }
-.timeline-date { color: var(--text-light); font-size: 0.78rem; white-space: nowrap; }
-.timeline-date.editable { cursor: pointer; border-bottom: 1px dashed var(--text-light); }
-.timeline-date.editable:hover { color: var(--primary); border-bottom-color: var(--primary); }
-
-/* ===== CARD ACTIONS ===== */
-.card-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
-.actions-row { display: flex; gap: 6px; }
-.actions-row button { flex: 1; padding: 7px 8px; font-size: 0.84rem; }
-.btn-assume { width: 100%; padding: 11px; font-size: 0.97rem; background: #059669; }
-.btn-corrected { width: 100%; padding: 10px; background: var(--success); }
-.btn-pdf { width: 100%; background: #1f2937; margin-top: 2px; font-size: 0.84rem; }
-
-/* ===== MODAIS ===== */
-.modal-overlay { position: fixed; inset: 0; background: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); padding: 16px; }
-.modal-content { background: var(--card); padding: 24px; border-radius: 14px; width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
-@keyframes modalIn { from { opacity:0; transform: translateY(-16px) scale(0.96); } to { opacity:1; transform: translateY(0) scale(1); } }
-.modal-title { color: var(--primary); font-size: 1.2rem; margin-bottom: 6px; }
-.modal-desc  { color: var(--text-light); font-size: 0.9rem; margin-bottom: 14px; line-height: 1.5; }
-.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-grid.full { grid-template-columns: 1fr; }
-.form-grid > * { margin-bottom: 0; }
-
-/* ===== CHART & RESPONSIVE ===== */
-.chart-container { background: var(--card); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 16px; height: 430px; }
-@media (max-width: 640px) {
-  body { padding: 10px; }
-  .projects-list { grid-template-columns: 1fr; }
-  .form-grid { grid-template-columns: 1fr; }
-  .top-bar { flex-direction: column; align-items: stretch; }
-  .top-bar-actions { flex-direction: column; }
-  .tabs { gap: 2px; }
-  .tab-btn { padding: 8px 10px; font-size: 0.88rem; }
-  .modal-content { padding: 18px; }
-  .search-wrap input { min-width: 0; }
-}
-</style>
+  <!-- ESTILOS CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -303,6 +83,20 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
       <div>
         <label for="cp-tipo">Tipo</label>
         <select id="cp-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
+      </div>
+    </div>
+    <div class="form-grid three-cols">
+      <div>
+        <label for="cp-largura">Largura (m)</label>
+        <input type="text" id="cp-largura" placeholder="Ex: 20" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);">
+      </div>
+      <div>
+        <label for="cp-comprimento">Comprimento (m)</label>
+        <input type="text" id="cp-comprimento" placeholder="Ex: 30" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);">
+      </div>
+      <div>
+        <label for="cp-altura">Altura (m)</label>
+        <input type="text" id="cp-altura" placeholder="Ex: 7" onkeydown="if(event.key === 'Enter') closeCreateProjectModal(true);">
       </div>
     </div>
     <div><label for="cp-probabilidade">Probabilidade de Venda</label>
@@ -360,8 +154,10 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <label for="pdf-filter">Quais projetos incluir?</label>
     <select id="pdf-filter" style="margin-bottom:14px;">
       <option value="MEUS_ANDAMENTO" id="pdf-opt-meus-and">Meus Projetos em Andamento</option>
+      <option value="MEUS_ESPERA" id="pdf-opt-meus-esp">Meus Projetos em Espera</option>
       <option value="MEUS_CONCLUIDOS" id="pdf-opt-meus-con">Meus Projetos Concluídos</option>
       <option value="TODOS_ANDAMENTO">Todos em Andamento</option>
+      <option value="TODOS_ESPERA">Todos em Espera</option>
       <option value="TODOS_CONCLUIDOS">Todos os Concluídos</option>
       <option value="TODOS">Absolutamente Todos (Geral)</option>
     </select>
@@ -379,6 +175,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL EDITAR PROJETO -->
 <div id="edit-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ep-modal-title">
   <div class="modal-content">
     <h3 id="ep-modal-title" class="modal-title">✏️ Editar Informações do Projeto</h3>
@@ -401,6 +198,20 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
         <select id="ep-tipo"><option value="NOVO">NOVO</option><option value="REVISÃO">REVISÃO</option></select>
       </div>
     </div>
+    <div class="form-grid three-cols">
+      <div>
+        <label for="ep-largura">Largura (m)</label>
+        <input type="text" id="ep-largura" placeholder="Ex: 20" onkeydown="if(event.key === 'Enter') closeEditProjectModal(true);">
+      </div>
+      <div>
+        <label for="ep-comprimento">Comprimento (m)</label>
+        <input type="text" id="ep-comprimento" placeholder="Ex: 30" onkeydown="if(event.key === 'Enter') closeEditProjectModal(true);">
+      </div>
+      <div>
+        <label for="ep-altura">Altura (m)</label>
+        <input type="text" id="ep-altura" placeholder="Ex: 7" onkeydown="if(event.key === 'Enter') closeEditProjectModal(true);">
+      </div>
+    </div>
     <div><label for="ep-probabilidade">Probabilidade</label>
       <select id="ep-probabilidade"><option value="">Não informada</option><option value="BAIXA">BAIXA</option><option value="MÉDIA">MÉDIA</option><option value="ALTA">ALTA</option></select>
     </div>
@@ -411,6 +222,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL ADMIN EQUIPE -->
 <div id="admin-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
   <div class="modal-content">
     <h3 id="admin-modal-title" class="modal-title">⚙️ Gerenciar Equipe</h3>
@@ -422,6 +234,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL DATA -->
 <div id="date-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="date-modal-title">
   <div class="modal-content">
     <h3 id="date-modal-title" class="modal-title">📅 Editar Data do Evento</h3>
@@ -434,6 +247,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL RETRABALHO -->
 <div id="rework-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rework-modal-title">
   <div class="modal-content">
     <h3 id="rework-modal-title" class="modal-title">🔄 Classificar Retrabalho</h3>
@@ -451,6 +265,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL GENÉRICO DE TEXTO -->
 <div id="custom-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal-content">
     <h3 id="modal-title" class="modal-title"></h3>
@@ -464,6 +279,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL DE SENHA -->
 <div id="password-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pwd-modal-title">
   <div class="modal-content">
     <h3 id="pwd-modal-title" class="modal-title">🔑 Autenticação</h3>
@@ -477,6 +293,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
   </div>
 </div>
 
+<!-- MODAL DE CONFIRMAÇÃO -->
 <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
   <div class="modal-content" style="text-align:center;">
     <h3 id="confirm-title" class="modal-title" style="color:var(--danger);">⚠️ Confirmar Ação</h3>
@@ -490,6 +307,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 <div class="container">
 
+  <!-- VIEW: SELEÇÃO DE PERFIS -->
   <div id="view-profiles" class="hidden">
     <div class="header-card" style="text-align:center; padding:30px 20px;">
       <span onclick="handleMasterLogin()" style="cursor:pointer; font-size:2rem;" title="Acesso administrativo">🏢</span>
@@ -526,15 +344,27 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
   </div>
 
+  <!-- VIEW: PAINEL CORPORATIVO (VISUALIZADOR) -->
   <div id="view-manager" class="hidden">
     <div class="header-card">
-      <div class="top-bar">
-        <div>
-          <h2 style="margin:0; display:flex; align-items:center; gap:8px;">👔 Painel Corporativo</h2>
-          <p style="margin:4px 0 0; color:var(--text-light); font-size:0.88rem;">Acompanhamento em tempo real — somente leitura.</p>
+      <div class="header-top-row">
+        <div class="header-title-group">
+          <button class="ghost btn-back" onclick="logout()">← Sair</button>
+          <div>
+            <h2 style="margin:0; font-size:1.25rem;">👔 Painel Corporativo</h2>
+            <p style="margin:2px 0 0; color:var(--text-light); font-size:0.82rem;">Acompanhamento em tempo real — somente leitura.</p>
+          </div>
         </div>
-        <div class="top-bar-actions">
-          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
+        <div class="header-utility-group">
+          <button class="ghost" onclick="toggleTheme()" title="Alternar Tema">🌓 Tema</button>
+        </div>
+      </div>
+
+      <div class="header-toolbar-row">
+        <div class="search-wrap">
+          <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Pesquisar Obra, Cliente ou CÓD...">
+        </div>
+        <div class="toolbar-controls">
           <select id="manager-sort-select" onchange="renderGlobalFeed()">
             <option value="DATE_DESC">Mais Recentes</option>
             <option value="DATE_ASC">Mais Antigos</option>
@@ -542,14 +372,8 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
             <option value="TIPO_NOVO">Apenas NOVOS</option>
             <option value="TIPO_REVISAO">Apenas REVISÕES</option>
           </select>
-          <div class="search-wrap">
-            <input type="text" id="manager-search" onkeyup="debounceRenderGlobal()" placeholder="Obra ou CÓD...">
-          </div>
-          <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
-          
-          <button onclick="openPdfModal()" style="background:#111827;">📊 PDF da Aba</button>
-          
-          <button class="secondary" onclick="logout()">← Sair</button>
+          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
+          <button onclick="openPdfModal()" class="btn-dark">📊 PDF</button>
         </div>
       </div>
     </div>
@@ -557,6 +381,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div class="tabs">
       <button id="tab-fila" class="tab-btn active" onclick="switchManagerTab('fila')">⏳ Fila <span class="tab-badge" id="badge-fila">0</span></button>
       <button id="tab-andamento" class="tab-btn" onclick="switchManagerTab('andamento')">▶ Em Andamento <span class="tab-badge" id="badge-andamento">0</span></button>
+      <button id="tab-espera" class="tab-btn" onclick="switchManagerTab('espera')">⏸ Em Espera <span class="tab-badge" id="badge-espera">0</span></button>
       <button id="tab-concluidos" class="tab-btn" onclick="switchManagerTab('concluidos')">✅ Concluídos <span class="tab-badge" id="badge-concluidos">0</span></button>
       <button id="tab-graficos" class="tab-btn" onclick="switchManagerTab('graficos')">📊 Pareto</button>
     </div>
@@ -566,14 +391,14 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="view-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
         <strong style="white-space:nowrap;">Desenhista:</strong>
-        <select id="graph-user-manager" onchange="refreshGraphFilters('manager')" style="margin-bottom:0; max-width:180px;"></select>
+        <select id="graph-user-manager" onchange="refreshGraphFilters('manager')" style="margin-bottom:0; width:auto; min-width:160px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
-        <select id="graph-project-manager" onchange="renderPareto('manager')" style="margin-bottom:0; max-width:200px;"></select>
+        <select id="graph-project-manager" onchange="renderPareto('manager')" style="margin-bottom:0; width:auto; min-width:180px;"></select>
         
         <strong style="white-space:nowrap; margin-left:8px;">Período:</strong>
-        <input type="date" id="pareto-start-manager" onchange="renderPareto('manager')" style="margin:0; width:auto; max-width:130px;">
+        <input type="date" id="pareto-start-manager" onchange="renderPareto('manager')" style="margin:0; width:auto;">
         <span style="color:var(--text-light)">até</span>
-        <input type="date" id="pareto-end-manager" onchange="renderPareto('manager')" style="margin:0; width:auto; max-width:130px;">
+        <input type="date" id="pareto-end-manager" onchange="renderPareto('manager')" style="margin:0; width:auto;">
       </div>
       <div class="chart-container"><canvas id="paretoChart"></canvas></div>
       <div class="kpi-container">
@@ -585,58 +410,147 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     </div>
   </div>
 
+  <!-- VIEW: ÁREA DE TRABALHO (DESENHISTA / ADMIN) -->
   <div id="view-dashboard" class="hidden">
     <div class="header-card">
-      <div class="top-bar">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <button class="secondary" onclick="logout()" style="white-space:nowrap;">← Sair</button>
-          <h2 id="dashboard-title" style="margin:0;">Área de Trabalho</h2>
+      <!-- LINHA 1: IDENTIDADE E AÇÕES DE CONTA / NOVO PROJETO -->
+      <div class="header-top-row">
+        <div class="header-title-group">
+          <button class="ghost btn-back" onclick="logout()">← Sair</button>
+          <h2 id="dashboard-title" style="margin:0; font-size:1.3rem;">Área de Trabalho</h2>
         </div>
-        <div class="top-bar-actions">
-          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
-          <button class="ghost" onclick="changeMyPassword()" title="Alterar senha">🔑 Senha</button>
-          <button id="admin-btn" class="hidden danger" onclick="openAdminModal()">⚙️ Equipe</button>
-          <select id="user-filter-select" onchange="renderProjects()" style="max-width:200px;margin-bottom:0;">
+
+        <div class="header-utility-group">
+          <button class="success btn-new-project" onclick="openCreateProjectModal()">➕ Novo Projeto na Fila</button>
+          <button class="ghost" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
+          <button class="ghost" onclick="changeMyPassword()" title="Alterar minha senha">🔑 Senha</button>
+          <button id="admin-btn" class="hidden warning" onclick="openAdminModal()">⚙️ Equipe</button>
+          <button class="ghost danger-text" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Excluir meu perfil">🗑️</button>
+        </div>
+      </div>
+
+      <!-- LINHA 2: BARRA DE PESQUISA E FILTROS UNIFICADA -->
+      <div class="header-toolbar-row">
+        <div class="search-wrap">
+          <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Pesquisar por Obra, Cliente ou CÓD...">
+        </div>
+        <div class="toolbar-controls">
+          <select id="user-filter-select" onchange="renderProjects()">
             <option value="ALL">Todos</option>
             <option value="MEUS" selected>Só os Meus</option>
           </select>
-          <select id="sort-filter-select" onchange="renderProjects()" style="margin-bottom:0;">
+          <select id="sort-filter-select" onchange="renderProjects()">
             <option value="DATE_DESC">Mais Recentes</option>
             <option value="DATE_ASC">Mais Antigos</option>
             <option value="VENDEDOR">Por Vendedor</option>
             <option value="TIPO_NOVO">Apenas NOVOS</option>
             <option value="TIPO_REVISAO">Apenas REVISÕES</option>
           </select>
-          <div class="search-wrap">
-            <input type="text" id="search-input" onkeyup="debounceRenderProjects()" placeholder="Obra ou CÓD...">
-          </div>
-          <button class="secondary btn-sm" style="padding:8px;" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
-          
-          <button id="pdf-dashboard-btn" onclick="openPdfModal()" style="background:#1f2937;">📊 PDF</button>
-          
+          <button class="secondary toggle-view-btn" onclick="toggleViewMode()">📋 Ver em Tabela</button>
+          <button id="pdf-dashboard-btn" onclick="openPdfModal()" class="btn-dark">📊 PDF</button>
         </div>
       </div>
     </div>
 
+    <!-- PAINEL DE SUGESTÃO ADMIN -->
     <div id="admin-suggestion-panel" class="hidden header-card" style="border-left: 5px solid var(--purple); background: var(--bg-purple-light); padding: 16px;">
-        <h3 style="color: var(--purple); margin-top:0; font-size: 1.1rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
-        <p style="font-size: 0.88rem; color: var(--text-light); margin-bottom: 12px;">
-            Este painel mapeia os próximos projetos prioritários baseado na regra do rodízio configurada.
-        </p>
-        <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container">
-        </div>
+      <h3 style="color: var(--purple); margin-top:0; font-size: 1.05rem;">🎯 Fila Ideal (Rodízio para a Equipe)</h3>
+      <p style="font-size: 0.84rem; color: var(--text-light); margin-bottom: 10px;">
+        Próximos projetos prioritários baseados na regra do rodízio configurada.
+      </p>
+      <div class="table-responsive" style="margin-bottom: 0; box-shadow:none; border:1px solid var(--border);" id="sugg-table-container"></div>
     </div>
 
-    <div style="background:var(--card); padding:12px 16px; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <button class="danger" id="delete-profile-btn" onclick="deleteCurrentUser()">🗑️ Excluir Meu Perfil</button>
-      <button class="success" onclick="openCreateProjectModal()" style="padding:11px 22px; font-size:1rem;">➕ Novo Projeto na Fila</button>
-    </div>
-
+    <!-- NAVEGAÇÃO DE ABAS -->
     <div class="tabs">
       <button id="tab-d-fila" class="tab-btn active" onclick="switchDraftsmanTab('fila')">⏳ Fila <span class="tab-badge" id="badge-d-fila">0</span></button>
       <button id="tab-d-andamento" class="tab-btn" onclick="switchDraftsmanTab('andamento')">▶ Andamento <span class="tab-badge" id="badge-d-andamento">0</span></button>
-      <button id="tab-d-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos <span class="tab-badge" id="badge-d-concluidos">0</span></button>
+      <button id="tab-d-espera" class="tab-btn" onclick="switchDraftsmanTab('espera')">⏸ Em Espera <span class="tab-badge" id="badge-d-espera">0</span></button>
+      <button id="tab-d-concluidos" class="tab-btn" onclick="switchDraftsmanTab('concluidos')">✅ Concluídos (Geral) <span class="tab-badge" id="badge-d-concluidos">0</span></button>
       <button id="tab-d-graficos" class="tab-btn" onclick="switchDraftsmanTab('graficos')">📊 Meus Gráficos</button>
+      <button id="tab-d-meus-concluidos" class="tab-btn" onclick="switchDraftsmanTab('meus_concluidos')">🏆 Meus Concluídos <span class="tab-badge" id="badge-d-meus-concluidos">0</span></button>
+    </div>
+
+    <!-- PAINEL EXECUTIVO DA ABA "MEUS CONCLUÍDOS" -->
+    <div id="meus-concluidos-stats" class="hidden mc-panel">
+      <div class="mc-header">
+        <div>
+          <h3 class="mc-title">🏆 Meu Resumo de Entregas</h3>
+          <p class="mc-subtitle">Tempo útil gasto em cada projeto e distribuição de projetos por vendedor no período.</p>
+        </div>
+
+        <div class="mc-period-bar">
+          <input type="hidden" id="mc-period-select" value="ALL">
+          <div class="period-pills">
+            <button type="button" class="pill-btn active" data-period="ALL" onclick="setMcPeriod('ALL')">Tudo</button>
+            <button type="button" class="pill-btn" data-period="10" onclick="setMcPeriod('10')">10 dias</button>
+            <button type="button" class="pill-btn" data-period="30" onclick="setMcPeriod('30')">30 dias</button>
+            <button type="button" class="pill-btn" data-period="40" onclick="setMcPeriod('40')">40 dias</button>
+            <button type="button" class="pill-btn" data-period="60" onclick="setMcPeriod('60')">60 dias</button>
+            <button type="button" class="pill-btn" data-period="CUSTOM" onclick="setMcPeriod('CUSTOM')">📅 Datas</button>
+          </div>
+          <div id="mc-custom-dates" class="hidden mc-custom-dates">
+            <input type="date" id="mc-start-date" onchange="renderProjects()">
+            <span>até</span>
+            <input type="date" id="mc-end-date" onchange="renderProjects()">
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-grid">
+        <!-- DESTAQUES PRINCIPAIS -->
+        <div class="mc-main-metrics">
+          <div class="mc-stat-box success">
+            <span class="mc-stat-icon">✅</span>
+            <div>
+              <span class="mc-stat-label">Projetos Entregues</span>
+              <strong class="mc-stat-number" id="mc-kpi-total">0</strong>
+            </div>
+          </div>
+          <div class="mc-stat-box purple">
+            <span class="mc-stat-icon">⏱️</span>
+            <div>
+              <span class="mc-stat-label">Minha Média / Proj</span>
+              <strong class="mc-stat-number" id="mc-kpi-avg">0h</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- DISTRIBUIÇÃO POR VENDEDOR -->
+        <div class="mc-vendors-box">
+          <div class="mc-vendors-header">Projetos por Vendedor no Período</div>
+          <div class="mc-vendors-grid">
+            <div class="mc-vendor-item">
+              <div class="mc-vendor-top">
+                <span class="mc-vendor-name">CARLA</span>
+                <strong class="mc-vendor-count" id="mc-vend-carla">0</strong>
+              </div>
+              <div class="mc-vendor-bar"><div id="mc-bar-carla" style="width:0%"></div></div>
+            </div>
+            <div class="mc-vendor-item">
+              <div class="mc-vendor-top">
+                <span class="mc-vendor-name">JONES</span>
+                <strong class="mc-vendor-count" id="mc-vend-jones">0</strong>
+              </div>
+              <div class="mc-vendor-bar"><div id="mc-bar-jones" style="width:0%"></div></div>
+            </div>
+            <div class="mc-vendor-item">
+              <div class="mc-vendor-top">
+                <span class="mc-vendor-name">SHANA</span>
+                <strong class="mc-vendor-count" id="mc-vend-shana">0</strong>
+              </div>
+              <div class="mc-vendor-bar"><div id="mc-bar-shana" style="width:0%"></div></div>
+            </div>
+            <div class="mc-vendor-item">
+              <div class="mc-vendor-top">
+                <span class="mc-vendor-name">OUTRO</span>
+                <strong class="mc-vendor-count" id="mc-vend-outro">0</strong>
+              </div>
+              <div class="mc-vendor-bar"><div id="mc-bar-outro" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="projects-list" id="projects-container"></div>
@@ -644,14 +558,14 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
     <div id="view-draftsman-graphics" class="hidden">
       <div class="card padded" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:0;">
         <strong>Desenhista:</strong>
-        <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; max-width:180px;"></select>
+        <select id="graph-user-draftsman" onchange="refreshGraphFilters('draftsman')" style="margin-bottom:0; width:auto; min-width:160px;"></select>
         <strong style="white-space:nowrap; margin-left:8px;">Projeto:</strong>
-        <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; max-width:200px;"></select>
+        <select id="graph-project-draftsman" onchange="renderPareto('draftsman')" style="margin-bottom:0; width:auto; min-width:180px;"></select>
         
         <strong style="white-space:nowrap; margin-left:8px;">Período:</strong>
-        <input type="date" id="pareto-start-draftsman" onchange="renderPareto('draftsman')" style="margin:0; width:auto; max-width:130px;">
+        <input type="date" id="pareto-start-draftsman" onchange="renderPareto('draftsman')" style="margin:0; width:auto;">
         <span style="color:var(--text-light)">até</span>
-        <input type="date" id="pareto-end-draftsman" onchange="renderPareto('draftsman')" style="margin:0; width:auto; max-width:130px;">
+        <input type="date" id="pareto-end-draftsman" onchange="renderPareto('draftsman')" style="margin:0; width:auto;">
       </div>
       <div class="chart-container"><canvas id="draftsmanParetoChart"></canvas></div>
       <div class="kpi-container">
@@ -664,1302 +578,7 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-
 
 </div>
 
-<script>
-/* ==================================================
-   CONFIGURAÇÕES GERAIS E ETAPAS
-================================================== */
-const STAGES = [
-  "Aguardando Início (Fila)", // 0
-  "Em Desenho",               // 1
-  "Orçamento",                // 2
-  "Correção 1",               // 3
-  "Correção 2",               // 4
-  "Luis",                     // 5
-  "Cristian",                 // 6
-  "Desenhista",               // 7
-  "Entregue"                  // 8
-];
-
-const FIREBASE_CFG = {
-  apiKey: "AIzaSyBQNM9GvBAeO12R-VtJiD5MQ8LKgVqCndw",
-  authDomain: "controle-projetos-comerciais.firebaseapp.com",
-  projectId: "controle-projetos-comerciais",
-  storageBucket: "controle-projetos-comerciais.firebasestorage.app",
-  messagingSenderId: "154256368322",
-  appId: "1:154256368322:web:9c580e7886abfc9779515b"
-};
-const MASTER_KEY = "070522";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAVE6EWLAzr-__4Fll2Wvrro-O6JdUzwjFBGGBFc9iF0j2mfXYfRTM0m-a3h6dP8s9/exec";
-
-const ROTACAO_VENDEDORES = ["CARLA", "JONES", "SHANA", "OUTRO"];
-
-let db, docRef;
-let appData = { users: [], passwords: {}, projects: [], lastVendedor: null };
-let currentUser   = null;
-let isViewerMode  = false;
-let managerTab    = "andamento";
-let draftsmanTab  = "fila";
-let viewMode      = "cards";
-let fbSynced      = false;
-let activeCharts  = {};
-
-let customModalResolve   = null;
-let passwordModalResolve = null;
-let confirmModalResolve  = null;
-
-let dateEditCtx = { projectId: null, histIndex: null };
-let reworkProjectId = null;
-let maiorNumeroDeProjetosVistos = 0;
-
-Chart.register(ChartDataLabels);
-
-/* ==================================================
-   LÓGICA DO TEMA (LIGHT/DARK)
-================================================== */
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.classList.toggle('dark');
-  localStorage.setItem('tema_projetos', isDark ? 'dark' : 'light');
-  
-  Chart.defaults.color = isDark ? '#94a3b8' : '#6b7280';
-  
-  if (activeCharts["paretoChart"]) renderPareto("manager");
-  if (activeCharts["draftsmanParetoChart"]) renderPareto("draftsman");
-}
-
-const savedTheme = localStorage.getItem('tema_projetos');
-if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-    Chart.defaults.color = '#94a3b8';
-} else {
-    Chart.defaults.color = '#6b7280';
-}
-
-function normalizeVendedor(v) {
-  const upper = (v || "").trim().toUpperCase();
-  return ROTACAO_VENDEDORES.includes(upper) ? upper : "OUTRO";
-}
-
-/* ==================================================
-   ALTERAR MODO DE VISUALIZAÇÃO
-================================================== */
-function toggleViewMode() {
-  viewMode = viewMode === "cards" ? "table" : "cards";
-  const label = viewMode === "cards" ? "📋 Ver em Tabela" : "📇 Ver em Cards";
-  document.querySelectorAll(".toggle-view-btn").forEach(btn => btn.innerHTML = label);
-  
-  if (isViewerMode) renderGlobalFeed(); 
-  else renderProjects();
-}
-
-/* ==================================================
-   TOAST E SEGURANÇA
-================================================== */
-function toast(msg, type = "info", duration = 3500) {
-  const c = document.getElementById("toast-container");
-  const t = document.createElement("div");
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  c.appendChild(t);
-  setTimeout(() => {
-    t.style.animation = "fadeOut 0.3s ease forwards";
-    setTimeout(() => t.remove(), 300);
-  }, duration);
-}
-
-async function hashPassword(pass) {
-  const enc = new TextEncoder().encode(pass);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
-}
-
-async function checkPassword(stored, input) {
-  if (stored && stored.length !== 64) return stored === input;
-  return stored === await hashPassword(input);
-}
-
-function debounce(fn, ms = 300) {
-  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-}
-const debounceRenderProjects = debounce(() => renderProjects());
-const debounceRenderGlobal   = debounce(() => renderGlobalFeed());
-
-/* ==================================================
-   MANIPULAÇÃO DE MODAIS
-================================================== */
-function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
-
-function openCustomModal(title, desc, placeholder, defaultVal = "") {
-  const m = document.getElementById("custom-modal");
-  document.getElementById("modal-title").textContent = title;
-  document.getElementById("modal-desc").textContent  = desc;
-  const inp = document.getElementById("modal-input");
-  inp.value = defaultVal; inp.placeholder = placeholder;
-  m.classList.remove("hidden");
-  requestAnimationFrame(() => inp.focus());
-  return new Promise(r => { customModalResolve = r; });
-}
-function closeCustomModal(confirm) {
-  document.getElementById("custom-modal").classList.add("hidden");
-  if (customModalResolve) {
-    customModalResolve(confirm ? document.getElementById("modal-input").value : null);
-    customModalResolve = null;
-  }
-}
-
-function openPasswordModal(title, desc) {
-  document.getElementById("pwd-modal-title").textContent = title;
-  document.getElementById("pwd-modal-desc").textContent  = desc;
-  const inp = document.getElementById("pwd-modal-input");
-  inp.value = "";
-  document.getElementById("password-modal").classList.remove("hidden");
-  requestAnimationFrame(() => inp.focus());
-  return new Promise(r => { passwordModalResolve = r; });
-}
-function closePasswordModal(confirm) {
-  document.getElementById("password-modal").classList.add("hidden");
-  if (passwordModalResolve) {
-    passwordModalResolve(confirm ? document.getElementById("pwd-modal-input").value : null);
-    passwordModalResolve = null;
-  }
-}
-
-function openConfirmModal(title, desc) {
-  document.getElementById("confirm-title").textContent = title;
-  document.getElementById("confirm-desc").textContent  = desc;
-  document.getElementById("confirm-modal").classList.remove("hidden");
-  return new Promise(r => { confirmModalResolve = r; });
-}
-function closeConfirmModal(confirm) {
-  document.getElementById("confirm-modal").classList.add("hidden");
-  if (confirmModalResolve) { confirmModalResolve(confirm); confirmModalResolve = null; }
-}
-
-document.addEventListener("keydown", e => {
-  if (e.key !== "Escape") return;
-  ["pdf-modal","custom-modal","password-modal","confirm-modal","admin-modal","date-modal","rework-modal","create-project-modal","edit-project-modal","create-revisao-modal"]
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el && !el.classList.contains("hidden")) el.classList.add("hidden");
-    });
-});
-
-document.getElementById("pwd-modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") { e.preventDefault(); closePasswordModal(true); }
-});
-
-document.getElementById("modal-input").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); closeCustomModal(true); }
-});
-
-/* ==================================================
-   TRATAMENTO DE DATAS E TRABALHO ÚTIL
-================================================== */
-function dateToLocalString(ds) {
-  try {
-    const [d, t] = ds.replace(",","").trim().split(" ");
-    const [dd, mm, yy] = d.split("/");
-    const [hh, mn] = (t || "00:00").split(":");
-    return `${yy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}T${hh.padStart(2,"0")}:${mn.padStart(2,"0")}`;
-  } catch { return ""; }
-}
-function localStringToDate(ls) {
-  const [d, t] = ls.split("T");
-  const [yy, mm, dd] = d.split("-");
-  const [hh, mn] = (t || "00:00").split(":");
-  return `${dd}/${mm}/${yy}, ${hh}:${mn}:00`;
-}
-function nowBR() { return new Date().toLocaleString("pt-BR"); }
-function parseDateBR(str) {
-  try {
-    const parts = str.split(/[\s,]+/);
-    const [dd, mm, yy] = parts[0].split("/");
-    const [hh, mn] = (parts[1] || "00:00").split(":");
-    return new Date(yy, mm - 1, dd, hh || 0, mn || 0).getTime();
-  } catch { return Date.now(); }
-}
-
-function getBusinessHours(startMs, endMs) {
-  if (startMs >= endMs) return 0;
-  let total = 0;
-  const cur = new Date(startMs); cur.setHours(0, 0, 0, 0);
-  const end = new Date(endMs);
-  while (cur <= end) {
-    const day = cur.getDay();
-    if (day !== 0 && day !== 6) {
-      const bizStart = new Date(cur); bizStart.setHours(8, 0, 0, 0);
-      const bizEnd   = new Date(cur); bizEnd.setHours(18, 0, 0, 0);
-      const aStart = Math.max(startMs, bizStart.getTime());
-      const aEnd   = Math.min(endMs,   bizEnd.getTime());
-      if (aStart < aEnd) total += (aEnd - aStart) / 3_600_000;
-    }
-    cur.setDate(cur.getDate() + 1);
-  }
-  return total;
-}
-
-/* ==================================================
-   CONEXÃO SINCRO FIREBASE E TRAVA ANTI-APAGÃO
-================================================== */
-function setFirebaseStatus(state) {
-  const dot  = document.getElementById("firebase-dot");
-  const text = document.getElementById("firebase-status-text");
-  if (!dot || !text) return;
-  dot.className  = `firebase-dot ${state}`;
-  text.textContent = { connected:"Conectado à nuvem", error:"Modo Local (Offline)", "":"Verificando..." }[state] || "Modo Local";
-}
-function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-
-function ensureDefaults(data) {
-  if (!data) data = {};
-  if (!data.users) data.users = [];
-  if (!data.projects) data.projects = [];
-  if (!data.passwords) data.passwords = {};
-  if (!data.lastVendedor) data.lastVendedor = null;
-  return data;
-}
-
-function bootUI() {
-  hideLoader();
-  if (!fbSynced) {
-    const local = localStorage.getItem("appData_local");
-    if (local) {
-        try { appData = JSON.parse(local); } catch(e) {}
-    }
-  }
-  appData = ensureDefaults(appData);
-  if (!currentUser && !isViewerMode) { show("view-profiles"); renderProfiles(); }
-  else if (isViewerMode) { show("view-manager"); renderGlobalFeed(); }
-  else { show("view-dashboard"); renderProjects(); }
-}
-
-function show(id) {
-  ["view-profiles","view-manager","view-dashboard"].forEach(v => document.getElementById(v).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-}
-
-const isConfigured = FIREBASE_CFG.apiKey && !FIREBASE_CFG.apiKey.includes("SUA_API_KEY");
-const fbTimeout = setTimeout(() => { if (!fbSynced) { setFirebaseStatus("error"); bootUI(); } }, 2500);
-
-if (isConfigured) {
-  try {
-    firebase.initializeApp(FIREBASE_CFG);
-    db = firebase.firestore();
-    docRef = db.collection("sistema").doc("bancoDeDados");
-    docRef.onSnapshot(doc => {
-      clearTimeout(fbTimeout);
-      if (doc.exists) {
-        appData = ensureDefaults(doc.data());
-        fbSynced = true;
-        document.getElementById("offline-banner").style.display = "none";
-        setFirebaseStatus("connected");
-        maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-      } else if (!fbSynced) {
-        docRef.set(ensureDefaults(appData)).catch(() => {});
-        fbSynced = true;
-      }
-      bootUI();
-    }, () => { setFirebaseStatus("error"); bootUI(); });
-  } catch { bootUI(); }
-} else {
-  clearTimeout(fbTimeout);
-  setFirebaseStatus("error");
-  bootUI();
-}
-
-function saveData() {
-  if (!fbSynced) { 
-    localStorage.setItem("appData_local", JSON.stringify(appData)); 
-    return; 
-  }
-  if (appData && appData.projects && appData.projects.length === 0 && maiorNumeroDeProjetosVistos > 0) return;
-  if (!docRef) return;
-  docRef.set(appData).then(() => {
-    maiorNumeroDeProjetosVistos = Math.max(maiorNumeroDeProjetosVistos, appData.projects.length);
-  }).catch(() => toast("Erro ao salvar no banco.", "danger"));
-}
-
-/* ==================================================
-   EXPORTAÇÃO PARA GOOGLE PLANILHAS (CORRIGIDO PARA NOVA DATA)
-================================================== */
-async function sendToGoogleSheets(p) {
-  if (!GOOGLE_SCRIPT_URL) return;
-  try {
-    // PUXA A DATA DO PRIMEIRO ITEM DO HISTORICO (QUE É O MAIS RECENTE: A CRIAÇÃO OU REVISÃO DE HOJE)
-    const entryDate = p.history && p.history.length > 0 ? p.history[0].date.split(" ")[0].replace(/,/g, "").trim() : "";
-    
-    const payload = {
-      vendedor: p.vendedor,
-      tipo: p.tipo,
-      probabilidade: p.probabilidade,
-      situacao: "PROJETO", 
-      stage: "PROJETO",    
-      status: "PROJETO",   
-      name: p.name,
-      cod: p.cod,
-      cidade: p.cidade,
-      date: entryDate,
-      owner: " ",          
-      desenhista: " "
-    };
-    
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {}
-}
-
-/* ==================================================
-   CONTROLE DE LOGINS, PERFIS E FLUXOS
-================================================== */
-function findProject(id) { return (appData.projects || []).find(p => p.id === id) || null; }
-function pushHistory(p, stage, obs) {
-  if (!p.history) p.history = [];
-  p.history.unshift({ stage, obs: obs || "", date: nowBR(), author: currentUser || "Visualizador" });
-}
-
-function updateBadges() {
-  const projs = appData.projects || [];
-  const setBadge = (id, count) => { const el = document.getElementById(id); if(el) el.textContent = count; };
-  const getStage = p => Number(p.stageIndex) || 0;
-
-  setBadge("badge-fila", projs.filter(p => getStage(p) === 0).length);
-  setBadge("badge-andamento", projs.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
-  setBadge("badge-concluidos", projs.filter(p => getStage(p) >= 8).length);
-
-  if (currentUser) {
-    const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
-    const filtered = projs.filter(p => {
-       const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
-       if (isFila) return true;
-       if (filterUser === "ALL") return true;
-       return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
-    });
-    setBadge("badge-d-fila", filtered.filter(p => getStage(p) === 0).length);
-    setBadge("badge-d-andamento", filtered.filter(p => getStage(p) > 0 && getStage(p) < 8).length);
-    setBadge("badge-d-concluidos", filtered.filter(p => getStage(p) >= 8).length);
-  }
-}
-
-function renderProfiles() {
-  const c = document.getElementById("profiles-container"); if (!c) return; c.innerHTML = "";
-  (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
-    const div = document.createElement("div"); div.className = "profile-card";
-    div.innerHTML = `<span class="profile-name" onclick="handleLoginClick('${u}')">👤 ${u}</span>`;
-    c.appendChild(div);
-  });
-}
-
-async function addUser() {
-  const inp = document.getElementById("new-user-name"); const name = inp.value.trim(); if (!name) return;
-  if (appData.users.includes(name) || name.toUpperCase() === "ADMIN") { toast("Nome existente!", "warning"); return; }
-  const pass = await openPasswordModal("Criar Senha", `Defina a senha para "${name}":`);
-  if (pass !== null && pass.trim()) {
-    appData.users.push(name); appData.passwords[name] = await hashPassword(pass);
-    saveData(); inp.value = ""; renderProfiles();
-    toast(`${name} adicionado!`, "success");
-  }
-}
-
-async function deleteCurrentUser() {
-  const ok = await openConfirmModal("Excluir Perfil", `Deseja apagar permanentemente o perfil "${currentUser}"?`);
-  if (!ok) return;
-  appData.users = appData.users.filter(u => u !== currentUser); delete appData.passwords[currentUser];
-  saveData(); logout();
-}
-
-function populateUserFilter() {
-  const sel = document.getElementById("user-filter-select"); if (!sel) return;
-  sel.innerHTML = '<option value="ALL">Todos</option><option value="MEUS">Só os Meus</option>';
-  (appData.users || []).filter(u => u !== currentUser && u !== "ADMIN").forEach(u => { sel.innerHTML += `<option value="${u}">Projetos de: ${u}</option>`; });
-  sel.value = currentUser === "ADMIN" ? "ALL" : "MEUS";
-}
-
-async function handleLoginClick(user) {
-  const stored = appData.passwords[user];
-  if (!stored) {
-    const pass = await openPasswordModal("Criar Senha", `Crie uma senha para "${user}":`);
-    if (pass !== null && pass.trim()) { appData.passwords[user] = await hashPassword(pass); saveData(); proceedLogin(user); }
-  } else {
-    const pass = await openPasswordModal("Acesso", `Senha de ${user}:`);
-    if (pass === null) return;
-    if (pass === MASTER_KEY || await checkPassword(stored, pass)) { proceedLogin(user); } else { toast("Senha incorreta.", "danger"); }
-  }
-}
-
-async function handleMasterLogin() {
-  const pass = await openPasswordModal("Acesso Master", "Senha administrativa:");
-  if (pass === null) return;
-  const ok = pass === MASTER_KEY || (appData.passwords?.["ADMIN"] && await checkPassword(appData.passwords["ADMIN"], pass));
-  if (ok) { if (!appData.users.includes("ADMIN")) appData.users.push("ADMIN"); proceedLogin("ADMIN"); } else { toast("Senha incorreta.", "danger"); }
-}
-
-function proceedLogin(user) {
-  currentUser = user;
-  isViewerMode = false; show("view-dashboard");
-  document.getElementById("dashboard-title").textContent = user === "ADMIN" ? "Área de Trabalho (Gestão)" : `Área de Trabalho — ${user}`;
-  document.getElementById("admin-btn").classList.toggle("hidden", user !== "ADMIN");
-  document.getElementById("delete-profile-btn").classList.toggle("hidden", user === "ADMIN");
-  populateUserFilter(); switchDraftsmanTab("fila");
-}
-
-function proceedAsViewer() { currentUser = null; isViewerMode = true; show("view-manager"); switchManagerTab("andamento"); }
-function logout() { currentUser = null; isViewerMode = false; show("view-profiles"); renderProfiles(); }
-async function changeMyPassword() {
-  const pass = await openPasswordModal("Alterar Senha", "Digite sua nova senha:");
-  if (pass !== null && pass.trim()) { appData.passwords[currentUser] = await hashPassword(pass); saveData(); toast("Senha atualizada!", "success"); }
-}
-
-function openAdminModal() {
-  const list = document.getElementById("admin-users-list"); list.innerHTML = "";
-  (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
-    const row = document.createElement("div"); row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);";
-    row.innerHTML = `<strong>👤 ${u}</strong><button class="warning" style="padding:6px 12px; font-size:0.85rem;" onclick="changeUserPassword('${u}')">Alterar Senha</button>`;
-    list.appendChild(row);
-  });
-  document.getElementById("admin-modal").classList.remove("hidden");
-}
-async function changeUserPassword(u) {
-  const pass = await openCustomModal("Alterar Senha", `Nova senha para ${u}:`, "Nova senha...");
-  if (pass !== null && pass.trim()) { appData.passwords[u] = await hashPassword(pass); saveData(); toast(`Senha de ${u} atualizada!`, "success"); }
-}
-
-/* ==================================================
-   SISTEMA DE SUGESTÃO ADMIN 
-================================================== */
-function updateAdminSuggestion() {
-  const panel = document.getElementById("admin-suggestion-panel");
-  if (!panel) return;
-
-  if (currentUser !== "ADMIN" || isViewerMode) {
-    panel.classList.add("hidden");
-    return;
-  }
-
-  const filaProjs = (appData.projects || []).filter(p => Number(p.stageIndex) === 0);
-  const desenhistas = (appData.users || []).filter(u => u !== "ADMIN");
-
-  if (filaProjs.length === 0 || desenhistas.length === 0) {
-    panel.classList.add("hidden");
-    return;
-  }
-
-  let lastIndex = ROTACAO_VENDEDORES.indexOf((appData.lastVendedor || "").toUpperCase());
-  if (lastIndex === -1) lastIndex = -1;
-
-  let oldestProj = null;
-  for (let i = 1; i <= ROTACAO_VENDEDORES.length; i++) {
-    let checkIndex = (lastIndex + i) % ROTACAO_VENDEDORES.length;
-    let checkName = ROTACAO_VENDEDORES[checkIndex];
-
-    let projsVendedor = filaProjs.filter(p => normalizeVendedor(p.vendedor) === checkName)
-                                 .sort((a, b) => Number(a.id) - Number(b.id)); 
-    if (projsVendedor.length > 0) {
-      oldestProj = projsVendedor[0]; 
-      break; 
-    }
-  }
-
-  if (!oldestProj && filaProjs.length > 0) {
-    oldestProj = filaProjs.sort((a, b) => Number(a.id) - Number(b.id))[0];
-  }
-
-  if (!oldestProj) {
-    panel.classList.add("hidden");
-    return;
-  }
-
-  let desenhistasOrdenados = [...desenhistas].sort((a, b) => {
-     let countA = (appData.projects || []).filter(p => p.owner === a && p.stageIndex > 0 && p.stageIndex < 8).length;
-     let countB = (appData.projects || []).filter(p => p.owner === b && p.stageIndex > 0 && p.stageIndex < 8).length;
-     return countA - countB;
-  });
-
-  panel.classList.remove("hidden");
-  let html = `<table class="data-table" style="background: var(--card); width:100%;">
-                <thead>
-                    <tr>
-                      <th style="background:var(--purple); width:20%;">Sugerido Para</th>
-                      <th style="background:var(--purple); width:15%;">Vendedor</th>
-                      <th style="background:var(--purple); width:10%;">CÓD</th>
-                      <th style="background:var(--purple); width:40%;">Obra</th>
-                      <th style="background:var(--purple); width:15%; text-align:center;">Ação</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-  desenhistasOrdenados.forEach((dName) => {
-      html += `<tr>
-          <td style="font-weight:700; color:var(--purple);">👤 ${dName}</td>
-          <td style="font-weight:700; color:var(--text);">${normalizeVendedor(oldestProj.vendedor)}</td>
-          <td style="color:var(--text);">${oldestProj.cod || "-"}</td>
-          <td style="white-space:normal; color:var(--text);">${oldestProj.name}</td>
-          <td style="text-align:center;">
-              <button class="success" style="padding:6px 12px; font-size:0.8rem; border-radius:4px;" onclick="adminAssignProject('${oldestProj.id}', '${dName}')">Atribuir Agora</button>
-          </td>
-      </tr>`;
-  });
-  html += `</tbody></table>`;
-  
-  document.getElementById("sugg-table-container").innerHTML = html;
-}
-
-async function adminAssignProject(id, desenhista) {
-  const p = findProject(id); if (!p) return;
-  const ok = await openConfirmModal("Atribuir Projeto", `Deseja transferir o projeto "${p.name}" para o desenhista ${desenhista}?`);
-  if (!ok) return;
-  const ant = p.owner; 
-  p.owner = desenhista;
-  p.stageIndex = 1; 
-  appData.lastVendedor = normalizeVendedor(p.vendedor);
-  
-  pushHistory(p, "🚀 ATRIBUÍDO PELO ADMIN", `Transferido da Fila -> [${p.owner}].`);
-  saveData(); 
-  if (isViewerMode) renderGlobalFeed(); else renderProjects();
-  toast(`Projeto transferido com sucesso para ${desenhista}!`, "success");
-}
-
-/* ==================================================
-   RENDERIZAÇÃO DE TABELAS / CARDS
-================================================== */
-function updateViews() { 
-  if (isViewerMode) renderGlobalFeed();
-  else renderProjects(); 
-}
-
-function switchManagerTab(tab) {
-  managerTab = tab; ["fila","andamento","concluidos","graficos"].forEach(t => document.getElementById(`tab-${t}`)?.classList.toggle("active", tab === t));
-  const isGraph = tab === "graficos";
-  document.getElementById("global-feed-container").classList.toggle("hidden", isGraph);
-  document.getElementById("view-graphics").classList.toggle("hidden", !isGraph);
-  if (isGraph) { refreshGraphFilters("manager"); } else renderGlobalFeed();
-}
-
-function renderGlobalFeed() {
-  const container = document.getElementById("global-feed-container"); if (!container) return;
-  const src = (document.getElementById("manager-search")?.value || "").toLowerCase();
-  const sort = document.getElementById("manager-sort-select")?.value || "DATE_DESC";
-  const list = filterAndSort(appData.projects || [], src, sort, managerTab);
-  
-  viewMode === "table" ? buildTable(list, container, false) : buildCards(list, container, false);
-  updateBadges(); 
-}
-
-function switchDraftsmanTab(tab) {
-  draftsmanTab = tab;
-  ["fila","andamento","concluidos","graficos"].forEach(t => document.getElementById(`tab-d-${t}`)?.classList.toggle("active", tab === t));
-  const isGraph = tab === "graficos";
-  document.getElementById("projects-container").classList.toggle("hidden", isGraph);
-  document.getElementById("view-draftsman-graphics").classList.toggle("hidden", !isGraph);
-  if (isGraph) { refreshGraphFilters("draftsman"); } else renderProjects();
-}
-
-function renderProjects() {
-  const container = document.getElementById("projects-container"); if (!container || draftsmanTab === "graficos") return;
-  container.innerHTML = "";
-  const src = (document.getElementById("search-input")?.value || "").toLowerCase();
-  const filterUser = document.getElementById("user-filter-select")?.value || "MEUS";
-  const sort = document.getElementById("sort-filter-select")?.value  || "DATE_DESC";
-  let list = filterAndSort(appData.projects || [], src, sort, draftsmanTab);
-  
-  list = list.filter(p => {
-    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista";
-    if (isFila) return true;
-    if (filterUser === "ALL") return true;
-    return filterUser === "MEUS" ? p.owner === currentUser : p.owner === filterUser;
-  });
-
-  viewMode === "table" ? buildTable(list, container, true) : buildCards(list, container, true);
-  
-  updateBadges(); 
-  updateAdminSuggestion();
-}
-
-function filterAndSort(projects, search, sort, tab) {
-  return projects
-    .filter(p => {
-      if (!p) return false; const stage = Number(p.stageIndex) || 0; 
-      const inTab = tab === "fila" ? stage === 0 : tab === "andamento" ? stage > 0 && stage < 8 : tab === "concluidos" ? stage >= 8 : false;
-      if (!inTab) return false;
-      if (sort === "TIPO_NOVO" && p.tipo !== "NOVO") return false;
-      if (sort === "TIPO_REVISAO" && p.tipo !== "REVISÃO") return false;
-      
-      const searchSpace = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")+" "+((p.previousCods||[]).join(" "))).toLowerCase();
-      return searchSpace.includes(search);
-    })
-    .sort((a, b) => {
-      if (sort === "VENDEDOR") { const cmp = (a.vendedor||"").localeCompare(b.vendedor||""); return cmp !== 0 ? cmp : b.id - a.id; }
-      return sort === "DATE_ASC" ? a.id - b.id : b.id - a.id;
-    });
-}
-
-/* ==================================================
-   MONTAGEM DA VIEW: TABELA EXCEL (READ ONLY)
-================================================== */
-function buildTable(list, container, isDash) {
-  container.style.display = "block";
-  container.innerHTML = "";
-  if (!list.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado nesta visualização.</p></div>`; return; }
-
-  let html = `
-    <p style="text-align:right; font-size:0.85rem; color:var(--text-light); margin-bottom:8px;">⚠️ Modo de visualização somente leitura. Alterne para "Ver em Cards" para editar.</p>
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Vendedor</th><th>Tipo</th><th>Probabilidade</th><th>Situação (Etapa)</th><th>Cliente / Obra</th><th>CÓD</th><th>Cidade</th><th>Entrada (Fila)</th><th>Desenhista</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  list.forEach(p => {
-    if (!p) return; const stageVal = Number(p.stageIndex) || 0;
-    let stageName = p.isImpeded ? "PAUSADO" : (p.reworkType ? `REVISÃO (${p.reworkType})`.toUpperCase() : STAGES[stageVal]);
-    if (stageVal >= 8) stageName = "ENTREGUE";
-    let typeBadge = p.tipo === "REVISÃO" ? "badge-revisao" : "badge-novo";
-    let probBadge = p.probabilidade === "ALTA" ? "badge-alta" : (p.probabilidade === "MÉDIA" ? "badge-media" : "badge-baixa");
-    let entryDate = p.history && p.history.length > 0 ? p.history[p.history.length - 1].date.split(" ")[0] : "-";
-    
-    let codDisplay = p.cod || "-";
-    if (p.previousCods && p.previousCods.length > 0) {
-        codDisplay += ` <span style="font-size:0.7rem; background:rgba(245, 158, 11, 0.2); color:var(--warning); padding:2px 4px; border-radius:4px; margin-left:4px;" title="Versões anteriores: ${p.previousCods.join(', ')}">⚠️ ex: ${p.previousCods[p.previousCods.length-1]}</span>`;
-    }
-
-    html += `
-      <tr>
-        <td style="font-weight:700; color:var(--text);">${p.vendedor || "-"}</td>
-        <td><span class="badge-table ${typeBadge}">${p.tipo || "NOVO"}</span></td>
-        <td><span class="badge-table ${probBadge}">${p.probabilidade || "-"}</span></td>
-        <td><span class="badge-stage">${stageName}</span></td>
-        <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis; color:var(--text);" title="${p.name || ''}">${p.name || "-"}</td>
-        <td style="font-weight:600; color:var(--text);">${codDisplay}</td>
-        <td style="color:var(--text);">${p.cidade || "-"}</td>
-        <td style="color:var(--text-light); font-size:0.8rem;">${entryDate}</td>
-        <td style="font-weight:600; color:var(--primary);">${p.owner}</td>
-      </tr>
-    `;
-  });
-  html += `</tbody></table></div>`; container.innerHTML = html;
-}
-
-/* ==================================================
-   MONTAGEM DA VIEW: CARDS DINÂMICOS COM INTERAÇÃO
-================================================== */
-function buildCards(list, container, isDash) {
-  container.innerHTML = ""; if (!list.length) { container.style.display = "block"; container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum projeto encontrado.</p></div>`; return; }
-  container.style.display = "grid";
-
-  list.forEach(p => {
-    if (!p) return; const stageVal = Number(p.stageIndex) || 0;
-    const isC = stageVal >= 8; const isMine = p.owner === currentUser; const isAdmin = currentUser === "ADMIN";
-    const isFila = p.owner === "Fila" || p.owner === "Sem Desenhista"; const canEdit = !isViewerMode && isDash && (isMine || isAdmin || isFila);
-
-    let cardClass = isC ? "completed" : (p.isImpeded ? "impediment" : "");
-    if (!isC && p.reworkType === "interno") cardClass += " rework-int";
-    if (!isC && p.reworkType === "externo") cardClass += " rework-ext";
-
-    const progress = Math.round((stageVal / (STAGES.length - 1)) * 100);
-    const stageOpts = STAGES.map((s, i) => `<option value="${i}" ${i === stageVal ? "selected" : ""}>${i+1}. ${s}</option>`).join("");
-    const histHTML = (p.history || []).map((h, i) => {
-      if (!h) return "";
-      const editBtns = canEdit ? `<div class="timeline-actions"><button class="icon-btn" onclick="editHistoryItem('${p.id}',${i})">✏️</button><button class="icon-btn" onclick="deleteHistoryItem('${p.id}',${i})">🗑️</button></div>` : "";
-      const dateAttr = canEdit ? `class="timeline-date editable" onclick="openDateModal('${p.id}',${i})"` : `class="timeline-date"`;
-      let sStyle = h.stage?.includes("RECADO") || h.stage?.includes("ASSUMIU") ? "color:var(--purple);font-weight:700;" : (h.stage?.includes("CORRIGIDO") || h.stage?.includes("REVISÃO") ? "color:var(--success);font-weight:700;" : "");
-
-      return `<div class="timeline-item"><div class="timeline-top"><span class="timeline-stage" style="${sStyle}">${h.stage||""}</span>${editBtns}</div>
-        <div class="timeline-obs">↳ ${h.obs||""}</div>
-        <div class="timeline-meta"><span class="timeline-author">👤 ${h.author||p.owner}</span><span ${dateAttr}>${h.date||""}</span></div></div>`;
-    }).join("");
-
-    let statusLabel = p.isImpeded ? "⚠️ PAUSADO" : (isC ? "✅ CONCLUÍDO" : (!isC && p.reworkType === "interno" ? "🔄 REVISÃO — ERRO INTERNO" : (!isC && p.reworkType === "externo" ? "🔄 REVISÃO — PEDIDO EXTERNO" : "▶ " + STAGES[stageVal])));
-    let actions = "";
-    
-    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<button class="btn-assume success" onclick="assumirProjeto('${p.id}')">🚀 Assumir e Desenhar</button>`;
-    if (!isViewerMode && isDash && !isC && (stageVal === 3 || stageVal === 4)) actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
-    
-    const commonBtns = (isDash && canEdit || isViewerMode) ? `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
-    
-    if (isFila && isDash && !isViewerMode && stageVal === 0) actions += `<div class="actions-row">${commonBtns}<button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
-    else if (canEdit && !isC) actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded?'success':'warning'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded?'▶':'⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
-    else if (!isViewerMode && isC) actions += `<div class="actions-row">${commonBtns}<button style="background:var(--orange);color:#fff;flex:2;" onclick="createRevisaoFromCompleted('${p.id}')">🔄 Criar Revisão</button></div>`;
-    
-    actions += `<button class="btn-pdf" onclick="exportReportPDF('${p.id}')">📄 Dossier PDF</button>`;
-
-    let prevCodsHTML = "";
-    if (p.previousCods && p.previousCods.length > 0) {
-        prevCodsHTML = `<div class="info-row" style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-h);">
-            <span style="font-size:0.8rem; color:var(--text-light);"><strong>CÓDs Antigos:</strong> ${p.previousCods.join(", ")}</span>
-        </div>`;
-    }
-
-    const card = document.createElement("div"); card.className = `project-card ${cardClass}`;
-    card.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-        <span class="badge-owner">👤 ${p.owner}</span>
-        ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Fechar Revisão" : "🔄 Retrabalho"}</button>` : ""}
-      </div>
-      <div class="project-title-row"><h2>${p.name||"Sem Nome"}</h2>${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ""}</div>
-      <div class="info-box">
-        ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')">⚙️</button>` : ""}
-        <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
-        <div class="info-row"><span><strong>Tipo:</strong> ${p.tipo||"-"}</span><span><strong>Prob:</strong> ${p.probabilidade||"-"}</span></div>
-        <hr class="info-divider"><span><strong>Cidade:</strong> ${p.cidade||"-"}</span>
-        ${prevCodsHTML}
-      </div>
-      ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
-      <div class="status-label">${statusLabel}</div>
-      <div class="progress-wrap"><div class="progress-bar" style="width:${progress}%;"></div></div>
-      <div class="timeline"><div class="timeline-header">📋 Histórico</div>${histHTML || '<div style="color:var(--text-light);">Nenhum registro.</div>'}</div>
-      <div class="card-actions">${actions}</div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-/* ==================================================
-   CRUDS, MODIFICAÇÕES DE PROJETO E INTEGRANTE
-================================================== */
-function openEditProjectModal(id) {
-  const p = findProject(id); if (!p) return;
-  document.getElementById("ep-id").value = id; document.getElementById("ep-cod").value = p.cod || "";
-  document.getElementById("ep-cidade").value = p.cidade || ""; document.getElementById("ep-vendedor").value = p.vendedor || "";
-  document.getElementById("ep-tipo").value = p.tipo || "NOVO"; document.getElementById("ep-probabilidade").value = p.probabilidade || "";
-  document.getElementById("edit-project-modal").classList.remove("hidden");
-}
-function closeEditProjectModal(confirm) {
-  document.getElementById("edit-project-modal").classList.add("hidden"); if (!confirm) return;
-  const p = findProject(document.getElementById("ep-id").value); if (!p) return;
-  p.cod = document.getElementById("ep-cod").value.trim(); p.cidade = document.getElementById("ep-cidade").value.trim();
-  p.vendedor = document.getElementById("ep-vendedor").value; p.tipo = document.getElementById("ep-tipo").value;
-  p.probabilidade = document.getElementById("ep-probabilidade").value; saveData(); updateViews(); toast("Atualizado!", "success");
-}
-
-function openCreateProjectModal() {
-  ["cp-cliente","cp-cod","cp-cidade","cp-obs"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("cp-vendedor").value = "";
-  document.getElementById("cp-tipo").value = "NOVO"; document.getElementById("cp-probabilidade").value = "";
-  const skipCheckbox = document.getElementById("cp-skip-sheets"); if (skipCheckbox) skipCheckbox.checked = false;
-  document.getElementById("create-project-modal").classList.remove("hidden");
-  requestAnimationFrame(() => document.getElementById("cp-cliente").focus());
-}
-function closeCreateProjectModal(confirm) {
-  if (!confirm) { document.getElementById("create-project-modal").classList.add("hidden"); return; }
-  const cli = document.getElementById("cp-cliente").value.trim();
-  if (!cli) { toast("Nome obrigatório!", "warning"); return; }
-  if (!appData.projects) appData.projects = [];
-  
-  const newProj = {
-    id: Date.now().toString(), owner: "Fila", name: cli, stageIndex: 0, isImpeded: false, reworkType: null,
-    cod: document.getElementById("cp-cod").value.trim(), vendedor: document.getElementById("cp-vendedor").value,
-    tipo: document.getElementById("cp-tipo").value, probabilidade: document.getElementById("cp-probabilidade").value,
-    cidade: document.getElementById("cp-cidade").value.trim(),
-    previousCods: [],
-    history: [{ stage: STAGES[0], obs: document.getElementById("cp-obs").value.trim() || "Adicionado à fila.", date: nowBR(), author: currentUser || "Visualizador" }]
-  };
-
-  appData.projects.unshift(newProj);
-  document.getElementById("create-project-modal").classList.add("hidden");
-  saveData(); updateViews(); 
-  
-  isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
-  toast("Criado e inserido na Fila!", "success");
-
-  const skipSheets = document.getElementById("cp-skip-sheets").checked;
-  if (!skipSheets) sendToGoogleSheets(newProj);
-}
-
-async function editProjectName(id) {
-  const p = findProject(id); if (!p) return;
-  const n = await openCustomModal("Editar Nome", "Qual o novo nome?", "Nome...", p.name);
-  if (n !== null && n.trim()) { p.name = n.trim(); saveData(); updateViews(); }
-}
-async function deleteProject(id) {
-  const p = findProject(id); const ok = await openConfirmModal("Excluir", `Apagar permanentemente "${p?.name}"?`);
-  if (!ok) return;
-  appData.projects = appData.projects.filter(x => x.id !== id); saveData(); updateViews(); toast("Excluído.", "info");
-}
-
-async function updateStage(id, sel) {
-  const p = findProject(id); if (!p) return; const idx = parseInt(sel.value);
-  if (p.stageIndex === idx) return;
-  const sName = STAGES[idx] || "Desconhecido";
-  const obs = await openCustomModal("Avançar Etapa", `Mudar para: "${sName}"`, "Obs...");
-  if (obs === null) { sel.value = p.stageIndex; return; }
-  
-  if (idx === 0) {
-      p.owner = "Fila"; 
-  } else if (p.owner === "Fila" || p.owner === "Sem Desenhista") { 
-      p.owner = currentUser === "ADMIN" ? "Admin" : currentUser; 
-      pushHistory(p, "🚀 ASSUMIU PROJETO", `Auto-assumido.`); 
-      appData.lastVendedor = normalizeVendedor(p.vendedor); 
-  }
-  
-  p.stageIndex = idx;
-  pushHistory(p, sName === "Desenhista" ? "🔄 Retornou ao Desenhista" : sName, obs || "Etapa alterada."); 
-  saveData(); updateViews();
-}
-
-async function markAsCorrected(id) {
-  const p = findProject(id); if (!p) return;
-  const obs = await openCustomModal("Corrigido", "Obs (opcional):", "Tudo certo...");
-  if (obs === null) return; p.stageIndex = 7;
-  pushHistory(p, "✅ CORRIGIDO", obs || "Corrigido."); saveData(); 
-  if (isViewerMode) renderGlobalFeed(); else renderProjects();
-}
-
-async function assumirProjeto(id) {
-  const p = findProject(id); if (!p) return; const ant = p.owner;
-  p.owner = currentUser === "ADMIN" ? "Admin" : currentUser;
-  p.stageIndex = 1; 
-  appData.lastVendedor = normalizeVendedor(p.vendedor); 
-  pushHistory(p, "🚀 ASSUMIU PROJETO", `De [${ant}] -> [${p.owner}].`); 
-  saveData(); updateViews(); 
-  toast(`Você assumiu este projeto!`, "success"); 
-  switchDraftsmanTab("andamento");
-}
-
-function createRevisaoFromCompleted(id) {
-  const p = findProject(id); if (!p) return;
-  document.getElementById("cr-id").value = id;
-  document.getElementById("cr-cod").value = "";
-  document.getElementById("cr-motivo").value = "";
-  document.getElementById("cr-skip-sheets").checked = false;
-  document.getElementById("create-revisao-modal").classList.remove("hidden");
-  requestAnimationFrame(() => document.getElementById("cr-cod").focus());
-}
-
-function closeCreateRevisaoModal(confirm) {
-  document.getElementById("create-revisao-modal").classList.add("hidden");
-  if (!confirm) return;
-  
-  const id = document.getElementById("cr-id").value;
-  const p = findProject(id); if (!p) return;
-  
-  const oldCod = p.cod;
-  const newCod = document.getElementById("cr-cod").value.trim();
-  const mot = document.getElementById("cr-motivo").value.trim();
-  const skipSheets = document.getElementById("cr-skip-sheets").checked;
-  
-  if (!mot) { toast("O motivo é obrigatório!", "warning"); return; }
-
-  let msgHistorico = mot;
-
-  if (newCod && newCod !== oldCod) {
-      if (!p.previousCods) p.previousCods = [];
-      if (oldCod && !p.previousCods.includes(oldCod)) {
-          p.previousCods.push(oldCod);
-      }
-      msgHistorico = `[CÓD alterado de ${oldCod||'Sem Cód'} ➔ ${newCod}] ` + mot;
-      p.cod = newCod;
-  }
-
-  p.stageIndex = 0; 
-  p.tipo = "REVISÃO";
-  p.owner = "Fila"; 
-  
-  pushHistory(p, "🔄 RETORNOU PARA REVISÃO", msgHistorico);
-  saveData(); 
-  updateViews(); 
-  switchDraftsmanTab("fila");
-  toast("Voltou como REVISÃO e está livre na fila.", "info");
-  
-  if (!skipSheets) sendToGoogleSheets(p);
-}
-
-async function registerEvent(id) { const p = findProject(id);
-if (p) { const obs = await openCustomModal("Recado", "Insira o recado:", ""); if (obs) { pushHistory(p, "📢 RECADO", obs); saveData();
-updateViews(); } } }
-async function editHistoryItem(id, i) { const p = findProject(id);
-if (p && p.history[i]) { const n = await openCustomModal("Editar Histórico", `Ajustar obs de: ${p.history[i].stage}`, "", p.history[i].obs);
-if (n !== null) { p.history[i].obs = n || "Sem obs."; saveData(); updateViews(); } } }
-async function deleteHistoryItem(id, i) { const ok = await openConfirmModal("Remover", "Remover este item?");
-if (ok) { const p = findProject(id); if (p?.history) { p.history.splice(i, 1); saveData(); updateViews(); } } }
-
-async function toggleImpediment(id) {
-  const p = findProject(id); if (!p) return;
-  if (p.isImpeded) {
-    const obs = await openCustomModal("Retomar", "Como foi resolvido?", "Obs..."); if (obs === null) return;
-    p.isImpeded = false; pushHistory(p, "🟢 RETOMADO", obs || "Liberado.");
-  } else {
-    const obs = await openCustomModal("Pausar", "Motivo (obrigatório):", "");
-    if (!obs) { toast("Informe o motivo.", "warning"); return; }
-    p.isImpeded = true; pushHistory(p, "🔴 PAUSADO", obs);
-  }
-  saveData(); updateViews();
-}
-
-async function toggleRework(id) {
-  const p = findProject(id); if (!p) return;
-  if (p.reworkType) {
-    const obs = await openCustomModal("Fechar Revisão", "Retrabalho concluído? Descreva:", "");
-    if (obs === null) return;
-    p.reworkType = null; pushHistory(p, "✅ RETRABALHO CONCLUÍDO", obs || "Concluído."); saveData(); updateViews();
-  } else { reworkProjectId = id; document.getElementById("rework-obs-input").value = ""; document.getElementById("rework-modal").classList.remove("hidden"); }
-}
-function closeReworkModal(confirm) {
-  document.getElementById("rework-modal").classList.add("hidden");
-  if (!confirm || !reworkProjectId) { reworkProjectId = null; return; }
-  const type = document.getElementById("rework-type-select").value; const obs = document.getElementById("rework-obs-input").value;
-  const p = findProject(reworkProjectId); if (p) { p.reworkType = type.toLowerCase(); pushHistory(p, `⚠️ RETRABALHO INICIADO — ${type}`, obs || "Não informado.");
-  saveData(); updateViews(); } reworkProjectId = null;
-}
-
-function openDateModal(id, i) { if (isViewerMode) return;
-dateEditCtx = { projectId: id, histIndex: i }; const p = findProject(id); if (!p?.history?.[i]) return; document.getElementById("date-modal-input").value = dateToLocalString(p.history[i].date); document.getElementById("date-modal").classList.remove("hidden");
-}
-function closeDateModal(confirm) {
-  document.getElementById("date-modal").classList.add("hidden"); if (confirm && dateEditCtx.projectId !== null) {
-    const val = document.getElementById("date-modal-input").value;
-    if (val) { const p = findProject(dateEditCtx.projectId); if (p?.history?.[dateEditCtx.histIndex]) { p.history[dateEditCtx.histIndex].date = localStringToDate(val); saveData(); updateViews(); } }
-  } dateEditCtx = { projectId: null, histIndex: null };
-}
-
-/* ==================================================
-   GERAÇÃO DE GRÁFICOS PARETO (CHART.JS)
-================================================== */
-function refreshGraphFilters(context) {
-    const isManager = context === "manager";
-    const userSel = document.getElementById(isManager ? "graph-user-manager" : "graph-user-draftsman");
-    const oldUser = userSel.value;
-    
-    let html = isManager ? '<option value="ALL">Geral da Empresa</option>' : `<option value="MEUS">Meus Projetos (${currentUser})</option><option value="ALL">Geral da Empresa</option>`;
-    (appData.users || []).filter(u => u !== "ADMIN").forEach(u => {
-        if(!isManager && u === currentUser) return;
-        html += `<option value="${u}">${isManager ? u : 'Projetos de: '+u}</option>`;
-    });
-    
-    userSel.innerHTML = html;
-    if (oldUser && [...userSel.options].some(o => o.value === oldUser)) userSel.value = oldUser;
-
-    renderPareto(context); 
-}
-
-function renderPareto(context) {
-  const isManager = context === "manager"; 
-  const canvasId = isManager ? "paretoChart" : "draftsmanParetoChart";
-  
-  const userSelVal = document.getElementById(isManager ? "graph-user-manager" : "graph-user-draftsman")?.value;
-  const projSel = document.getElementById(isManager ? "graph-project-manager" : "graph-project-draftsman");
-  const projSelVal = projSel?.value;
-
-  if (!userSelVal) return;
-
-  const startDateStr = document.getElementById(isManager ? "pareto-start-manager" : "pareto-start-draftsman")?.value;
-  const endDateStr = document.getElementById(isManager ? "pareto-end-manager" : "pareto-end-draftsman")?.value;
-  
-  const minBound = startDateStr ? new Date(startDateStr + "T00:00:00").getTime() : 0;
-  const maxBound = endDateStr ? new Date(endDateStr + "T23:59:59").getTime() : Infinity;
-
-  let baseList = appData.projects || [];
-  if (userSelVal === "MEUS") baseList = baseList.filter(p => p.owner === currentUser);
-  else if (userSelVal !== "ALL") baseList = baseList.filter(p => p.owner === userSelVal);
-
-  if (projSel) {
-      projSel.innerHTML = '<option value="ALL">Todos os Projetos</option>';
-      baseList.forEach(p => {
-          projSel.innerHTML += `<option value="${p.id}">${p.name} (${p.cod||'-'})</option>`;
-      });
-      if (projSelVal && [...projSel.options].some(o => o.value === projSelVal)) {
-          projSel.value = projSelVal;
-      }
-  }
-
-  let target = projSel?.value !== "ALL" && projSel?.value ? baseList.filter(p => p.id === projSel.value) : baseList;
-  
-  const hours = {}; STAGES.forEach(s => hours[s] = 0); hours["Pausado / Impedido"] = 0;
-  let countByStage = {}; 
-  let currentActive = {}; 
-  
-  let total = target.length, sumCompleted = 0, countCompleted = 0;
-  let countFila = 0;
-
-  target.forEach(p => {
-    if (!p.history) return; 
-    const rev = [...p.history].reverse(); 
-    let startMs = null, endMs = null;
-    let pInFila = false;
-    let stagesInThisProject = new Set(); 
-
-    rev.forEach(ev => { 
-        if (!ev) return; 
-        if (!startMs && (ev.stage === STAGES[1] || ev.stage?.includes("ASSUMIU"))) startMs = parseDateBR(ev.date); 
-        if (ev.stage === STAGES[8]) endMs = parseDateBR(ev.date); 
-    });
-    if (startMs && endMs && endMs > startMs) { sumCompleted += getBusinessHours(startMs, endMs); countCompleted++; }
-    
-    let curStage = null, lastTime = null;
-    
-    rev.forEach(ev => { 
-        if (!ev) return; 
-        const t = parseDateBR(ev.date); 
-        if (curStage && lastTime) {
-            let startOverlap = Math.max(lastTime, minBound);
-            let endOverlap = Math.min(t, maxBound);
-            if (startOverlap < endOverlap) {
-                hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap); 
-                stagesInThisProject.add(curStage);
-                if (curStage === STAGES[0]) pInFila = true;
-            }
-        } 
-        
-        if (STAGES.includes(ev.stage)) curStage = ev.stage; 
-        else if (ev.stage === "🔴 PAUSADO") curStage = "Pausado / Impedido"; 
-        else if (ev.stage === "🟢 RETOMADO") curStage = STAGES[0]; 
-        else if (ev.stage && ev.stage.includes("Desenhista")) curStage = "Desenhista";
-
-        lastTime = t; 
-    });
-    
-    if (p.stageIndex !== 8 && lastTime && curStage) {
-        let startOverlap = Math.max(lastTime, minBound);
-        let endOverlap = Math.min(Date.now(), maxBound);
-        if (startOverlap < endOverlap) {
-            hours[curStage] = (hours[curStage] || 0) + getBusinessHours(startOverlap, endOverlap);
-            stagesInThisProject.add(curStage);
-            if (curStage === STAGES[0]) pInFila = true;
-        }
-    }
-    
-    if (pInFila) countFila++;
-    stagesInThisProject.forEach(s => { countByStage[s] = (countByStage[s] || 0) + 1; });
-
-    if (p.stageIndex !== 8) {
-        let currentS = STAGES[p.stageIndex];
-        if (p.isImpeded) currentS = "Pausado / Impedido";
-        let histStage = p.history && p.history.length > 0 ? p.history[0].stage : null;
-        if (histStage) {
-            if (histStage === "🔴 PAUSADO") currentS = "Pausado / Impedido";
-            else if (histStage === "🟢 RETOMADO") currentS = STAGES[0];
-            else if (histStage.includes("Desenhista")) currentS = "Desenhista";
-            else if (STAGES.includes(histStage)) currentS = histStage;
-        }
-        currentActive[currentS] = (currentActive[currentS] || 0) + 1;
-    }
-  });
-
-  const totalFilaHours = hours[STAGES[0]] || 0;
-  const avgFila = countFila > 0 ? Math.round(totalFilaHours / countFila) : 0;
-
-  delete hours[STAGES[0]];
-  delete hours["Entregue"];
-
-  if (isManager) {
-    if (document.getElementById("kpi-total")) document.getElementById("kpi-total").textContent = total;
-    if (document.getElementById("kpi-avg-time")) document.getElementById("kpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
-    if (document.getElementById("kpi-completed")) document.getElementById("kpi-completed").textContent = countCompleted;
-    if (document.getElementById("kpi-avg-fila")) document.getElementById("kpi-avg-fila").textContent = avgFila + "h";
-  } else {
-    if (document.getElementById("dkpi-total")) document.getElementById("dkpi-total").textContent = total;
-    if (document.getElementById("dkpi-avg-time")) document.getElementById("dkpi-avg-time").textContent = countCompleted ? Math.round(sumCompleted/countCompleted)+"h" : "0h";
-    if (document.getElementById("dkpi-avg-fila")) document.getElementById("dkpi-avg-fila").textContent = avgFila + "h";
-  }
-
-  const items = Object.entries(hours).filter(([,h]) => h > 0.01).sort(([,a],[,b]) => b - a);
-  const totalH = items.reduce((s,[,h]) => s+h, 0); let cumulative = 0;
-  
-  const labels = [], bars = [], line = [], avgHover = [], currentHover = [];
-  
-  items.forEach(([s, h]) => { 
-      labels.push(s); 
-      bars.push(h.toFixed(1)); 
-      cumulative += h; 
-      line.push(((cumulative/totalH)*100).toFixed(1)); 
-      
-      let projCount = countByStage[s] || 0;
-      avgHover.push(projCount > 0 ? (h / projCount).toFixed(1) : 0);
-      currentHover.push(currentActive[s] || 0); 
-  });
-  
-  if (!labels.length) { labels.push("Sem dados no período"); bars.push(0); line.push(0); avgHover.push(0); currentHover.push(0); }
-
-  if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
-  const canvas = document.getElementById(canvasId); if (!canvas) return;
-  
-  activeCharts[canvasId] = new Chart(canvas.getContext("2d"), {
-    type: "bar",
-    data: { 
-        labels, 
-        datasets: [
-            { label: "% Acumulada", data: line, type: "line", borderColor: "#dc2626", yAxisID: "y1", tension: 0.3, pointRadius: 4 }, 
-            { label: "Horas", data: bars, backgroundColor: isManager ? "#2563eb" : "#4f46e5", yAxisID: "y" }
-        ] 
-    },
-    options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        scales: { 
-            y: { position: "left", title: { display: true, text: "Horas úteis" } }, 
-            y1: { position: "right", max: 105, title: { display: true, text: "% Acumulado" }, grid: { drawOnChartArea: false } } 
-        },
-        plugins: {
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        let idx = context.dataIndex;
-                        if (context.datasetIndex === 1) { 
-                            return [
-                                `Tempo Total: ${bars[idx]}h`,
-                                `Média: ${avgHover[idx]}h / proj`,
-                                `AGORA: ${currentHover[idx]} projs parados aqui`
-                            ];
-                        }
-                        return context.raw + '%'; 
-                    }
-                }
-            },
-            datalabels: {
-                display: function(context) { 
-                    return context.datasetIndex === 1 && currentHover[context.dataIndex] > 0; 
-                },
-                align: 'end',
-                anchor: 'end',
-                formatter: function(value, context) {
-                    let activeCount = currentHover[context.dataIndex];
-                    return "📌 " + activeCount + " agora";
-                },
-                font: { size: 11, weight: 'bold' },
-                color: '#dc2626'
-            }
-        }
-    }
-  });
-}
-
-/* ==================================================
-   RELATÓRIOS E COMPILADOR EM JSPDF
-================================================== */
-function sanitizePDF(t) { 
-    return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E\n\r]/g,""); 
-}
-
-function exportReportPDF(id) {
-  if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } const p = findProject(id); if (!p) return;
-  const doc = new window.jspdf.jsPDF(); doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(37,99,235); doc.text("DOSSIER DO PROJETO", 14, 22);
-  doc.setFontSize(14); doc.setTextColor(0,0,0); doc.text(`Obra: ${sanitizePDF(p.name)}`, 14, 32);
-  doc.autoTable({ startY:38, theme:"plain", body:[["COD:",sanitizePDF(p.cod),"Vendedor:",sanitizePDF(p.vendedor)],["Tipo:",sanitizePDF(p.tipo),"Probabilidade:",sanitizePDF(p.probabilidade)],["Cidade:",sanitizePDF(p.cidade),"Responsavel:",sanitizePDF(p.owner)]], styles:{cellPadding:2,fontSize:11} });
-  let y = doc.lastAutoTable.finalY + 10; doc.setFontSize(13); doc.setFont("helvetica","bold"); doc.setTextColor(37,99,235); doc.text("HISTORICO DE ATIVIDADES", 14, y);
-  const rows = (p.history||[]).map(h => [sanitizePDF(h.date||""), sanitizePDF(h.stage||""), sanitizePDF(h.author||""), sanitizePDF(h.obs||"")]);
-  doc.autoTable({ startY:y+5, head:[["Data","Etapa","Autor","Observacao"]], body:rows, theme:"striped", headStyles:{fillColor:[37,99,235]}, styles:{fontSize:9,cellPadding:3}, columnStyles:{3:{cellWidth:80}} });
-  window.open(URL.createObjectURL(doc.output("blob")),"_blank");
-}
-
-function openPdfModal() {
-  const optMeusAndamento = document.getElementById('pdf-opt-meus-and');
-  const optMeusConcluidos = document.getElementById('pdf-opt-meus-con');
-  
-  if (isViewerMode) {
-    optMeusAndamento.style.display = 'none';
-    optMeusConcluidos.style.display = 'none';
-    document.getElementById('pdf-filter').value = 'TODOS_ANDAMENTO';
-  } else {
-    optMeusAndamento.style.display = 'block';
-    optMeusConcluidos.style.display = 'block';
-    document.getElementById('pdf-filter').value = 'MEUS_ANDAMENTO';
-  }
-  
-  document.getElementById('pdf-modal').classList.remove('hidden');
-}
-
-function closePdfModal(confirm) {
-  document.getElementById('pdf-modal').classList.add('hidden');
-  if (!confirm) return;
-
-  const filter = document.getElementById('pdf-filter').value;
-  const detail = document.getElementById('pdf-detail').value;
-  const showHistory = detail === 'HISTORICO';
-
-  let list = appData.projects || [];
-  let title = "Relatório de Projetos";
-
-  if (filter === 'MEUS_ANDAMENTO') {
-    list = list.filter(p => p.owner === currentUser && p.stageIndex < 8);
-    title = `Projetos em Andamento - ${currentUser}`;
-  } else if (filter === 'MEUS_CONCLUIDOS') {
-    list = list.filter(p => p.owner === currentUser && p.stageIndex >= 8);
-    title = `Projetos Concluídos - ${currentUser}`;
-  } else if (filter === 'TODOS_ANDAMENTO') {
-    list = list.filter(p => p.stageIndex < 8);
-    title = `Todos os Projetos em Andamento`;
-  } else if (filter === 'TODOS_CONCLUIDOS') {
-    list = list.filter(p => p.stageIndex >= 8);
-    title = `Todos os Projetos Concluídos`;
-  } else if (filter === 'TODOS') {
-    title = `Todos os Projetos (Geral)`;
-  }
-
-  generateListPDF(list, title, showHistory);
-}
-
-function generateListPDF(list, title, showHistory) {
-  if (!window.jspdf?.jsPDF) { toast("Gerador Indisponível.", "warning"); return; } 
-  
-  const doc = new window.jspdf.jsPDF(showHistory ? "landscape" : "portrait"); 
-  
-  doc.setFont("helvetica","bold"); 
-  doc.setFontSize(18); 
-  doc.setTextColor(37,99,235); 
-  doc.text(sanitizePDF(title), 14, 22);
-  
-  doc.setFontSize(10); 
-  doc.setTextColor(100,100,100); 
-  doc.setFont("helvetica","normal"); 
-  doc.text("Gerado em: " + new Date().toLocaleString("pt-BR"), 14, 29);
-  
-  let head = [];
-  let rows = [];
-  let columnStyles = {};
-
-  if (showHistory) {
-    head = [["CÓD", "Obra / Cliente", "Responsável", "Histórico Completo"]];
-    rows = list.map(p => {
-      const histStr = (p.history||[]).map(h => `• ${h.date} | ${h.stage} (${h.author})\n   ↳ Obs: ${h.obs}`).join("\n\n");
-      return [
-        sanitizePDF(p.cod||"-"), 
-        sanitizePDF(p.name), 
-        sanitizePDF(p.owner), 
-        sanitizePDF(histStr)
-      ];
-    });
-    columnStyles = { 3: { cellWidth: 170 } }; 
-  } else {
-    head = [["CÓD", "Cliente/Obra", "Vendedor", "Desenhista", "Etapa Atual"]];
-    rows = list.map(p => [
-      sanitizePDF(p.cod||"-"), 
-      sanitizePDF(p.name), 
-      sanitizePDF(p.vendedor||"-"), 
-      sanitizePDF(p.owner), 
-      sanitizePDF(STAGES[p.stageIndex]||"-")
-    ]);
-  }
-
-  doc.autoTable({ 
-    startY: 36, 
-    head: head, 
-    body: rows, 
-    theme: "grid", 
-    headStyles: { fillColor: [37,99,235] }, 
-    styles: { fontSize: showHistory ? 8 : 9 },
-    columnStyles: columnStyles
-  });
-  
-  window.open(URL.createObjectURL(doc.output("blob")), "_blank");
-}
-
-/* ==================================================
-   BACKUP INTERNO JSON
-================================================== */
-function exportBackup() {
-  const d = new Date(); const name = `backup_projetos_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
-  const a = document.createElement("a"); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); a.download = name; a.click(); toast("Backup gerado!", "success");
-}
-function importBackup(e) {
-  const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-  reader.onload = ev => { try { appData = JSON.parse(ev.target.result); saveData(); renderProfiles(); toast("Restaurado com sucesso!", "success"); } catch { toast("Arquivo inválido.", "danger"); } };
-  reader.readAsText(file);
-}
-</script>
+<!-- LÓGICA JAVASCRIPT -->
+<script src="script.js"></script>
 </body>
 </html>
