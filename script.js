@@ -1266,7 +1266,16 @@ function closeCreateRevisaoModal(confirm) {
   switchDraftsmanTab("fila");
   toast("Voltou como REVISÃO e está livre na fila.", "info");
   
-  if (!skipSheets) sendToGoogleSheets(p);
+  // Revisão ATUALIZA a linha existente (nunca cria linha nova / duplicada)
+  if (!skipSheets) {
+    syncUpdateToGoogleSheets(p, {
+      oldCod: oldCod,
+      onlyEditInfo: true,
+      situacao: "PROJETO",
+      dataInicio: "",
+      dataConclusao: ""
+    });
+  }
 }
 
 async function registerEvent(id) {
