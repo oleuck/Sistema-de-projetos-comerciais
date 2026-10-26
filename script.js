@@ -2,7 +2,7 @@
    CONFIGURAÇÕES GERAIS E ETAPAS
    (FIREBASE_CFG, MASTER_KEY e GOOGLE_SCRIPT_URL vêm do index.html)
 ================================================== */
-const APP_VERSION = "2026-10-23-c";
+const APP_VERSION = "2026-10-26-a";
 console.log("%c[Sistema] script.js versão " + APP_VERSION, "color:#22c55e;font-weight:bold");
 
 const STAGES = [
@@ -413,10 +413,10 @@ function getSheetStageLabel(p) {
 }
 
 // 1. Cria nova linha na planilha SOMENTE quando clica em "+ Novo Projeto na Fila"
-async function sendToGoogleSheets(p) {
+async function sendToGoogleSheets(p, opts = {}) {
   if (typeof GOOGLE_SCRIPT_URL === "undefined" || !GOOGLE_SCRIPT_URL) return;
   try {
-    const entryDate = p.history && p.history.length > 0 ? p.history[0].date.split(" ")[0].replace(/,/g, "").trim() : todayShortBR();
+    const entryDate = opts.date ? opts.date : p.history && p.history.length > 0 ? p.history[0].date.split(" ")[0].replace(/,/g, "").trim() : todayShortBR();
     
     const payload = {
       action: "CREATE",
@@ -1271,16 +1271,8 @@ function closeCreateRevisaoModal(confirm) {
   switchDraftsmanTab("fila");
   toast("Voltou como REVISÃO e está livre na fila.", "info");
   
-  // Revisão ATUALIZA a linha existente (nunca cria linha nova / duplicada)
-  if (!skipSheets) {
-    syncUpdateToGoogleSheets(p, {
-      oldCod: oldCod,
-      onlyEditInfo: true,
-      situacao: "PROJETO",
-      dataInicio: "",
-      dataConclusao: ""
-    });
-  }
+  // Revisão = linha NOVA na aba AGENDA 2026 (a anterior já foi levada para "Prontos")
+  if (!skipSheets) sendToGoogleSheets(p, { date: todayShortBR() });
 }
 
 async function registerEvent(id) {
