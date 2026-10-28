@@ -2,7 +2,7 @@
    CONFIGURAÇÕES GERAIS E ETAPAS
    (FIREBASE_CFG, MASTER_KEY e GOOGLE_SCRIPT_URL vêm do index.html)
 ================================================== */
-const APP_VERSION = "2026-10-26-a";
+const APP_VERSION = "2026-10-26-b";
 console.log("%c[Sistema] script.js versão " + APP_VERSION, "color:#22c55e;font-weight:bold");
 
 const STAGES = [
@@ -307,6 +307,123 @@ function formatDimensions(p) {
 }
 
 /* ==================================================
+   VERSÕES SALVAS (CACHE LOCAL DESTE COMPUTADOR)
+   - Guarda até 30 cópias do banco de dados no navegador (IndexedDB)
+   - Tira uma cópia ao abrir o sistema e, depois, no máximo a cada 15 min
+   - Botão "Recuperar versões" lista as cópias e permite restaurar ou baixar
+================================================== */
+const SNAP_DB = "projetos_snapshots";
+const SNAP_STORE = "snaps";
+const SNAP_MAX = 30;
+const SNAP_MIN_MS = 15 * 60 * 1000;
+let snapOpenDone = false;
+let snapReady = false;
+let snapLastAt = 0;
+let snapLastHash = "";
+
+function snapHash_(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  return str.length + ":" + h;
+}
+function snapOpen_() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) return reject(new Error("sem indexedDB"));
+    const r = indexedDB.open(SNAP_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(SNAP_STORE, { keyPath: "id" });
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function snapList_() {
+  try {
+    const d = await snapOpen_();
+    return await new Promise(resolve => {
+      const q = d.transaction(SNAP_STORE).objectStore(SNAP_STORE).getAll();
+      q.onsuccess = () => resolve((q.result || []).sort((a, b) => b.id - a.id));
+      q.onerror = () => resolve([]);
+    });
+  } catch (e) { return []; }
+}
+async function snapSave_(reason, force) {
+  try {
+    if (!appData || !appData.projects || appData.projects.length === 0) return;
+    if (!force && reason === "auto" && snapReady && Date.now() - snapLastAt < SNAP_MIN_MS) return;
+    if (!snapReady) {
+      const l = await snapList_();
+      if (l[0]) { snapLastAt = l[0].id; snapLastHash = l[0].hash; }
+      snapReady = true;
+      if (!force && reason === "auto" && Date.now() - snapLastAt < SNAP_MIN_MS) return;
+    }
+    const json = JSON.stringify(appData);
+    const hash = snapHash_(json);
+    if (hash === snapLastHash) return;
+    const d = await snapOpen_();
+    const all = await snapList_();
+    const tx = d.transaction(SNAP_STORE, "readwrite");
+    const st = tx.objectStore(SNAP_STORE);
+    const id = Date.now();
+    st.put({ id, reason, hash, projects: appData.projects.length, users: (appData.users || []).length, json });
+    all.slice(SNAP_MAX - 1).forEach(x => st.delete(x.id));
+    snapLastAt = id; snapLastHash = hash;
+  } catch (e) {}
+}
+
+const SNAP_REASONS = { abertura: "Ao abrir o sistema", auto: "Automática", "antes-restaurar": "Antes de restaurar" };
+
+async function openVersionsModal() {
+  document.getElementById("versions-modal").classList.remove("hidden");
+  const box = document.getElementById("versions-list");
+  box.innerHTML = '<p style="color:var(--text-light);">Carregando...</p>';
+  const list = await snapList_();
+  if (!list.length) {
+    box.innerHTML = '<p style="color:var(--text-light);">Ainda não há versões salvas neste computador. Elas são criadas automaticamente enquanto o sistema é usado.</p>';
+    return;
+  }
+  box.innerHTML = list.map(s => {
+    const dt = new Date(s.id).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return `<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700;">${dt}</div>
+        <div style="font-size:0.8rem; color:var(--text-light);">${s.projects} projetos • ${s.users} pessoas • ${SNAP_REASONS[s.reason] || "Automática"}</div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="ghost" onclick="downloadSnapshot(${s.id})">💾 Baixar</button>
+        <button onclick="restoreSnapshot(${s.id})">↩️ Restaurar</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function closeVersionsModal() {
+  document.getElementById("versions-modal").classList.add("hidden");
+}
+async function downloadSnapshot(id) {
+  const s = (await snapList_()).find(x => x.id === id);
+  if (!s) return toast("Versão não encontrada.", "danger");
+  const d = new Date(s.id);
+  const p2 = n => String(n).padStart(2, "0");
+  const name = `versao_${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}-${p2(d.getMinutes())}.json`;
+  const a = document.createElement("a");
+  a.href = "data:text/json;charset=utf-8," + encodeURIComponent(s.json);
+  a.download = name; a.click();
+}
+async function restoreSnapshot(id) {
+  const s = (await snapList_()).find(x => x.id === id);
+  if (!s) return toast("Versão não encontrada.", "danger");
+  const dt = new Date(s.id).toLocaleString("pt-BR");
+  const atual = (appData && appData.projects) ? appData.projects.length : 0;
+  if (!confirm(`Restaurar a versão de ${dt}?\n\nIsso substitui os dados de TODOS os usuários (${s.projects} projetos nesta versão; ${atual} agora).\nAntes de restaurar, uma cópia do estado atual é guardada.\nA planilha do Google não é alterada.`)) return;
+  let novo;
+  try { novo = ensureDefaults(JSON.parse(s.json)); } catch (e) { return toast("Versão corrompida.", "danger"); }
+  await snapSave_("antes-restaurar", true);
+  appData = novo;
+  saveData();
+  closeVersionsModal();
+  if (currentUser || isViewerMode) { try { updateViews(); } catch (e) {} } else { renderProfiles(); }
+  toast("Versão restaurada!", "success");
+}
+
+/* ==================================================
    CONEXÃO SINCRO FIREBASE E TRAVA ANTI-APAGÃO
 ================================================== */
 function setFirebaseStatus(state) {
@@ -336,6 +453,7 @@ function bootUI() {
     }
   }
   appData = ensureDefaults(appData);
+  if (!snapOpenDone) { snapOpenDone = true; snapSave_("abertura"); }
   if (!currentUser && !isViewerMode) { show("view-profiles"); renderProfiles(); }
   else if (isViewerMode) { show("view-manager"); renderGlobalFeed(); }
   else { show("view-dashboard"); renderProjects(); }
@@ -376,6 +494,7 @@ if (isConfigured) {
 }
 
 function saveData() {
+  snapSave_("auto");
   if (!fbSynced) { 
     localStorage.setItem("appData_local", JSON.stringify(appData)); 
     return; 

@@ -58,6 +58,17 @@
 </div>
 
 <!-- MODAL CADASTRAR PROJETO -->
+<div id="versions-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ver-modal-title">
+  <div class="modal-content">
+    <h3 id="ver-modal-title" class="modal-title">🕘 Recuperar versões</h3>
+    <p class="modal-desc">Cópias automáticas guardadas neste computador (as últimas 30). Cada computador tem as suas.</p>
+    <div id="versions-list" style="max-height:50vh; overflow:auto; margin-bottom:14px;"></div>
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeVersionsModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="create-project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cp-modal-title">
   <div class="modal-content">
     <h3 id="cp-modal-title" class="modal-title">📋 Cadastrar Novo Projeto</h3>
@@ -335,6 +346,7 @@
       <div style="margin-top:32px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
         <button class="ghost" onclick="exportBackup()">💾 Gerar Backup</button>
         <button class="ghost" onclick="document.getElementById('import-file').click()">📂 Restaurar Backup</button>
+        <button class="ghost" onclick="openVersionsModal()">🕘 Recuperar versões</button>
         <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
       </div>
 
@@ -425,6 +437,7 @@
           <button class="success btn-new-project" onclick="openCreateProjectModal()">➕ Novo Projeto na Fila</button>
           <button class="ghost" onclick="toggleTheme()" title="Alternar Tema">🌓</button>
           <button class="ghost" onclick="changeMyPassword()" title="Alterar minha senha">🔑 Senha</button>
+          <button class="ghost" onclick="openVersionsModal()" title="Recuperar versões salvas">🕘 Versões</button>
           <button id="admin-btn" class="hidden warning" onclick="openAdminModal()">⚙️ Equipe</button>
           <button class="ghost danger-text" id="delete-profile-btn" onclick="deleteCurrentUser()" title="Excluir meu perfil">🗑️</button>
         </div>
@@ -580,6 +593,6 @@
 </div>
 
 <!-- LÓGICA JAVASCRIPT -->
-<script src="script.js?v=20261023b"></script>
+<script src="script.js?v=20261026b"></script>
 </body>
 </html>
