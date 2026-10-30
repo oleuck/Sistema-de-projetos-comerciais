@@ -132,6 +132,32 @@
   </div>
 </div>
 
+<!-- MODAL CRIAR OPÇÃO -->
+<div id="create-option-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="co-modal-title">
+  <div class="modal-content">
+    <h3 id="co-modal-title" class="modal-title" style="color:var(--primary);">➕ Nova Opção do Projeto</h3>
+    <p class="modal-desc">Cria um novo card na Fila, ligado a este projeto, com um CÓD próprio e uma linha nova na planilha.</p>
+    <input type="hidden" id="co-id">
+    <div style="margin-bottom:10px; font-size:0.9rem;"><strong>Origem:</strong> <span id="co-origem"></span></div>
+    <label for="co-cod">CÓD da nova opção *</label>
+    <input type="text" id="co-cod" placeholder="Ex: 18766" onkeydown="if(event.key === 'Enter') closeCreateOptionModal(true);">
+    <label for="co-label">Descrição da opção (opcional)</label>
+    <input type="text" id="co-label" placeholder="Ex: Opção B – com mezanino" onkeydown="if(event.key === 'Enter') closeCreateOptionModal(true);">
+
+    <div style="margin-top:10px; background:var(--bg-alt); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:normal; color:var(--text); margin-bottom:0;">
+        <input type="checkbox" id="co-skip-sheets" style="width:auto; margin:0; cursor:pointer;">
+        <span>Não enviar para o Google Planilhas</span>
+      </label>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="secondary" onclick="closeCreateOptionModal(false)">Cancelar</button>
+      <button onclick="closeCreateOptionModal(true)">Criar Opção</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CRIAR REVISÃO -->
 <div id="create-revisao-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cr-modal-title">
   <div class="modal-content">
@@ -593,6 +619,6 @@
 </div>
 
 <!-- LÓGICA JAVASCRIPT -->
-<script src="script.js?v=20261026b"></script>
+<script src="script.js?v=20261026c"></script>
 </body>
 </html>

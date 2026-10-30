@@ -2,7 +2,7 @@
    CONFIGURAÇÕES GERAIS E ETAPAS
    (FIREBASE_CFG, MASTER_KEY e GOOGLE_SCRIPT_URL vêm do index.html)
 ================================================== */
-const APP_VERSION = "2026-10-26-b";
+const APP_VERSION = "2026-10-26-c";
 console.log("%c[Sistema] script.js versão " + APP_VERSION, "color:#22c55e;font-weight:bold");
 
 const STAGES = [
@@ -1011,7 +1011,7 @@ function filterAndSort(projects, search, sort, tab) {
       if (sort === "TIPO_NOVO" && p.tipo !== "NOVO") return false;
       if (sort === "TIPO_REVISAO" && p.tipo !== "REVISÃO") return false;
       
-      const searchSpace = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")+" "+((p.previousCods||[]).join(" "))).toLowerCase();
+      const searchSpace = ((p.name||"")+" "+(p.cod||"")+" "+(p.owner||"")+" "+((p.previousCods||[]).join(" "))+" "+(p.optionLabel||"")).toLowerCase();
       return searchSpace.includes(search);
     })
     .sort((a, b) => {
@@ -1130,7 +1130,8 @@ function buildCards(list, container, isDash) {
       actions += `<button class="btn-corrected success" onclick="markAsCorrected('${p.id}')">✅ Marcar como Corrigido</button>`;
     }
     
-    const commonBtns = (isDash && canEdit || isViewerMode) ? `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "";
+    const commonBtns = ((isDash && canEdit || isViewerMode) ? `<button class="secondary" onclick="registerEvent('${p.id}')">📝 Recado</button>` : "")
+      + (!isC && (canEdit || isViewerMode) ? `<button class="secondary" title="Criar outra opção (novo CÓD) deste projeto" onclick="openCreateOptionModal('${p.id}')">➕ Opção</button>` : "");
     
     if (canEdit && !isC) {
       actions += `<div class="actions-row">${commonBtns}<button class="${p.isImpeded ? 'success' : 'warning'}" title="${p.isImpeded ? 'Retomar projeto' : 'Colocar em espera'}" onclick="toggleImpediment('${p.id}')">${p.isImpeded ? '▶' : '⏸'}</button><button class="danger" onclick="deleteProject('${p.id}')">🗑️</button></div>`;
@@ -1163,7 +1164,7 @@ function buildCards(list, container, isDash) {
         ${durationBadgeHTML}
         ${canEdit && !isC ? `<button class="ghost" style="font-size:0.8rem; padding:4px 8px;" onclick="toggleRework('${p.id}')">${p.reworkType ? "✅ Fechar Revisão" : "🔄 Retrabalho"}</button>` : ""}
       </div>
-      <div class="project-title-row"><h2>${p.name||"Sem Nome"}</h2>${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ""}</div>
+      <div class="project-title-row"><h2>${p.name||"Sem Nome"}${p.optionOf ? ` <span class="badge-opcao" title="${optEsc_(p.optionLabel || "Opção ligada a outro projeto")}">OPÇÃO${p.optionLabel ? " · " + optEsc_(p.optionLabel) : ""}</span>` : ""}</h2>${canEdit ? `<button class="icon-btn" onclick="editProjectName('${p.id}')">✏️</button>` : ""}</div>
       <div class="info-box">
         ${canEdit ? `<button class="icon-btn edit-info-btn" onclick="openEditProjectModal('${p.id}')">⚙️</button>` : ""}
         <div class="info-row"><span><strong>CÓD:</strong> ${p.cod||"-"}</span><span><strong>Vend:</strong> ${p.vendedor||"-"}</span></div>
@@ -1172,6 +1173,7 @@ function buildCards(list, container, isDash) {
         <div class="info-row"><span><strong>Cidade:</strong> ${p.cidade||"-"}</span></div>
         ${dimHTML}
         ${prevCodsHTML}
+        ${buildOptionsHTML(p)}
       </div>
       ${canEdit ? `<select class="stage-select" onchange="updateStage('${p.id}',this)" ${p.isImpeded||p.reworkType?"disabled":""}>${stageOpts}</select>` : ""}
       <div class="status-label">${statusLabel}</div>
@@ -1392,6 +1394,110 @@ function closeCreateRevisaoModal(confirm) {
   
   // Revisão = linha NOVA na aba AGENDA 2026 (a anterior já foi levada para "Prontos")
   if (!skipSheets) sendToGoogleSheets(p, { date: todayShortBR() });
+}
+
+/* ==================================================
+   OPÇÕES (cards ligados, cada um com linha própria na planilha)
+   - Botão "➕ Opção" no card cria um projeto novo na Fila, com um CÓD próprio,
+     copiando cliente, vendedor, cidade, tipo, probabilidade e dimensões.
+   - Os cards ficam ligados (optionOf = id do projeto de origem) e mostram
+     os códigos das outras opções.
+================================================== */
+function optEsc_(t) {
+  return String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function getOptionRootId(p) { return p.optionOf || p.id; }
+function getLinkedOptions(p) {
+  const root = getOptionRootId(p);
+  return (appData.projects || []).filter(x => x && x.id !== p.id && (x.id === root || x.optionOf === root));
+}
+function getOptionTabOf_(x) {
+  const st = Number(x.stageIndex) || 0;
+  if (st >= 8) return "concluidos";
+  if (x.isImpeded) return "espera";
+  return st === 0 ? "fila" : "andamento";
+}
+function buildOptionsHTML(p) {
+  const linked = getLinkedOptions(p);
+  if (!linked.length) return "";
+  const chips = linked.map(x => {
+    const st = x.isImpeded ? "Em espera" : (STAGES[Number(x.stageIndex) || 0] || "");
+    const lab = x.optionLabel ? ` · ${optEsc_(x.optionLabel)}` : "";
+    return `<span class="opt-chip" title="Ir para esta opção" onclick="goToOption('${x.id}')"><strong>${optEsc_(x.cod || "s/ CÓD")}</strong>${lab} <em>▸ ${optEsc_(st)}</em></span>`;
+  }).join("");
+  return `<div class="info-row opt-row"><span><strong>🔗 Outras opções:</strong></span><div class="opt-chips">${chips}</div></div>`;
+}
+function goToOption(id) {
+  const x = findProject(id); if (!x) return;
+  const tab = getOptionTabOf_(x);
+  const searchEl = document.getElementById("search-input");
+  if (searchEl && !isViewerMode) {
+    switchDraftsmanTab(tab);
+    searchEl.value = x.cod || x.name || "";
+    renderProjects();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    switchManagerTab(tab === "concluidos" ? "concluidos" : tab);
+  }
+}
+
+function openCreateOptionModal(id) {
+  const p = findProject(id); if (!p) return;
+  document.getElementById("co-id").value = id;
+  document.getElementById("co-origem").textContent = `${p.name || "Sem nome"} — CÓD ${p.cod || "-"}`;
+  document.getElementById("co-cod").value = "";
+  document.getElementById("co-label").value = "";
+  document.getElementById("co-skip-sheets").checked = false;
+  document.getElementById("create-option-modal").classList.remove("hidden");
+  requestAnimationFrame(() => document.getElementById("co-cod").focus());
+}
+
+function closeCreateOptionModal(confirm) {
+  document.getElementById("create-option-modal").classList.add("hidden");
+  if (!confirm) return;
+
+  const src = findProject(document.getElementById("co-id").value); if (!src) return;
+  const newCod = document.getElementById("co-cod").value.trim();
+  const label = document.getElementById("co-label").value.trim();
+  const skipSheets = document.getElementById("co-skip-sheets").checked;
+
+  if (!newCod) { toast("Informe o CÓD da nova opção!", "warning"); document.getElementById("create-option-modal").classList.remove("hidden"); return; }
+  const dup = (appData.projects || []).some(x => x && String(x.cod || "").trim().toUpperCase() === newCod.toUpperCase());
+  if (dup) { toast("Já existe um projeto com esse CÓD!", "warning"); document.getElementById("create-option-modal").classList.remove("hidden"); return; }
+
+  const rootId = getOptionRootId(src);
+  const root = findProject(rootId) || src;
+  const origemTxt = `Opção do projeto CÓD ${root.cod || "-"}` + (label ? ` — ${label}` : "");
+
+  const newProj = {
+    id: (Date.now() + Math.floor(Math.random() * 1000)).toString(),
+    owner: "Fila",
+    name: src.name,
+    stageIndex: 0,
+    isImpeded: false,
+    reworkType: null,
+    cod: newCod,
+    vendedor: src.vendedor || "",
+    tipo: src.tipo || "NOVO",
+    probabilidade: src.probabilidade || "",
+    cidade: src.cidade || "",
+    largura: src.largura || "",
+    comprimento: src.comprimento || "",
+    altura: src.altura || "",
+    previousCods: [],
+    optionOf: rootId,
+    optionLabel: label,
+    history: [{ stage: STAGES[0], obs: origemTxt, date: nowBR(), author: currentUser || "Visualizador" }]
+  };
+
+  appData.projects.unshift(newProj);
+  pushHistory(src, "🔗 OPÇÃO CRIADA", `Nova opção CÓD ${newCod}` + (label ? ` — ${label}` : ""));
+  saveData(); updateViews();
+  isViewerMode ? switchManagerTab("fila") : switchDraftsmanTab("fila");
+  toast(`Opção ${newCod} criada e inserida na Fila!`, "success");
+
+  // Linha NOVA na aba AGENDA 2026 (cada opção tem o seu CÓD e a sua linha)
+  if (!skipSheets) sendToGoogleSheets(newProj, { date: todayShortBR() });
 }
 
 async function registerEvent(id) {

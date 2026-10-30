@@ -493,3 +493,11 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-
   .modal-content { padding: 18px; }
   .mc-main-metrics, .mc-vendors-grid { grid-template-columns: 1fr; }
 }
+
+/* Opções ligadas a um projeto */
+.badge-opcao { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.3px; background: rgba(147, 51, 234, 0.18); color: var(--purple); border: 1px solid rgba(147, 51, 234, 0.4); }
+.info-row.opt-row { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-h); align-items: flex-start; flex-direction: column; justify-content: flex-start; }
+.opt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt-chip { cursor: pointer; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border-h); background: var(--bg); font-size: 0.78rem; color: var(--text); }
+.opt-chip:hover { border-color: var(--purple); }
+.opt-chip em { font-style: normal; color: var(--text-light); }
